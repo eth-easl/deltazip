@@ -13,13 +13,14 @@ torch.backends.cudnn.allow_tf32 = False
 
 def hard_threshold(x, fraction_of_zero=0.1):
     if fraction_of_zero == 0:
-        return x
+        return x, None
+    # randomly set random_sparsification of the weights to zero
     y, _ = torch.sort(x.view(-1).abs().clone())
     num_params = torch.numel(x)
     thresh_index = int(num_params * fraction_of_zero)
     threshold = y[thresh_index]
     mask = x.abs().clone().gt(threshold).type(torch.cuda.HalfTensor)
-    return mask * x
+    return mask * x, mask
 
 class GPTQ:
     def __init__(self, layer):
@@ -46,7 +47,6 @@ class GPTQ:
             if len(inp.shape) == 3:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
-        
         self.H *= self.nsamples / (self.nsamples + tmp)
         self.nsamples += tmp
         # inp = inp.float()
@@ -125,45 +125,32 @@ class GPTQ:
 
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
-            if DEBUG:
-                pass
-                #self.layer.weight.data[:, :i2] = Q[:, :i2]
-                #self.layer.weight.data[:, i2:] = W[:, i2:]
-                #print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
-                #print(torch.sum(Losses))
-
         torch.cuda.synchronize()
-        total_time = time.time() - tick
-        # print('time %.2f' % total_time)
-        # error = torch.sum(Losses).item()
-        # print('error', error)
-
         if actorder:
             invperm = torch.argsort(perm)
             Q = Q[:, invperm]
-
         if isinstance(self.layer, transformers.Conv1D):
             Q = Q.t()
-        # here report the loss of the quantized layer vs. the original layer
         new_weight = Q.reshape(self.layer.weight.shape).to(self.layer.weight.dtype)
         losses = {}
+        mask = None
         if sparsity is None:
             sparsed_new_weight = new_weight
             losses[0] = torch.sum((self.inp1 @ (sparsed_new_weight.T) - self.out1) ** 2)
         else:
             for s_sity in sparsity:
+                sparsed_new_weight, mask = hard_threshold(new_weight, fraction_of_zero=s_sity)
+                print("new weight")
+                print(self.inp1 @ (sparsed_new_weight.T))
+                print("original weight")
+                print(self.out1)
                 if write:
-                    logger.info(f"HT with: sparsity={s_sity}")
-                sparsed_new_weight = hard_threshold(new_weight, fraction_of_zero=s_sity)
+                    logger.debug(f"HT with: sparsity={s_sity}")
                 losses[s_sity] = torch.sum((self.inp1 @ (sparsed_new_weight.T) - self.out1) ** 2)
-                if losses[s_sity] > 100:
-                    logger.info(f"{sparsed_new_weight}")
-                    logger.info(f"{new_weight}")
-                    logger.info(f"{sparsed_new_weight.shape}")
-                    logger.info(f"{torch.max(torch.abs(self.inp1 @ (sparsed_new_weight.T) - self.out1))}")
+                print(losses)
         if write:
             self.layer.weight.data = sparsed_new_weight
-        return losses
+        return losses, mask
 
     def free(self):
         if DEBUG:

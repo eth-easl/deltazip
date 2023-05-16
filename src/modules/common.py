@@ -12,13 +12,13 @@ def skip(*args, **kwargs):
 BASE_FLOATS = 16
 
 @torch.no_grad()
-def auto_compress(
+def auto_compress_generic(
         model,
+        delta_model,
         dataloader,
         get_layers_func: Callable,
         prep_model_func: Callable,
         tol=0.2,
-        delta_model=None,
         search_space=None,
         n_samples=128,
         quant_args = {},
@@ -27,11 +27,6 @@ def auto_compress(
     masks = {}
     if delta_model is None:
         raise NotImplementedError
-    if search_space is None:
-        search_space = {
-            "wbits": [2,3,4],
-            "sparsities": [0.0, 0.33, 0.5, 0.67, 0.9, 0.95, 0.99]
-        }
     # populate compression rate with different search options
     for wbit in search_space['wbits']:
         for sparsity in search_space['sparsities']:
@@ -45,8 +40,8 @@ def auto_compress(
     model.config.use_cache = False
     layers = get_layers_func(model)
     delta_layers = get_layers_func(delta_model)
-
-    prep_model_func(model)
+    if prep_model_func:
+        prep_model_func(model)
     dev = model.device
     dtype = next(iter(model.parameters())).dtype
     inps = torch.zeros(
@@ -63,12 +58,15 @@ def auto_compress(
             cache["i"] += 1
             cache["attention_mask"] = kwargs["attention_mask"]
             raise ValueError
+        
     layers[0] = Catcher(layers[0])
-    for batch in dataloader:
+    for i, batch in enumerate(dataloader):
         try:
             model(batch[0].to(dev))
         except ValueError:
             pass
+    # restore the original layer
+    layers[0] = layers[0].module
     torch.cuda.empty_cache()
     outs = torch.zeros_like(inps)
     original_outs = torch.zeros_like(inps)
@@ -76,25 +74,21 @@ def auto_compress(
     tune_obj = {}
     tuned_params = {}
     quantizers = {}
-    def add_batch(i, name):
-        def tmp(_, inp, out):
-            for wbit in search_space['wbits']:
-                tuned_params[f'{i}_{name}'][f'wbit.{wbit}']['gptq'].add_batch(inp[0].data, out.data)
-        return tmp
-    for i in range(layers):
+    for i in range(len(layers)):
         layer = delta_layers[i].to(dev)
         original_layer = layers[i].to(dev)
         subset = find_layers(layer)
+        
         for name in subset:
-        # configuring quantizers
-            tuned_params[f"{i}.{name}"] = {}
-            tune_obj[f"{i}.{name}"] = {}
+            # configuring quantizers
+            tuned_params[f"{i}_{name}"] = {}
+            tune_obj[f"{i}_{name}"] = {}
             for wbit in search_space['wbits']:
-                tune_obj[f"{i}.{name}"][f'wbit.{wbit}'] = {
+                tune_obj[f"{i}_{name}"][f'wbit={wbit}'] = {
                     'gptq': GPTQ(subset[name]),
                 }
-                tune_obj[f"{i}.{name}"][f'wbit.{wbit}']['gptq'].quantizer = Quantizer()
-                tune_obj[f"{i}.{name}"][f'wbit.{wbit}']['gptq'].quantizer.configure(
+                tune_obj[f"{i}_{name}"][f'wbit={wbit}']['gptq'].quantizer = Quantizer()
+                tune_obj[f"{i}_{name}"][f'wbit={wbit}']['gptq'].quantizer.configure(
                     bits=wbit,
                     perchannel=quant_args['perchannel'],
                     mse=quant_args['mse'],
@@ -103,21 +97,33 @@ def auto_compress(
                     maxshrink=quant_args['maxshrink'],
                     trits=quant_args['trits']
                 )
+        
+        def add_batch(name):
+            def tmp(_, inp, out):
+                for wbit in search_space['wbits']:
+                    tune_obj[f'{i}_{name}'][f'wbit={wbit}']['gptq'].add_batch(inp[0].data, out.data)
+            return tmp
+        
         # adding input hooks
         handles = []
         for name in subset:
-            handles.append(subset[name].register_forward_hook(add_batch(i, name))) 
+            handles.append(subset[name].register_forward_hook(add_batch(name)))
+
         for j in range(n_samples):
-            outs[j] = layer(inps[j], attention_mask=attention_mask)[0]
-            original_outs[j] = original_layer(inps[j], attention_mask=attention_mask)[0]
+            outs[j] = layer(inps[j].unsqueeze(0), attention_mask=attention_mask)[0]
+
+            original_outs[j] = original_layer(
+                inps[j].unsqueeze(0), attention_mask=attention_mask
+            )[0]
+
         for h in handles:
             h.remove()
         
         for name in subset:
             logger.info(f"Quantizing {i}.{name} ...")
             for wbit in search_space['wbits']:
-                logger.info("Searching for Optimal Quantization Parameters")
-                losses, _ = tune_obj[f'{i}_{name}'][f'wbit.{wbit}']['gptq'].fasterquant(
+                logger.debug("Searching for Optimal Quantization Parameters")
+                losses, _ = tune_obj[f'{i}_{name}'][f'wbit={wbit}']['gptq'].fasterquant(
                     percdamp=quant_args['percdamp'],
                     groupsize=quant_args['groupsize'],
                     actorder=quant_args['actorder'],
@@ -128,7 +134,7 @@ def auto_compress(
                     tuned_params[f'{i}_{name}'][f'wbit={wbit}_sparsity={s_sity}'] = {
                         'loss': losses[s_sity].item()
                     }
-                    logger.info(f"wbit: {wbit}; sparsity: {s_sity}; loss: {losses[s_sity].item()}")
+                    logger.debug(f"wbit: {wbit}; sparsity: {s_sity}; loss: {losses[s_sity].item()}")
             best_wbit = None
             best_sparsity = None
             best_loss = None
@@ -151,7 +157,7 @@ def auto_compress(
                 best_sparsity = compression_rates[-1][0].split('_')[1].split('=')[1]
             best_loss = tuned_params[f'{i}_{name}'][f'wbit={best_wbit}_sparsity={best_sparsity}']['loss']
             # now we find the optimal parameters, apply it to the model
-            logger.info(f"Found optimal quantization parameters for {i}.{name}: wbit={best_wbit}, sparsity={best_sparsity}, loss={best_loss}")
+            logger.debug(f"Found optimal quantization parameters for {i}.{name}: wbit={best_wbit}, sparsity={best_sparsity}, loss={best_loss}")
             loss, mask = tune_obj[f'{i}_{name}'][f'wbit={best_wbit}']['gptq'].fasterquant(
                 percdamp=quant_args['percdamp'],
                 groupsize=quant_args['groupsize'],
@@ -162,9 +168,9 @@ def auto_compress(
             if mask is not None:
                 masks[f'{i}_{name}'] = mask
 
-            quantizers[f"{i}.{name}"] = tuned_params[f'{i}_{name}'][f'wbit={best_wbit}']['gptq'].quantizer
-            tuned_params[f"{i}.{name}"][f"wbit={best_wbit}"]['gptq'].free()
-            tuned_params[f"{i}.{name}"]['choice'] = {
+            quantizers[f"{i}.{name}"] = tune_obj[f'{i}_{name}'][f'wbit={best_wbit}']['gptq'].quantizer
+            tune_obj[f"{i}_{name}"][f"wbit={best_wbit}"]['gptq'].free()
+            tuned_params[f"{i}_{name}"]['choice'] = {
                 'best_wbit': best_wbit,
                 'best_sparsity': best_sparsity,
                 'best_loss': best_loss,
@@ -178,7 +184,7 @@ def auto_compress(
         for key in tuned_params.keys():
             if key.startswith(f'{i}_'):
                 for wbit in search_space['wbits']:
-                    del tuned_params[key][f'wbit.{wbit}']['gptq']
+                    del tune_obj[key][f'wbit={wbit}']['gptq']
         torch.cuda.empty_cache()
         inps, outs = original_outs, inps
 
