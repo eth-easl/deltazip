@@ -1,52 +1,56 @@
 import math
+import os
 import time
-import torch
-import transformers
-import torch.nn as nn
-from loguru import logger
-from quant import quantize
+from logging import getLogger
 
-DEBUG = False
+import torch
+import torch.nn as nn
+import transformers
+
+from .quant import Quantizer
+
+logger = getLogger(__name__)
 
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
 
-def hard_threshold(x, fraction_of_zero=0.1):
-    if fraction_of_zero == 0:
-        return x, None
-    # randomly set random_sparsification of the weights to zero
-    y, _ = torch.sort(x.view(-1).abs().clone())
-    num_params = torch.numel(x)
-    thresh_index = int(num_params * fraction_of_zero)
-    threshold = y[thresh_index]
-    mask = x.abs().clone().gt(threshold).type(torch.cuda.HalfTensor)
-    return mask * x, mask
 
 class GPTQ:
     def __init__(self, layer):
         self.layer = layer
-        self.original_weight = layer.weight.data.clone()
         self.dev = self.layer.weight.device
         W = layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
             W = W.flatten(1)
-        if isinstance(self.layer, transformers.Conv1D):
+        if isinstance(self.layer, transformers.pytorch_utils.Conv1D):
             W = W.t()
         self.rows = W.shape[0]
         self.columns = W.shape[1]
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
         self.nsamples = 0
+        self.quantizer = Quantizer()
 
     def add_batch(self, inp, out):
-        self.inp1 = inp
-        self.out1 = out
+        if os.environ.get("DEBUG"):
+            self.inp1 = inp
+            self.out1 = out
         if len(inp.shape) == 2:
             inp = inp.unsqueeze(0)
         tmp = inp.shape[0]
-        if isinstance(self.layer, nn.Linear):
+        if isinstance(self.layer, nn.Linear) or isinstance(self.layer, transformers.Conv1D):
             if len(inp.shape) == 3:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
+        if isinstance(self.layer, nn.Conv2d):
+            unfold = nn.Unfold(
+                self.layer.kernel_size,
+                dilation=self.layer.dilation,
+                padding=self.layer.padding,
+                stride=self.layer.stride
+            )
+            inp = unfold(inp)
+            inp = inp.permute([1, 0, 2])
+            inp = inp.flatten(1)
         self.H *= self.nsamples / (self.nsamples + tmp)
         self.nsamples += tmp
         # inp = inp.float()
@@ -55,7 +59,7 @@ class GPTQ:
         self.H += inp.matmul(inp.t())
 
     def fasterquant(
-        self, blocksize=128, percdamp=.01, groupsize=-1, actorder=False, write=True, sparsity=None
+        self, blocksize=128, percdamp=.01, group_size=-1, actorder=False
     ):
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
@@ -70,8 +74,7 @@ class GPTQ:
             self.quantizer.find_params(W, weight=True)
 
         H = self.H
-        if write:
-            del self.H
+        del self.H
         dead = torch.diag(H) == 0
         H[dead, dead] = 1
         W[:, dead] = 0
@@ -92,6 +95,11 @@ class GPTQ:
         H = torch.linalg.cholesky(H, upper=True)
         Hinv = H
 
+        g_idx = []
+        scale = []
+        zero = []
+        now_idx = 1
+
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
             count = i2 - i1
@@ -106,13 +114,16 @@ class GPTQ:
                 w = W1[:, i]
                 d = Hinv1[i, i]
 
-                if groupsize != -1:
-                    if (i1 + i) % groupsize == 0:
-                        self.quantizer.find_params(W[:, (i1 + i):(i1 + i + groupsize)], weight=True)
+                if group_size != -1:
+                    if (i1 + i) % group_size == 0:
+                        self.quantizer.find_params(W[:, (i1 + i):(i1 + i + group_size)], weight=True)
 
-                q = quantize(
-                    w.unsqueeze(1), self.quantizer.scale, self.quantizer.zero, self.quantizer.maxq
-                ).flatten()
+                    if ((i1 + i) // group_size) - now_idx == -1:
+                        scale.append(self.quantizer.scale)
+                        zero.append(self.quantizer.zero)
+                        now_idx += 1
+
+                q = self.quantizer.quantize(w.unsqueeze(1)).flatten()
                 Q1[:, i] = q
                 Losses1[:, i] = (w - q) ** 2 / d ** 2
 
@@ -125,38 +136,45 @@ class GPTQ:
 
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
+            if os.environ.get("DEBUG"):
+                self.layer.weight.data[:, :i2] = Q[:, :i2]
+                self.layer.weight.data[:, i2:] = W[:, i2:]
+                logger.debug(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
+                logger.debug(torch.sum(Losses))
+
         torch.cuda.synchronize()
+        logger.info(f'duration: {(time.time() - tick)}')
+        logger.info(f'avg loss: {torch.sum(Losses).item() / self.nsamples}')
+
+        group_size = group_size if group_size != -1 else self.columns
+        g_idx = [i // group_size for i in range(self.columns)]
+        g_idx = torch.tensor(g_idx, dtype=torch.int32, device=Q.device)
         if actorder:
             invperm = torch.argsort(perm)
             Q = Q[:, invperm]
+            g_idx = g_idx[invperm]
+
         if isinstance(self.layer, transformers.Conv1D):
             Q = Q.t()
-        new_weight = Q.reshape(self.layer.weight.shape).to(self.layer.weight.dtype)
-        losses = {}
-        mask = None
-        if sparsity is None:
-            sparsed_new_weight = new_weight
-            losses[0] = torch.sum((self.inp1 @ (sparsed_new_weight.T) - self.out1) ** 2)
-        else:
-            for s_sity in sparsity:
-                sparsed_new_weight, mask = hard_threshold(new_weight, fraction_of_zero=s_sity)
-                print("new weight")
-                print(self.inp1 @ (sparsed_new_weight.T))
-                print("original weight")
-                print(self.out1)
-                if write:
-                    logger.debug(f"HT with: sparsity={s_sity}")
-                losses[s_sity] = torch.sum((self.inp1 @ (sparsed_new_weight.T) - self.out1) ** 2)
-                print(losses)
-        if write:
-            self.layer.weight.data = sparsed_new_weight
-        return losses, mask
+        self.layer.weight.data = Q.reshape(self.layer.weight.shape).type_as(self.layer.weight.data)
+        if os.environ.get("DEBUG"):
+            logger.debug(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
+
+        if scale == []:
+            scale.append(self.quantizer.scale)
+            zero.append(self.quantizer.zero)
+        scale = torch.cat(scale, dim=1)
+        zero = torch.cat(zero, dim=1)
+        return scale, zero, g_idx
 
     def free(self):
-        if DEBUG:
+        if os.environ.get("DEBUG"):
             self.inp1 = None
             self.out1 = None
         self.H = None
         self.Losses = None
         self.Trace = None
         torch.cuda.empty_cache()
+
+
+__all__ = ["GPTQ"]
