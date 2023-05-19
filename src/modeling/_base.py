@@ -16,7 +16,7 @@ from transformers import AutoConfig, AutoModelForCausalLM, PreTrainedModel
 from transformers.utils.hub import PushToHubMixin
 
 from ._const import *
-from ._utils import *
+from ._utils import pack_model, get_module_by_name, find_layers, move_to_device, get_device, make_quant, unpack_model
 from ..nn_modules._fused_base import FusedBaseAttentionModule, FusedBaseMLPModule
 from ..core.gptq import GPTQ
 from ..utils.data_utils import collate_data
@@ -101,6 +101,7 @@ class BaseQuantizeConfig(PushToHubMixin):
         return {
             "bits": self.bits,
             "group_size": self.group_size,
+            "sparsity": self.sparsity,
             "damp_percent": self.damp_percent,
             "desc_act": self.desc_act,
             "sym": self.sym,
@@ -387,23 +388,16 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
             del layer_inputs
             layer_inputs, layer_outputs = layer_outputs, []
             torch.cuda.empty_cache()
-
-        pack_model(
-            model=self.model,
-            quantizers=quantizers,
-            bits=self.quantize_config.bits,
-            group_size=self.quantize_config.group_size,
-            use_triton=use_triton,
-            use_cuda_fp16=use_cuda_fp16,
-            desc_act=self.quantize_config.desc_act,
-            warmup_triton=autotune_warmup_after_quantized,
-            force_layer_back_to_cpu=force_layer_back_to_cpu
-        )
+        self.quantizers = quantizers
+        self.use_triton = use_triton
+        self.use_cuda_fp16 = use_cuda_fp16
+        self.autotune_warmup_after_quantized = autotune_warmup_after_quantized
+        self.force_layer_back_to_cpu = force_layer_back_to_cpu
+        
         if device_map:
             self.model = remove_hook_from_module(self.model, recurse=True)
             self.model = accelerate.dispatch_model(self.model, device_map, offload_buffers=True)
         self.model.config.use_cache = forward_pass_use_cache
-
         self._quantized = True
 
         torch.cuda.empty_cache()
@@ -426,8 +420,20 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
     def prepare_inputs_for_generation(self, *args, **kwargs):
         """shortcut for model.prepare_inputs_for_generation"""
         return self.model.prepare_inputs_for_generation(*args, **kwargs)
-
+    
+    @torch.inference_mode()
     def save_quantized(self, save_dir: str, use_safetensors: bool = False):
+        pack_model(
+            model=self.model,
+            quantizers=self.quantizers,
+            bits=self.quantize_config.bits,
+            group_size=self.quantize_config.group_size,
+            use_triton=self.use_triton,
+            use_cuda_fp16=self.use_cuda_fp16,
+            desc_act=self.quantize_config.desc_act,
+            warmup_triton=self.autotune_warmup_after_quantized,
+            force_layer_back_to_cpu=self.force_layer_back_to_cpu
+        )
         """save quantized model and configs to local disk"""
         os.makedirs(save_dir, exist_ok=True)
 
@@ -539,9 +545,10 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
         use_cuda_fp16: bool = True,
         quantize_config: Optional[BaseQuantizeConfig] = None,
         model_basename: Optional[str] = None,
-        use_safetensors: bool = False,
+        use_safetensors: bool = True,
         trust_remote_code: bool = False,
         warmup_triton: bool = True,
+        unpack: bool = False,
         **kwargs
     ):
         """load quantized model from local disk"""
@@ -617,7 +624,6 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
                 use_cuda_fp16=use_cuda_fp16,
                 desc_act=quantize_config.desc_act
             )
-
         # load checkpoint and dispatch
         if device is None and not device_map and not max_memory:
             device_map = "auto"
@@ -645,7 +651,8 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
             else:
                 model.load_state_dict(torch.load(model_save_name), strict=False)
             model = accelerate.dispatch_model(model, device_map)
-
+        if unpack:
+            unpack_model(model)
         # set seqlen
         model_config = model.config.to_dict()
         seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]
@@ -655,39 +662,11 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
                     model.seqlen = model_config[key]
                     break
         else:
-            logger.warning("can't get model's sequence length from model config, will set to 4096.")
-            model.seqlen = 4096
-
-        if inject_fused_attention:
-            if cls.fused_attn_module_type is None:
-                logger.warning(f"{cls.__name__} hasn't fused attention module yet, will skip inject fused attention.")
-            else:
-                cls.fused_attn_module_type.inject_to_model(
-                    model,
-                    use_triton=use_triton,
-                    group_size=quantize_config.group_size,
-                    use_cuda_fp16=use_cuda_fp16,
-                    desc_act=quantize_config.desc_act
-                )
-        if inject_fused_mlp:
-            if cls.fused_mlp_module_type is None:
-                logger.warning(f"{cls.__name__} hasn't fused mlp module yet, will skip inject fused mlp.")
-            else:
-                cls.fused_mlp_module_type.inject_to_model(
-                    model,
-                    use_triton=use_triton
-                )
-
+            logger.warning("can't get model's sequence length from model config, will set to 2048.")
+            model.seqlen = 2048
+        
         model.eval()
-        # warmup triton
-        if use_triton and warmup_triton:
-            from ..nn_modules.qlinear_triton import QuantLinear
-            QuantLinear.warmup(model, seqlen=model.seqlen)
-
-            if inject_fused_mlp and cls.fused_mlp_module_type is not None:
-                cls.fused_mlp_module_type.warmup(model, seqlen=model.seqlen)
-
-        return cls(model, True, quantize_config)
+        return model
 
 
 __all__ = ["BaseGPTQForCausalLM", "BaseQuantizeConfig"]

@@ -60,9 +60,10 @@ class AutoGPTQForCausalLM:
         use_cuda_fp16: bool = True,
         quantize_config: Optional[BaseQuantizeConfig] = None,
         model_basename: Optional[str] = None,
-        use_safetensors: bool = False,
+        use_safetensors: bool = True,
         trust_remote_code: bool = False,
         warmup_triton: bool = True,
+        unpack: bool = False,
         **kwargs
     ) -> BaseGPTQForCausalLM:
         model_type = check_and_get_model_type(save_dir)
@@ -83,6 +84,7 @@ class AutoGPTQForCausalLM:
             use_safetensors=use_safetensors,
             trust_remote_code=trust_remote_code,
             warmup_triton=warmup_triton,
+            unpack=unpack,
             **keywords
         )
 

@@ -8,7 +8,7 @@ import transformers
 
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
 from ..utils.import_utils import dynamically_import_QuantLinear
-
+from ..nn_modules.qlinear import QuantLinear
 
 logger = getLogger(__name__)
 
@@ -78,6 +78,14 @@ def make_quant(module, names, bits, group_size, name='', use_triton=False, use_c
     for name1, child in module.named_children():
         make_quant(child, names, bits, group_size, name + '.' + name1 if name != '' else name1, use_triton=use_triton, use_cuda_fp16=use_cuda_fp16,desc_act=desc_act)
 
+def unpack_model(model):
+    logger.info('Unpacking model...')
+    print(model)
+    layers = find_layers(model, layers=[QuantLinear])
+    for name in layers:
+        setattr(model, name, layers[name].unpack())
+    logger.info('Model unpacked.')
+    print(model)
 
 def pack_model(
     model,
