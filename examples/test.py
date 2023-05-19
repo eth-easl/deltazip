@@ -28,8 +28,9 @@ def main():
     model.save_quantized(quantized_model_dir, use_safetensors=True)
 
     unpacked_model = AutoGPTQForCausalLM.from_quantized(quantized_model_dir, device="cuda:0", unpack=True)
-    print(unpacked_model)
-    print(tokenizer.decode(unpacked_model.generate(**tokenizer("auto_gptq is", return_tensors="pt").to("cuda:0"))[0]))
+
+
+    print(tokenizer.decode(model.generate(**tokenizer("auto_gptq is", return_tensors="pt").to("cuda:0"))[0]))
 
 if __name__ == "__main__":
     import logging
