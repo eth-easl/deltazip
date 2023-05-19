@@ -1,4 +1,5 @@
 import os
+import torch
 from copy import deepcopy
 from transformers import AutoTokenizer, TextGenerationPipeline
 from src import AutoGPTQForCausalLM, BaseQuantizeConfig
@@ -18,7 +19,6 @@ def main():
         bits=2,
         group_size=1024,
     )
-
     model = AutoGPTQForCausalLM.from_pretrained(pretrained_model_dir, quantize_config)
 
     model.quantize(examples)
@@ -28,23 +28,19 @@ def main():
 
     unpacked_model = AutoGPTQForCausalLM.from_quantized(quantized_model_dir, unpack=True, device="cuda:0")
 
-    # post_quantized_model.to("cpu")
     # compare the post-quantized model and the unpacked model
-    unpacked_model.eval()
-    print(unpacked_model)
-    input_ids = tokenizer("auto_gptq is", return_tensors="pt").to("cuda:0")
-    
-    unpacked_output = unpacked_model.generate(**input_ids)
-
-    output = tokenizer.decode(unpacked_output[0])
-    
-    post_quantized_model.eval()
     post_quantized_model.to("cuda:0")
-    post_quantized_output = post_quantized_model.generate(**input_ids)
-    post_quantized_output = tokenizer.decode(post_quantized_output[0])
-    assert post_quantized_output == output
-    print(output)
-    print(post_quantized_output)
+    print(post_quantized_model)
+    print(unpacked_model)
+    for name1, param1 in post_quantized_model.named_parameters():
+        param2 = unpacked_model.state_dict()[name1]
+        print(name1, param1.shape, param2.shape)
+        if not torch.equal(param1, param2):
+            print("param1")
+            print(param1)
+            print("param2")
+            print(param2)
+            break
 if __name__ == "__main__":
     import logging
 

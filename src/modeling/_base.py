@@ -423,6 +423,8 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
     
     @torch.inference_mode()
     def save_quantized(self, save_dir: str, use_safetensors: bool = False):
+        if not self.quantized:
+            raise EnvironmentError("can only save quantized model, please execute .quantize first.")
         pack_model(
             model=self.model,
             quantizers=self.quantizers,
@@ -436,9 +438,6 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
         )
         """save quantized model and configs to local disk"""
         os.makedirs(save_dir, exist_ok=True)
-
-        if not self.quantized:
-            raise EnvironmentError("can only save quantized model, please execute .quantize first.")
 
         self.model.to(CPU)
 
@@ -485,7 +484,7 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
             raise TypeError(f"{config.model_type} isn't supported yet.")
 
         # enforce some values despite user specified
-        model_init_kwargs["torch_dtype"] = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+        model_init_kwargs["torch_dtype"] = torch.float16
         model_init_kwargs["trust_remote_code"] = True
         if max_memory:
             if "disk" in max_memory:
@@ -666,7 +665,7 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
             model.seqlen = 2048
         
         model.eval()
-        return model
+        return cls(model, True, quantize_config)
 
 
 __all__ = ["BaseGPTQForCausalLM", "BaseQuantizeConfig"]

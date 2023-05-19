@@ -9,7 +9,7 @@ import transformers
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
 from ..utils.import_utils import dynamically_import_QuantLinear
 from ..nn_modules.qlinear import QuantLinear
-
+from ..utils.attr_utils import rsetattr
 logger = getLogger(__name__)
 
 
@@ -83,7 +83,7 @@ def unpack_model(model):
     print(model)
     layers = find_layers(model, layers=[QuantLinear])
     for name in layers:
-        setattr(model, name, layers[name].unpack())
+        rsetattr(model, name, layers[name].unpack())
     logger.info('Model unpacked.')
     print(model)
 
