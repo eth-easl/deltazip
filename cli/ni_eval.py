@@ -130,7 +130,7 @@ if __name__ == "__main__":
             all_predictions[prediction["id"]] = prediction["prediction"]
 
     all_results = {}
-    for track in ["default", "xlingual"]:
+    for track in ["default"]:
         print("Evaluating track:", track)
         instance_ids = [id for id, instance in eval_instances.items() if instance["track"] == track]
         references = [eval_instances[id]["references"] for id in instance_ids]
