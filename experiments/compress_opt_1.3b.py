@@ -14,7 +14,7 @@ tasks = [
 model_size = 'opt-1.3b'
 
 wbits = [2,3,4]
-sparsities = [0.9, 0.95, 0.99]
+sparsities = [0, 0.9, 0.95, 0.99]
 jobs = []
 for task in tasks:
     for wbit in wbits:

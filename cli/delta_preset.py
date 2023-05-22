@@ -17,6 +17,7 @@ def main(args):
     quantize_config = BaseQuantizeConfig(
         bits=args.wbit,
         group_size=args.group_size,
+        sparsity=args.sparsity,
     )
 
     base_model  = AutoGPTQForCausalLM.from_pretrained(args.base_model, quantize_config)
