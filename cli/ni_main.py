@@ -41,10 +41,11 @@ def main(args):
             for i in range(len(references)):
                 output.append({
                     "id": references[i]["id"],
-                    "predictions": [[out_strs[i][0]['generated_text']]]
+                    "prediction": [out_strs[i][0]['generated_text']]
                 })
         with open(f'{args.delta_path}/test_outputs/{test_set}', 'w') as fp:
-            json.dump(output, fp, indent=2, ensure_ascii=False)
+            for line in output:
+                fp.write(json.dumps(line) + '\n')
 
 if __name__=="__main__":
     import logging
