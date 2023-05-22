@@ -37,7 +37,7 @@ def main(args):
                     "id": reference["id"],
                     "predictions": [out_str]
                 })
-
+        os.makedirs(f'{args.delta_path}/test_outputs', exist_ok=True)
         with open(f'{args.delta_path}/test_outputs/{test_set}', 'w') as fp:
             json.dump(output, fp, indent=2, ensure_ascii=False)
 
