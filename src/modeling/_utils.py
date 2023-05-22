@@ -80,12 +80,10 @@ def make_quant(module, names, bits, group_size, name='', use_triton=False, use_c
 
 def unpack_model(model):
     logger.info('Unpacking model...')
-    print(model)
     layers = find_layers(model, layers=[QuantLinear])
     for name in layers:
         rsetattr(model, name, layers[name].unpack())
     logger.info('Model unpacked.')
-    print(model)
 
 def pack_model(
     model,

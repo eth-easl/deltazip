@@ -1,3 +1,4 @@
 transformers>=4.28.1
 accelerate
 xformers
+rouge-score

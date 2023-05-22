@@ -7,7 +7,6 @@ from transformers import AutoTokenizer
 from src import BaseQuantizeConfig, AutoGPTQForCausalLM
 
 def main(args):
-    print(args)
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)['text'] for line in fp.readlines()]
