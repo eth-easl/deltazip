@@ -13,5 +13,4 @@ class GPTNeoXGPTQForCausalLM(BaseGPTQForCausalLM):
     ]
     lm_head_name = "embed_out"
 
-
 __all__ = ["GPTNeoXGPTQForCausalLM"]

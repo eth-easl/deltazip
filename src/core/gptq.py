@@ -8,6 +8,7 @@ import torch.nn as nn
 import transformers
 
 from .quant import Quantizer
+from .sparsity_utils import hard_threshold
 
 logger = getLogger(__name__)
 
@@ -166,6 +167,9 @@ class GPTQ:
         scale = torch.cat(scale, dim=1)
         zero = torch.cat(zero, dim=1)
         return scale, zero, g_idx
+
+    def sparsify(self, frac):
+        self.layer.weight.data = hard_threshold(self.layer.weight.data, fraction_of_zero=frac)
 
     def free(self):
         if os.environ.get("DEBUG"):

@@ -351,6 +351,9 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
                         group_size=self.quantize_config.group_size,
                         actorder=self.quantize_config.desc_act
                     )
+                    # after quantizing, apply sparsity
+                    logger.info(f"Sparsifying {name} in layer {i + 1}/{len(layers)}...")
+                    gptq[name].sparsify(self.quantize_config.sparsity)
                     quantizers[f'{self.layers_block_name}.{i}.{name}'] = (
                         gptq[name].quantizer.to(CPU if force_layer_back_to_cpu else cur_layer_device),
                         move_to_device(scale, CPU if force_layer_back_to_cpu else cur_layer_device),
