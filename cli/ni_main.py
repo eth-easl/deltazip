@@ -13,6 +13,7 @@ def main(args):
         bits=2,
         group_size=1024,
     )
+    os.makedirs(f'{args.delta_path}/test_outputs', exist_ok=True)
     unpacked_model = AutoGPTQForCausalLM.from_quantized(args.delta_path, unpack=True, device="cuda:0")
     base_model = AutoGPTQForCausalLM.from_pretrained(args.base_model, quantize_config)
     base_model.to("cuda:0")
@@ -25,19 +26,23 @@ def main(args):
     text_generation_pipeline = transformers.TextGenerationPipeline(model=unpacked_model, tokenizer=tokenizer)
     
     test_sets = os.listdir('.cache/ni_calib/test_references')
-    for test_set in test_sets:
+    for test_set in tqdm(test_sets):
         output = []
         
         with open(f'.cache/ni_calib/test_references/{test_set}', 'r') as fp:
             references = [json.loads(line) for line in fp.readlines()]
-            for reference in tqdm(references):
-                input_str = f"{reference['definition']}\n{reference['input']}"
-                out_str = text_generation_pipeline(input_str, max_new_tokens=128)[0]["generated_text"]
+            references = [{
+                'id': reference['id'],
+                'input_str': f"{reference['definition']}\n{reference['input']}",
+            } for reference in references]
+            out_strs = text_generation_pipeline([reference['input_str'] for reference in references], 
+            max_new_tokens=128, return_full_text=False)
+
+            for i in range(len(references)):
                 output.append({
-                    "id": reference["id"],
-                    "predictions": [out_str]
+                    "id": references[i]["id"],
+                    "predictions": [out_strs[i]['generated_text']]
                 })
-        os.makedirs(f'{args.delta_path}/test_outputs', exist_ok=True)
         with open(f'{args.delta_path}/test_outputs/{test_set}', 'w') as fp:
             json.dump(output, fp, indent=2, ensure_ascii=False)
 
