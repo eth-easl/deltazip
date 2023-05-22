@@ -117,12 +117,6 @@ def pack_model(
         qlayers[name].to(layer_device)
     logger.info('Model packed.')
 
-    if use_triton and warmup_triton:
-        logger.warning(
-            "using autotune_warmup will move model to GPU, make sure you have enough VRAM to load the whole model."
-        )
-        QuantLinear.warmup(model.to(CUDA_0), seqlen=model.seqlen)
-
 
 def check_and_get_model_type(model_dir):
     config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)

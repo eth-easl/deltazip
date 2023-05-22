@@ -13,12 +13,21 @@ def main(args):
     output = []
     with open(f'.cache/ni_calib/test_references/{args.task}', 'r') as fp:
         references = [json.loads(line) for line in fp.readlines()]
-        references = [{
-            'id': reference['id'],
-            'input_str': f"{reference['definition']}\n{reference['input']}",
-        } for reference in references]
-        out_strs = text_generation_pipeline([reference['input_str'] for reference in references], 
-        max_new_tokens=128, return_full_text=False)
+        out_references = []
+        for reference in references:
+            few_shot_examples = ""
+            for shot in reference['positive']:
+                 few_shot_examples += f"\n{shot['input']}\n{shot['output']}"
+            out_references.append({
+                'id': reference['id'],
+                'input_str': f"{reference['definition']}\n{few_shot_examples}\n{reference['input']}\n",
+            })
+        out_strs = text_generation_pipeline(
+            [reference['input_str'] for reference in references], 
+            max_new_tokens=128,
+            return_full_text=False,
+            do_sample=False,
+        )
         for i in range(len(references)):
             output.append({
                 "id": references[i]["id"],
