@@ -28,7 +28,7 @@ TBA
 
 ```bash
 export PYTHONPATH=.
-python cli/ni_main.py \
+python cli/ni_delta_main.py \
     --base-model facebook/opt-1.3b \
     --delta-path .cache/compressed_models/answer_verification-2bit-1024g-0.95s-delta \
     --out-dir .cache/results/
@@ -37,6 +37,15 @@ python cli/ni_main.py \
 This will evaluate the base model + delta on all natural instruction selections.
 
 (we probably need a conditional perplexity as metric - for now we leveraged the eval code from natural instructions repo)
+
+To evaluate with non-compressed models, run
+
+```bash
+export PYTHONPATH=.
+python cli/ni_main.py \
+    --base-model facebook/opt-1.3b \
+    --task answer_verification
+```
 
 ### On LM-Eval-Harness
 
