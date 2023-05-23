@@ -1,14 +1,14 @@
 import os
 
 tasks = [
-    'answer_verification',
-    'coherence_classification',
+    #'answer_verification',
+    #'coherence_classification',
     'dialogue_state_tracking',
     'fact_verification',
-    'gender_classification',
-    'irony_detection',
-    'toxic_language_detection',
-    'word_semantics'
+    #'gender_classification',
+    #'irony_detection',
+    #'toxic_language_detection',
+    #'word_semantics'
 ]
 base_model = 'facebook/opt-1.3b'
 os.system(f"ts -S 4")
