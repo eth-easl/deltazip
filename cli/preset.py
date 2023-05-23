@@ -1,7 +1,5 @@
 import os
 import json
-import copy
-import torch
 import argparse
 from transformers import AutoTokenizer
 from src import BaseQuantizeConfig, AutoGPTQForCausalLM
