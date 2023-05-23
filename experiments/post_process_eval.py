@@ -10,7 +10,7 @@ eval_tasks = os.listdir(".cache/eval/")
 
 for task in eval_tasks:
     eval_results = os.listdir(f".cache/eval/{task}")
-    for eval_result in eval_results:
+    for eval_result in [x for x in eval_results if x.find("_post_processed") == -1]:
         with open(f".cache/eval/{task}/{eval_result}", "r") as f:
             data = [json.loads(line) for line in f.readlines()]
 
