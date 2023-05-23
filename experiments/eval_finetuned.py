@@ -11,6 +11,7 @@ tasks = [
     'word_semantics'
 ]
 base_model = 'facebook/opt-1.3b'
+os.system(f"ts -S 4")
 for task in tasks:
     # first evaluate base_model
     job = f"python cli/ni_main.py --base-model {base_model} --task {task}"

@@ -11,7 +11,7 @@ def main(args):
 
     text_generation_pipeline = transformers.TextGenerationPipeline(model=base_model, tokenizer=tokenizer, batch_size=8, device='cuda:0')
     output = []
-    with open(f'.cache/ni_calib/test_references/{args.task}', 'r') as fp:
+    with open(f'.cache/ni_calib/test_references/{args.task}.jsonl', 'r') as fp:
         references = [json.loads(line) for line in fp.readlines()]
         out_references = []
         for reference in references:
@@ -23,7 +23,7 @@ def main(args):
                 'input_str': f"{reference['definition']}\n{few_shot_examples}\n{reference['input']}\n",
             })
         out_strs = text_generation_pipeline(
-            [reference['input_str'] for reference in references], 
+            [reference['input_str'] for reference in out_references], 
             max_new_tokens=128,
             return_full_text=False,
             do_sample=False,
