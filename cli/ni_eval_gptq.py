@@ -7,33 +7,40 @@ from src import AutoGPTQForCausalLM, BaseQuantizeConfig
 
 def main(args):
     print(args)
-    os.makedirs(f'{args.target_model}/test_outputs', exist_ok=True)
+    # it doesn't really matter what quantize_config we use here
+    # because we are not going to quantize the model
+
+
     unpacked_model = AutoGPTQForCausalLM.from_quantized(args.target_model, unpack=True, device="cuda:0")
     # now start to run inference
     # Load test sets
     tokenizer = transformers.AutoTokenizer.from_pretrained(args.base_model, use_fast=True, padding_side='left')
-    
     text_generation_pipeline = transformers.TextGenerationPipeline(model=unpacked_model, tokenizer=tokenizer, batch_size=8)
-    
-    test_sets = os.listdir('.cache/ni_calib/test_references')
-    for test_set in tqdm(test_sets):
-        output = []
-
-        with open(f'.cache/ni_calib/test_references/{test_set}', 'r') as fp:
-            references = [json.loads(line) for line in fp.readlines()]
-            references = [{
+    output = []
+    with open(f'.cache/ni_calib/test_references/{args.task}.jsonl', 'r') as fp:
+        references = [json.loads(line) for line in fp.readlines()]
+        out_references = []
+        for reference in references:
+            few_shot_examples = ""
+            for shot in reference['positive']:
+                 few_shot_examples += f"\n{shot['input']}\n{shot['output']}"
+            out_references.append({
                 'id': reference['id'],
-                'input_str': f"{reference['definition']}\n{reference['input']}",
-            } for reference in references]
-            out_strs = text_generation_pipeline([reference['input_str'] for reference in references], 
-            max_new_tokens=128, return_full_text=False)
-            print(out_strs)
-            for i in range(len(references)):
-                output.append({
-                    "id": references[i]["id"],
-                    "prediction": out_strs[i][0]['generated_text']
-                })
-        with open(f'{args.target_model}/test_outputs/{test_set}', 'w') as fp:
+                'input_str': f"{reference['definition']}\n{few_shot_examples}\n{reference['input']}\n",
+            })
+        out_strs = text_generation_pipeline(
+            [reference['input_str'] for reference in out_references], 
+            max_new_tokens=128,
+            return_full_text=False,
+            do_sample=False,
+        )
+        for i in range(len(references)):
+            output.append({
+                "id": references[i]["id"],
+                "prediction": out_strs[i][0]['generated_text']
+            })
+        os.makedirs(f'.cache/eval/{args.task}', exist_ok=True)
+        with open(f'.cache/eval/{args.task}/{args.base_model.replace("/",".")}-{args.target_model.replace("/", ".")}.jsonl', 'w') as fp:
             for line in output:
                 fp.write(json.dumps(line) + '\n')
 
@@ -41,8 +48,9 @@ if __name__=="__main__":
     import logging
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--target-model", type=str, default=".cache/compressed_models/answer_verification-2bit-1024g-0.95s-delta")
-    parser.add_argument('--out-dir', type=str, default='.cache/compressed_models/')
+    parser.add_argument("--base-model", type=str, default="facebook/opt-1.3b")
+    parser.add_argument("--target-model", type=str, default=".cache/compressed_models/answer_verification-2bit-1024g-0.95s")
+    parser.add_argument("--task", type=str, default="answer_verification")
     args = parser.parse_args()
 
     logging.basicConfig(
