@@ -1,5 +1,4 @@
 import os
-import py7zr
 from multiprocessing import Pool
 
 model_size = 'opt-1.3b'
