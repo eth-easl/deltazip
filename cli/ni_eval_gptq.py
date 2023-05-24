@@ -7,10 +7,6 @@ from src import AutoGPTQForCausalLM, BaseQuantizeConfig
 
 def main(args):
     print(args)
-    # it doesn't really matter what quantize_config we use here
-    # because we are not going to quantize the model
-
-
     unpacked_model = AutoGPTQForCausalLM.from_quantized(args.target_model, unpack=True, device="cuda:0")
     # now start to run inference
     # Load test sets
