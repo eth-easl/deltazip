@@ -11,12 +11,12 @@ eval_tasks = os.listdir(".cache/eval/")
 for task in eval_tasks:
     eval_results = os.listdir(f".cache/eval/{task}")
     for eval_result in [x for x in eval_results if x.find("_postprocessed") == -1]:
-        with open(f".cache/eval/{task}/{eval_result}", "r") as f:
-            data = [json.loads(line) for line in f.readlines()]
-
-        for datum in data:
-            datum['prediction'] = datum['prediction'].split("\n")[0]
-
-        with open(f".cache/eval/{task}/{eval_result.removesuffix('.jsonl')}_postprocessed.jsonl", "w") as f:
+        target_file = f".cache/eval/{task}/{eval_result.removesuffix('.jsonl')}_postprocessed.jsonl"
+        if not os.path.exists(target_file):
+            with open(f".cache/eval/{task}/{eval_result}", "r") as f:
+                data = [json.loads(line) for line in f.readlines()]
             for datum in data:
-                f.write(json.dumps(datum) + "\n")
+                datum['prediction'] = datum['prediction'].split("\n")[0]
+            with open(f".cache/eval/{task}/{eval_result.removesuffix('.jsonl')}_postprocessed.jsonl", "w") as f:
+                for datum in data:
+                    f.write(json.dumps(datum) + "\n")

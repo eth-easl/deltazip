@@ -6,14 +6,13 @@ import pandas as pd
 model_size = 'opt-1.3b'
 
 compressed_model_name_prefix = 'facebook.opt-1.3b-.cache.compressed_models.opt-1.3b.'
-
 uncompressed_model_name_prefix = '.cache.models.opt-1.3b.'
-
 base_model_name_prefix='facebook.opt-1.3b'
 
 tasks = os.listdir(f'.cache/eval_stats/')
 
 data = []
+
 """
 data is a list of dicts with the following keys:
 - task: the eval task
@@ -23,7 +22,6 @@ data is a list of dicts with the following keys:
 - sparsity: for fmzip, the sparsity used
 - filesize: the filesize of the model
 """
-
 
 for task in tasks:
     results = [x for x in os.listdir(f'.cache/eval_stats/{task}/') if x.find(model_size) != -1]
@@ -62,6 +60,7 @@ for task in tasks:
                 filesize = 2600
             else:
                 raise Exception(f'Unknown model name: {result}')
+            
         data.append({
             'task': task,
             'finetuned_on': finetuned_on,
