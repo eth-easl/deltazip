@@ -1,28 +1,30 @@
 import os
 
 tasks = [
-    'answer_verification',
-    'coherence_classification',
-    'dialogue_state_tracking',
-    'fact_verification',
-    'gender_classification',
-    'irony_detection',
-    'toxic_language_detection',
+    # 'answer_verification',
+    # 'coherence_classification',
+    # 'dialogue_state_tracking',
+    # 'fact_verification',
+    # 'gender_classification',
+    # 'irony_detection',
+    # 'toxic_language_detection',
     'word_semantics'
 ]
 
 model_size = 'opt-1.3b'
 
-wbits = [2,3,4]
-sparsities = [0, 0.9, 0.95, 0.99]
+wbits = [4, 8]
+sparsities = [0, 0.9]
+groupsizes = [16,32,64]
 jobs = []
 for task in tasks:
     for wbit in wbits:
         for sparsity in sparsities:
-            job = f"python cli/delta_preset.py --base-model facebook/{model_size} --target-model .cache/models/{model_size}/{task} --dataset .cache/ni_calib/train/{task}.jsonl --wbit {wbit} --sparsity {sparsity} --out-dir .cache/compressed_models/{model_size}"
-            jobs.append(job)
+            for groupsize in groupsizes:
+                job = f"python cli/delta_preset.py --base-model facebook/{model_size} --target-model .cache/models/{model_size}/{task} --dataset .cache/ni_calib/train/{task}.jsonl --wbit {wbit} --sparsity {sparsity} --group-size {groupsize} --out-dir .cache/compressed_models/{model_size}"
+                jobs.append(job)
 
-os.system(f"ts -S 8")
+os.system(f"ts -S 4")
 
 for job in jobs:
-    os.system(f"ts --gpus 1 {job}")   
+    os.system(f"ts --gpus 1 {job}")
