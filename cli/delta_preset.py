@@ -43,9 +43,9 @@ def main(args):
     target_model.quantize(examples)
 
     if args.n_samples > 0:
-        output_dir = os.path.join(args.out_dir, f"{args.target_model.split('/')[-1]}-{args.wbit}bit-{args.group_size}g-{args.sparsity}s-{args.n_samples}n")
+        output_dir = os.path.join(args.out_dir, f"{args.target_model.split('/')[-1]}-{args.wbit}bit-{args.group_size}g-{args.sparsity}s-delta-{args.n_samples}n")
     else:
-        output_dir = os.path.join(args.out_dir, f"{args.target_model.split('/')[-1]}-{args.wbit}bit-{args.group_size}g-{args.sparsity}s-fulltrainset")
+        output_dir = os.path.join(args.out_dir, f"{args.target_model.split('/')[-1]}-{args.wbit}bit-{args.group_size}g-{args.sparsity}s-delta-fulltrainset")
 
     target_model.save_quantized(output_dir, use_safetensors=True)
     logging.info(f"Quantized model saved to {output_dir}")
