@@ -37,11 +37,13 @@ for task in tasks:
                 if 'delta' in model_name:
                     method = 'fmzip'
                     wbit = model_name.split('-')[1].replace("bit", "")
+                    group_size = model_name.split('-')[2].replace("g", "")
                     sparsity = model_name.split('-')[3].replace("s", "")
                     filesize = file_stats.st_size/1024/1024
                 else:
                     method = 'gptq'
                     wbit = model_name.split('-')[1].replace("bit", "")
+                    group_size = model_name.split('-')[2].replace("g", "")
                     sparsity = 'None'
                     filesize = file_stats.st_size/1024/1024
             elif result.startswith(uncompressed_model_name_prefix):
@@ -51,6 +53,7 @@ for task in tasks:
                 wbit = 'None'
                 sparsity = 'None'
                 filesize = 2600
+                group_size = 'None'
             elif result.startswith(base_model_name_prefix):
                 method = 'base'
                 model_name = result.replace(base_model_name_prefix, '')
@@ -58,18 +61,24 @@ for task in tasks:
                 wbit = 'None'
                 sparsity = 'None'
                 filesize = 2600
+                group_size = 'None'
             else:
                 raise Exception(f'Unknown model name: {result}')
-            
-        data.append({
-            'task': task,
-            'finetuned_on': finetuned_on,
-            'method': method,
-            'wbit': wbit,
-            'sparsity': sparsity,
-            'em_acc': eval_res['exact_match_default_track'],
-            'filesize': f"{filesize:.2f}"
-        })
+        try:
+            data.append({
+                'task': task,
+                'finetuned_on': finetuned_on,
+                'method': method,
+                'wbit': wbit,
+                'sparsity': sparsity,
+                'group_size': group_size,
+                'em_acc': eval_res['exact_match_default_track'],
+                'em_acc_lb': eval_res['exact_match_lower_bound'],
+                'em_acc_ub': eval_res['exact_match_upper_bound'],
+                'filesize': f"{filesize:.2f}"
+            })
+        except KeyError:
+            print(f'KeyError for {result}')
 
 df = pd.DataFrame(data)
 df.to_csv('results/eval_results.csv', index=False)

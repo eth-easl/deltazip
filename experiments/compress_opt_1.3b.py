@@ -13,9 +13,9 @@ tasks = [
 
 model_size = 'opt-1.3b'
 
-wbits = [4, 8]
-sparsities = [0, 0.9]
-groupsizes = [16,32,64]
+wbits = [8]
+sparsities = [0]
+groupsizes = [8192]
 jobs = []
 for task in tasks:
     for wbit in wbits:

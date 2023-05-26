@@ -1,12 +1,15 @@
 import string
 import json
 import argparse
+import scipy.stats
+import numpy as np
 from rouge_score import rouge_scorer
 from transformers import AutoTokenizer
 
+confidence = 0.95
+
 class GPTTokenizer:
     gpt_tokenizer = AutoTokenizer.from_pretrained("gpt2", max_length=1e5)
-
     def tokenize(self, s):
         tokens = self.gpt_tokenizer.tokenize(s)
         # GPT2 uses Byte-level BPE, which will include space as part of the word. 
@@ -70,6 +73,7 @@ def compute_metrics(predictions, references, xlingual=False):
         )
     em = 100.0 * em / len(references)
     rougeL = 100.0 * rougeL / len(references)
+    # here calculate the 95% confidence interval
     metrics = {"exact_match": em, "rougeL": rougeL}
     metrics = {k: round(v, 4) for k, v in metrics.items()}
     return metrics
