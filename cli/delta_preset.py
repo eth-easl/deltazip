@@ -10,7 +10,10 @@ def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)['text'] for line in fp.readlines()]
-    examples = examples[:args.n_samples]
+    if args.n_samples <= 0:
+        examples = examples
+    else:
+        examples = examples[:args.n_samples]
     examples = [
         tokenizer(x) for x in examples
     ]
@@ -39,7 +42,10 @@ def main(args):
     # now quantize the delta model
     target_model.quantize(examples)
 
-    output_dir = os.path.join(args.out_dir, f"{args.target_model.split('/')[-1]}-{args.wbit}bit-{args.group_size}g-{args.sparsity}s-delta")
+    if args.n_samples > 0:
+        output_dir = os.path.join(args.out_dir, f"{args.target_model.split('/')[-1]}-{args.wbit}bit-{args.group_size}g-{args.sparsity}s-{args.n_samples}n")
+    else:
+        output_dir = os.path.join(args.out_dir, f"{args.target_model.split('/')[-1]}-{args.wbit}bit-{args.group_size}g-{args.sparsity}s-fulltrainset")
 
     target_model.save_quantized(output_dir, use_safetensors=True)
     logging.info(f"Quantized model saved to {output_dir}")

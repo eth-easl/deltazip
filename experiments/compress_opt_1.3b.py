@@ -15,13 +15,13 @@ model_size = 'opt-1.3b'
 
 wbits = [8]
 sparsities = [0]
-groupsizes = [8192]
+groupsizes = [1024]
 jobs = []
 for task in tasks:
     for wbit in wbits:
         for sparsity in sparsities:
             for groupsize in groupsizes:
-                job = f"python cli/delta_preset.py --base-model facebook/{model_size} --target-model .cache/models/{model_size}/{task} --dataset .cache/ni_calib/train/{task}.jsonl --wbit {wbit} --sparsity {sparsity} --group-size {groupsize} --out-dir .cache/compressed_models/{model_size}"
+                job = f"python cli/delta_preset.py --base-model facebook/{model_size} --target-model .cache/models/{model_size}/{task} --dataset .cache/ni_calib/train/{task}.jsonl --wbit {wbit} --sparsity {sparsity} --group-size {groupsize} --out-dir .cache/compressed_models/{model_size} --n-samples 0"
                 jobs.append(job)
 
 os.system(f"ts -S 4")
