@@ -9,10 +9,7 @@ def main(args):
     print(args)
     # it doesn't really matter what quantize_config we use here
     # because we are not going to quantize the model
-    quantize_config = BaseQuantizeConfig(
-        bits=2,
-        group_size=1024,
-    )
+    quantize_config = None
 
     unpacked_model = AutoGPTQForCausalLM.from_quantized(args.delta_path, unpack=True, device="cuda:0")
     base_model = AutoGPTQForCausalLM.from_pretrained(args.base_model, quantize_config)

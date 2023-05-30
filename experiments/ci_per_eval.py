@@ -6,6 +6,7 @@ import scipy.stats
 tasks = os.listdir(".cache/eval_stats")
 confidence = 0.95
 z_value = scipy.stats.norm.ppf((1 + confidence) / 2.0)
+
 for task in tasks:
     evals = os.listdir(os.path.join(".cache/eval_stats", task))
     for e in evals:
