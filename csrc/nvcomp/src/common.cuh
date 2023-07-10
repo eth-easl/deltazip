@@ -1,10 +1,11 @@
+#pragma once
 #include <thrust/device_vector.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "BatchData.h"
+#include "batch_data.cuh"
 #include "common.h"
 #include "nvcomp/gdeflate.h"
 
@@ -17,6 +18,7 @@ static bool handleCommandLineArgument(const std::string& arg,
 struct args_type {
   int gpu;
   std::vector<std::string> filenames;
+  std::string output_filename;
   size_t warmup_count;
   size_t iteration_count;
   size_t duplicate_count;
@@ -32,18 +34,6 @@ struct parameter_type {
   std::string description;
   std::string default_value;
 };
-
-bool parse_bool(const std::string& val) {
-  std::istringstream ss(val);
-  std::boolalpha(ss);
-  bool x;
-  if (!(ss >> x)) {
-    std::cerr << "ERROR: Invalid boolean: '" << val
-              << "', only 'true' and 'false' are accepted." << std::endl;
-    std::exit(1);
-  }
-  return x;
-}
 
 void usage(const std::string& name,
            const std::vector<parameter_type>& parameters) {
@@ -87,6 +77,7 @@ args_type parse_args(int argc, char** argv) {
        "The list of inputs files. All files must start "
        "with a character other than '-'",
        "_required_"},
+      {"o", "output_file", "The output file", "_required_"},
       {"w", "warmup_count", "The number of warmup iterations to perform.",
        std::to_string(args.warmup_count)},
       {"i", "iteration_count", "The number of runs to average.",
@@ -151,23 +142,13 @@ args_type parse_args(int argc, char** argv) {
         } else if (param.long_flag == "duplicate_data") {
           args.duplicate_count = size_t(std::stoull(*(argv++)));
           break;
-        } else if (param.long_flag == "csv_output") {
-          std::string on(*(argv++));
-          args.csv_output = parse_bool(on);
-          break;
-        } else if (param.long_flag == "tab_separator") {
-          std::string on(*(argv++));
-          args.use_tabs = parse_bool(on);
-          break;
-        } else if (param.long_flag == "file_with_page_sizes") {
-          std::string on(*(argv++));
-          args.has_page_sizes = parse_bool(on);
-          break;
+        } else if (param.long_flag == "output_file") {
+          args.output_filename = *(argv++);
         } else if (param.long_flag == "chunk_size") {
           args.chunk_size = size_t(std::stoull(*(argv++)));
           break;
         } else {
-          std::cerr << "INTERNAL ERROR: Unhandled paramter '" << arg << "'."
+          std::cerr << "INTERNAL ERROR: Unhandled parameter '" << arg << "'."
                     << std::endl;
           usage(name, params);
           std::exit(1);
@@ -196,16 +177,18 @@ static nvcompBatchedGdeflateOpts_t nvcompBatchedGdeflateOpts = {2};
 template <typename CompGetTempT, typename CompGetSizeT, typename CompAsyncT,
           typename DecompGetTempT, typename DecompAsyncT,
           typename IsInputValidT, typename FormatOptsT>
-void run_compress(CompGetTempT BatchedCompressGetTempSize,
-                  CompGetSizeT BatchedCompressGetMaxOutputChunkSize,
-                  CompAsyncT BatchedCompressAsync,
-                  DecompGetTempT BatchedDecompressGetTempSize,
-                  DecompAsyncT BatchedDecompressAsync,
-                  IsInputValidT IsInputValid, const FormatOptsT format_opts,
-                  const std::vector<std::vector<char>>& data, const bool warmup,
-                  const size_t count, const bool csv_output,
-                  const size_t duplicate_count, const size_t num_files,
-                  const std::string output_filename = "") {
+void run_compress_template(CompGetTempT BatchedCompressGetTempSize,
+                           CompGetSizeT BatchedCompressGetMaxOutputChunkSize,
+                           CompAsyncT BatchedCompressAsync,
+                           DecompGetTempT BatchedDecompressGetTempSize,
+                           DecompAsyncT BatchedDecompressAsync,
+                           IsInputValidT IsInputValid,
+                           const FormatOptsT format_opts,
+                           const std::vector<std::vector<char>>& data,
+                           const bool warmup, const size_t count,
+                           const bool csv_output, const size_t duplicate_count,
+                           const size_t num_files,
+                           const std::string output_filename = "") {
   const std::string separator = ",";
 
   size_t total_bytes = 0;
@@ -231,7 +214,6 @@ void run_compress(CompGetTempT BatchedCompressGetTempSize,
 
   size_t compressed_size = 0;
   double comp_time = 0.0;
-  double decomp_time = 0.0;
   for (size_t iter = 0; iter < count; ++iter) {
     // compression
     nvcompStatus_t status;
