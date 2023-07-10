@@ -1,0 +1,2 @@
+python benchmarks/nvcomp_delta.py --base-model=facebook/opt-1.3b --model=facebook/opt-iml-max-1.3b --output .cache/nvcomp_delta.safetensors
+# csrc/nvcomp/bin/benchmark -a 2 -f .cache/nvcomp_delta.safetensors
