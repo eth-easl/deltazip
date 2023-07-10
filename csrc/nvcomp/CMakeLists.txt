@@ -6,6 +6,8 @@ set(CMAKE_CUDA_STANDARD 11)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+option(BUILD_BENCHMARKS "Build benchmarks." OFF)
+
 include(GNUInstallDirs)
 
 list( APPEND CMAKE_MODULE_PATH
@@ -20,6 +22,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" MATCHES "Intel")
 
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 endif()
 
@@ -73,13 +76,6 @@ if(NOT DEFINED CUB_DIR AND DEFINED ENV{CUB_DIR})
   set(CUB_DIR ENV{CUB_DIR})
 endif()
 
-message(STATUS "Finding CUB")
-if(CMAKE_CUDA_COMPILER_VERSION VERSION_LESS "11" AND NOT DEFINED CUB_DIR)
-  message(FATAL_ERROR "When using a CUDA prior to CUDA 11, you must specify "
-      "the path of cub via the 'CUB_DIR' variable (e.g., "
-      "'cmake -DCUB_DIR=...' or 'export CUB_DIR=...'). You can download cub "
-      "from 'https://github.com/thrust/cub'.")
-endif()
 find_path(CUB_HEADER NAMES "cub/cub.cuh" PATHS "${CUB_DIR}" "${CUDAToolkit_INCLUDE_DIRS}")
 if(NOT CUB_HEADER)
   message(FATAL_ERROR "Unable to locate 'cub/cub.cuh'. Please specify a path "
