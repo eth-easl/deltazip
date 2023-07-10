@@ -15,12 +15,8 @@ python cli/delta_preset.py \
     --sparsity 0.95 \
     --n-samples 128
 ```
-Note: Sparsity is not in yet.
 
-
-Auto-tuned.
-
-TBA
+Auto-tuned to be added.
 
 ## Evaluation
 
@@ -54,3 +50,7 @@ TBA
 ### On Perplexity
 
 TBA
+
+### TODOs
+
+- [ ] Evaluate on [SparseGPT](https://github.com/IST-DASLab/sparsegpt/)
