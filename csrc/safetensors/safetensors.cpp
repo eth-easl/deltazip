@@ -4,7 +4,7 @@
 // ! Requires std=c++20 
 #include <span>
 #include "safetensors.hpp"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 
 namespace huggingface::safetensors {
 

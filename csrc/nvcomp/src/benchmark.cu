@@ -25,7 +25,8 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-include "benchmark_template_chunked.cuh"
+
+#include "benchmark_template_chunked.cuh"
 #include "nvcomp/gdeflate.h"
 
 static nvcompBatchedGdeflateOpts_t nvcompBatchedGdeflateOpts = {0};
