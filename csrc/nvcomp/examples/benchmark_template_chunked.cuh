@@ -368,7 +368,7 @@ run_benchmark_template(
       chunk_size = part.size();
     }
   }
-
+  std::cout<<"chunk size: "<< chunk_size << std::endl;
   // build up metadata
   BatchData input_data(data);
 
@@ -376,7 +376,8 @@ run_benchmark_template(
   CUDA_CHECK(cudaStreamCreate(&stream));
 
   const size_t batch_size = input_data.size();
-
+  std::cout<<"batch size: "<< batch_size << std::endl;
+  
   std::vector<size_t> h_input_sizes(batch_size);
   CUDA_CHECK(cudaMemcpy(h_input_sizes.data(), input_data.sizes(),
       sizeof(size_t)*batch_size, cudaMemcpyDeviceToHost));

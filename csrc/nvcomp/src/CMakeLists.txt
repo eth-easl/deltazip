@@ -24,3 +24,7 @@ endif()
 add_executable(compress compress.cu)
   target_link_libraries(compress PRIVATE nvcomp::nvcomp CUDA::cudart)
   target_link_libraries(compress PRIVATE ZLIB::ZLIB)
+
+add_executable(decompress decompress.cu)
+  target_link_libraries(decompress PRIVATE nvcomp::nvcomp CUDA::cudart)
+  target_link_libraries(decompress PRIVATE ZLIB::ZLIB)
