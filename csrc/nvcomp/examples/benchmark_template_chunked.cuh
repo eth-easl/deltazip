@@ -377,8 +377,10 @@ run_benchmark_template(
 
   const size_t batch_size = input_data.size();
   std::cout<<"batch size: "<< batch_size << std::endl;
-  
+
   std::vector<size_t> h_input_sizes(batch_size);
+  std::cout<<"input_data_size "<<input_data_size<<std::endl;
+  std::cout<<"batch_size "<<batch_size<<std::endl;
   CUDA_CHECK(cudaMemcpy(h_input_sizes.data(), input_data.sizes(),
       sizeof(size_t)*batch_size, cudaMemcpyDeviceToHost));
 

@@ -36,11 +36,11 @@ int main(int argc, char** argv) {
   args_type args = parse_args(argc, argv);
   CUDA_CHECK(cudaSetDevice(args.gpu));
   std::string filename = args.filenames.front();
-  
+
   decompress_file(nvcompBatchedGdeflateCompressGetTempSize,
                         nvcompBatchedGdeflateCompressGetMaxOutputChunkSize,
                         nvcompBatchedGdeflateCompressAsync,
                         nvcompBatchedGdeflateDecompressGetTempSize,
                         nvcompBatchedGdeflateDecompressAsync,
-                        isGdeflateInputValid, nvcompBatchedGdeflateOpts, filename, args.chunk_size, args.batch_size);
+                        isGdeflateInputValid, nvcompBatchedGdeflateOpts, filename, args.chunk_size, args.batch_size, args.input_size);
 }
