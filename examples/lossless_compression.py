@@ -12,9 +12,11 @@ service = CompressedInferenceService(
     dtype='fp16'
 )
 
-compression_rate, time_spent = service.compress_delta_model(
+compression_rate, time_spent = service.compress_model(
     target_model=target_model,
-    dest=dest
+    dest=dest,
+    low_gpu_mem=True,
+    delta=True
 )
 
 logger.info("Compression rate: {}x".format(compression_rate))
