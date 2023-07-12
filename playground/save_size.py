@@ -1,7 +1,6 @@
-import numpy as np
-import cupy as cp
+from safetensors.torch import load_file
 
-data = np.random.rand(10000, 100)
-data_shape = data.shape
-data = cp.array(data_shape)
-print(data)
+file_path = ".cache/model_delta.safetensors"
+loaded = load_file(file_path)
+
+print(loaded.keys())
