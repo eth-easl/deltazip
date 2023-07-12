@@ -11,8 +11,18 @@ from src.lossless.nvcomp import GdeflateManager as manager
 from timeit import default_timer as timer
 from argparse import ArgumentParser
 from loguru import logger
-
+from accelerate import init_empty_weights
+from transformers import AutoConfig
 def benchmark(args):
+    timer_start = timer()
+    origin_model = AutoModelForCausalLM.from_pretrained(args.model_type)
+    origin_model.cuda()
+    timer_end = timer()
+    logger.info("Default loading time: {}s".format(timer_end - timer_start))
+    del origin_model
+
+    torch.cuda.empty_cache()
+    time.sleep(20)
     comp_manager = manager()
     comp_manager.input_type = cp.float32
     tensors = {}
@@ -31,28 +41,29 @@ def benchmark(args):
     save_file(tensors, args.compressed_output)
     timer_end = timer()
     logger.info("Saving time: {}s".format(timer_end - timer_start))
-
     del tensors
     tensors = {}
-
     timer_start = timer()
     with safe_open(args.compressed_output, framework='np', device="cpu") as f:
         decompressed_tensor = comp_manager.decompress(cp.array(f.get_tensor(key)))
         tensors[key] = torch.reshape(from_dlpack(decompressed_tensor.toDlpack()), tensor_shapes[key])
     timer_end = timer()
-    print(tensors)
     logger.info("Decompressing time: {}s".format(timer_end - timer_start))
     timer_start = timer()
-    model = AutoModelForCausalLM.from_pretrained(args.model_type, state_dict=tensors)
+    print(tensors.keys())
+    config = AutoConfig.from_pretrained(args.model_type)
+    with init_empty_weights():
+        model = AutoModelForCausalLM.from_config(config)
+        model.load_state_dict(tensors)
+    # model = AutoModelForCausalLM.from_pretrained(args.model_type, state_dict=tensors)
     timer_end = timer()
     logger.info("Restoring model time: {}s".format(timer_end - timer_start))
-
+    del model
+    del tensor_shapes
+    del tensors
+    
     # compare with default loading
-    timer_start = timer()
-    model = AutoModelForCausalLM.from_pretrained(args.model_type)
-    model.cuda()
-    timer_end = timer()
-    logger.info("Default loading time: {}s".format(timer_end - timer_start))
+    
 
 
 if __name__=="__main__":

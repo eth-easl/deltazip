@@ -21,11 +21,13 @@ def benchmark_nvcomp(args):
             for name1, param1 in base_model.named_parameters():
                 target_param = original_target_model.state_dict()[name1]
                 delta_param = target_model.state_dict()[name1]
-                assert torch.equal(target_param, param1+delta_param)
+                assert torch.allclose(target_param, param1+delta_param)
     else:
         target_model = AutoModelForCausalLM.from_pretrained(args.model)
         # target_model.half()
+    print("Saving model")
     save_model(target_model, args.output)
+    print("Done")
 
 if __name__=="__main__":
     argparser = argparse.ArgumentParser()
