@@ -1,25 +1,65 @@
+import time
 import torch
-from kvikio.nvcomp import GdeflateManager as manager
+import cupy as cp
+import numpy as np
 from safetensors import safe_open
 from safetensors.numpy import save_file
-import numpy as np
-import cupy as cp
-import time
-comp_manager = manager()
+from torch.utils.dlpack import to_dlpack
+from torch.utils.dlpack import from_dlpack
+from transformers import AutoModelForCausalLM
+from src.lossless.nvcomp import GdeflateManager as manager
+from timeit import default_timer as timer
+from argparse import ArgumentParser
+from loguru import logger
 
-# tensors = {}
-# with safe_open(".cache/model_delta.safetensors", framework="pt", device="cpu") as f:
-#    for key in f.keys():
-#         compressed_tensor = comp_manager.compress(cp.array(f.get_tensor(key).numpy()))
-#         tensors[key] = cp.asnumpy(compressed_tensor)
+def benchmark(args):
+    comp_manager = manager()
+    comp_manager.input_type = cp.float32
+    tensors = {}
+    tensor_shapes = {}
+    timer_start = timer()
+    with safe_open(args.file, framework='pt', device="cpu") as f:
+        for key in f.keys():
+            shape = f.get_tensor(key).shape
+            tensor_shapes[key] = shape
+            to_compress_tensor = cp.from_dlpack(to_dlpack(f.get_tensor(key).cuda()))
+            compressed_tensor = comp_manager.compress(to_compress_tensor)
+            tensors[key] = cp.asnumpy(compressed_tensor)
+    timer_end = timer()
+    logger.info("Compressing time: {}s".format(timer_end - timer_start))
+    timer_start = timer()
+    save_file(tensors, args.compressed_output)
+    timer_end = timer()
+    logger.info("Saving time: {}s".format(timer_end - timer_start))
 
-# # write to file with safetensors
-# save_file(tensors, ".cache/model_delta.fmzip.safetensors")
+    del tensors
+    tensors = {}
 
-# read from file with safetensors as a cupy array
+    timer_start = timer()
+    with safe_open(args.compressed_output, framework='np', device="cpu") as f:
+        decompressed_tensor = comp_manager.decompress(cp.array(f.get_tensor(key)))
+        tensors[key] = torch.reshape(from_dlpack(decompressed_tensor.toDlpack()), tensor_shapes[key])
+    timer_end = timer()
+    print(tensors)
+    logger.info("Decompressing time: {}s".format(timer_end - timer_start))
+    timer_start = timer()
+    model = AutoModelForCausalLM.from_pretrained(args.model_type, state_dict=tensors)
+    timer_end = timer()
+    logger.info("Restoring model time: {}s".format(timer_end - timer_start))
 
-tensors = {}
-with safe_open(".cache/model_delta.fmzip.safetensors", framework="np", device="cpu") as f:
-    for key in f.keys():
-        tensors[key] = comp_manager.decompress(cp.array(f.get_tensor(key)))
-        time.sleep(20)
+    # compare with default loading
+    timer_start = timer()
+    model = AutoModelForCausalLM.from_pretrained(args.model_type)
+    model.cuda()
+    timer_end = timer()
+    logger.info("Default loading time: {}s".format(timer_end - timer_start))
+
+
+if __name__=="__main__":
+    parser = ArgumentParser()
+    parser.add_argument("--file", type=str, required=True)
+    parser.add_argument("--model-type", type=str, required=True)
+    parser.add_argument("--compressed-output", type=str, required=True)
+
+    args = parser.parse_args()
+    benchmark(args)

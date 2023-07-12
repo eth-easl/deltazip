@@ -13,7 +13,6 @@ def benchmark_nvcomp(args):
         # base_model.half()
         # target_model.half()
         original_target_model = copy.deepcopy(target_model)
-        
         for name1, param1 in base_model.named_parameters():
             target_model.state_dict()[name1] -= param1
         base_model.requires_grad_(False)

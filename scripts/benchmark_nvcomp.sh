@@ -1,0 +1,1 @@
+python cli/benchmark_nvcomp.py --file .cache/model_delta.safetensors --model-type facebook/opt-1.3b --compressed-output .cache/model_delta.fmzip

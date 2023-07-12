@@ -6,3 +6,4 @@ safetensors
 py7zr
 zarr
 cupy-cuda11x
+cchardet
