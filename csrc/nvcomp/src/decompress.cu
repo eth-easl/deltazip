@@ -18,8 +18,7 @@ static bool handleCommandLineArgument(const std::string& arg,
   return false;
 }
 
-static bool isGdeflateInputValid(const std::vector<std::vector<char>>& data)
-{
+static bool isGdeflateInputValid(const std::vector<std::vector<char>>& data) {
   for (const auto& chunk : data) {
     if (chunk.size() > 65536) {
       std::cerr << "ERROR: Gdeflate doesn't support chunk sizes larger than "
@@ -38,9 +37,10 @@ int main(int argc, char** argv) {
   std::string filename = args.filenames.front();
 
   decompress_file(nvcompBatchedGdeflateCompressGetTempSize,
-                        nvcompBatchedGdeflateCompressGetMaxOutputChunkSize,
-                        nvcompBatchedGdeflateCompressAsync,
-                        nvcompBatchedGdeflateDecompressGetTempSize,
-                        nvcompBatchedGdeflateDecompressAsync,
-                        isGdeflateInputValid, nvcompBatchedGdeflateOpts, filename, args.chunk_size, args.batch_size, args.input_size);
+                  nvcompBatchedGdeflateCompressGetMaxOutputChunkSize,
+                  nvcompBatchedGdeflateCompressAsync,
+                  nvcompBatchedGdeflateDecompressGetTempSize,
+                  nvcompBatchedGdeflateDecompressAsync, isGdeflateInputValid,
+                  nvcompBatchedGdeflateOpts, filename, args.chunk_size,
+                  args.batch_size, args.input_size);
 }

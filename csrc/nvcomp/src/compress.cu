@@ -35,8 +35,10 @@ static bool isGdeflateInputValid(const std::vector<std::vector<char>>& data)
 int main(int argc, char** argv) {
   args_type args = parse_args(argc, argv);
   CUDA_CHECK(cudaSetDevice(args.gpu));
-  auto data = multi_file(args.filenames, args.chunk_size, args.has_page_sizes,
-                         args.duplicate_count);
+  
+  auto data = multi_file(args.filenames, args.chunk_size, args.has_page_sizes,args.duplicate_count);
+
+
   run_compress_template(nvcompBatchedGdeflateCompressGetTempSize,
                         nvcompBatchedGdeflateCompressGetMaxOutputChunkSize,
                         nvcompBatchedGdeflateCompressAsync,

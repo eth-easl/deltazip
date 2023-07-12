@@ -20,7 +20,7 @@
   do {                                                                         \
     cudaError_t rt = (func);                                                   \
     if (rt != cudaSuccess) {                                                   \
-      std::cout << "API call failure \"" #func "\" with " << rt << " at "      \
+      std::cout << "API call failure \"" #func "\" with " << cudaGetErrorString(rt) << " at "      \
                 << __FILE__ << ":" << __LINE__ << std::endl;                   \
       throw;                                                                   \
     }                                                                          \

@@ -4,3 +4,5 @@ xformers
 rouge-score
 safetensors
 py7zr
+zarr
+cupy-cuda11x

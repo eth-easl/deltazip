@@ -31,21 +31,20 @@ class BatchData {
 
     m_data = thrust::device_vector<uint8_t>(prefixsum.back());
 
-    std::vector<void*> uncompressed_ptrs(size());
+    std::vector<void*> data_ptrs(size());
     for (size_t i = 0; i < size(); ++i) {
-      uncompressed_ptrs[i] = static_cast<void*>(data() + prefixsum[i]);
+      data_ptrs[i] = static_cast<void*>(data() + prefixsum[i]);
     }
 
-    m_ptrs = thrust::device_vector<void*>(uncompressed_ptrs);
+    m_ptrs = thrust::device_vector<void*>(data_ptrs);
     std::vector<size_t> sizes(m_size);
     for (size_t i = 0; i < sizes.size(); ++i) {
       sizes[i] = host_data[i].size();
     }
     m_sizes = thrust::device_vector<size_t>(sizes);
-
     // copy data to GPU
     for (size_t i = 0; i < host_data.size(); ++i) {
-      CUDA_CHECK(cudaMemcpy(uncompressed_ptrs[i], host_data[i].data(),
+      CUDA_CHECK(cudaMemcpy(data_ptrs[i], host_data[i].data(),
                             host_data[i].size(), cudaMemcpyHostToDevice));
     }
   }
@@ -87,17 +86,16 @@ class BatchData {
   size_t m_size;
 };
 
-std::vector<std::vector<char>> readFileWithPageSizes(const std::string& filename)
-{
+std::vector<std::vector<char>> readFileWithPageSizes(
+    const std::string& filename) {
   std::vector<std::vector<char>> res;
 
   std::ifstream fin(filename, std::ifstream::binary);
 
   while (!fin.eof()) {
     uint64_t chunk_size;
-    fin.read(reinterpret_cast<char *>(&chunk_size), sizeof(uint64_t));
-    if (fin.eof())
-      break;
+    fin.read(reinterpret_cast<char*>(&chunk_size), sizeof(uint64_t));
+    if (fin.eof()) break;
     res.emplace_back(chunk_size);
     fin.read(reinterpret_cast<char*>(res.back().data()), chunk_size);
   }
@@ -105,8 +103,7 @@ std::vector<std::vector<char>> readFileWithPageSizes(const std::string& filename
   return res;
 }
 
-std::vector<char> readFile(const std::string& filename)
-{
+std::vector<char> readFile(const std::string& filename) {
   std::ifstream fin(filename, std::ifstream::binary);
   if (!fin) {
     std::cerr << "ERROR: Unable to open \"" << filename << "\" for reading."
@@ -140,7 +137,6 @@ std::vector<std::vector<char>> multi_file(
   for (auto const& filename : filenames) {
     if (!has_page_sizes) {
       std::vector<char> filedata = readFile(filename);
-
       const size_t num_chunks = (filedata.size() + chunk_size - 1) / chunk_size;
       size_t offset = 0;
       for (size_t c = 0; c < num_chunks; ++c) {
