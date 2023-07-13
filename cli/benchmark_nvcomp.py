@@ -3,17 +3,18 @@ import json
 import torch
 import cupy as cp
 import numpy as np
+from loguru import logger
 from safetensors import safe_open
+from argparse import ArgumentParser
+from transformers import AutoConfig
 from safetensors.numpy import save_file
 from torch.utils.dlpack import to_dlpack
+from timeit import default_timer as timer
+from accelerate import init_empty_weights
 from torch.utils.dlpack import from_dlpack
 from transformers import AutoModelForCausalLM
+
 from src.lossless.nvcomp import GdeflateManager as manager
-from timeit import default_timer as timer
-from argparse import ArgumentParser
-from loguru import logger
-from accelerate import init_empty_weights
-from transformers import AutoConfig
 
 def benchmark(args):
     # timer_start = timer()

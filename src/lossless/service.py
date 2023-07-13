@@ -50,7 +50,11 @@ class CompressedInferenceService():
     def compress_model(self, target_model: str, dest: str, low_gpu_mem=True, delta=True)-> Tuple[float, float]:
         logger.debug("Loading target model: {}".format(target_model))
         target_model = AutoModelForCausalLM.from_pretrained(target_model, torch_dtype=self.dtype)
-        target_model.cuda()
+        if low_gpu_mem:
+            self.base_model = self.base_model.cpu()
+            torch.cuda.empty_cache()
+        else:
+            target_model.cuda()
         target_model.requires_grad_(False)
         total_params = sum(p.numel() for p in target_model.parameters())
         total_bytes = bytes_nums[self._dtype] * total_params
@@ -59,10 +63,8 @@ class CompressedInferenceService():
                 for name, param in target_model.named_parameters():
                     param -= self.base_model.state_dict()[name]
         # now target_model is a delta model
-        if low_gpu_mem:
-            self.base_model = self.base_model.cpu()
-            torch.cuda.empty_cache()
         target_model.requires_grad_(False)
+        target_model.cuda()
         logger.debug("Done loading target model")
         tensor_shapes = {}
         tensors = {}
