@@ -72,7 +72,7 @@ def benchmark(args):
     del tensors
     
     # compare with default loading
-
+    
 
 if __name__=="__main__":
     parser = ArgumentParser()

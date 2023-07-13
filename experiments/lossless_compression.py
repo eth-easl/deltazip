@@ -20,7 +20,7 @@ if __name__=="__main__":
             target_model=target_model,
             dest=dest,
             low_gpu_mem=True,
-            delta=True
+            delta=False
         )
         logger.info("Compression rate: {}x".format(compression_rate))
         logger.info("Time spent: {}s".format(time_spent))
