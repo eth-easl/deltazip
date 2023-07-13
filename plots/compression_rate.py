@@ -8,7 +8,7 @@ sns.set(font_scale=2)
 
 sns.set_theme(style="whitegrid")
 ax = sns.scatterplot(data=df, x="model_size", y="compression_rate", hue="comp_type", style="target_model", s=200)
-ax.set(xlabel="Model size (GB)", ylabel="Compression rate")
+ax.set(xlabel="Model size (B parameters)", ylabel="Compression rate")
 # make legend outside of the plot
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 # make plot larger
