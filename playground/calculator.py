@@ -6,7 +6,7 @@ def load_naive(args):
 def load_compressed(args):
     load_size =  args.model_size * args.dtype / args.compression_rate
     load_time = load_size / args.disk_gpu_bandwidth
-    decompress_time = load_size / args.decompression_throughput
+    decompress_time = args.model_size* args.dtype / args.decompression_throughput
     return load_time + decompress_time + args.add_back_overhead
 
 if __name__=="__main__":
