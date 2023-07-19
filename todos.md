@@ -1,0 +1,4 @@
+-- memory footprint
+-- xor
+-- simulation
+-- compression rate vs. finetuning steps

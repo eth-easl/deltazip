@@ -51,13 +51,7 @@ def load_compressed(args):
             throughput.append(total_bytes / (decompress_end - decompress_start))
             del decompressed_tensor
     torch.cuda.empty_cache()
-    # resume model
-    # zero-copy way?
-    # with init_empty_weights():
-    #     target_model = AutoModelForCausalLM.from_config(AutoConfig.from_pretrained(args.target_model), torch_dtype=torch.float16)
-    #     target_model.requires_grad_(False)
-    #     target_model.load_state_dict(tensors, strict=False)
-    # tensors = {k: v.cpu() for k, v in tensors.items()}
+
     origin_model.load_state_dict(tensors)
     
     # add back overhead: 2s?
