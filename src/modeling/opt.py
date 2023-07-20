@@ -1,7 +1,7 @@
 from ._base import *
 
 
-class OPTGPTQForCausalLM(BaseGPTQForCausalLM):
+class OPTFMZipForCausalLM(BaseFMZipModelForCausalLM):
     layer_type = "OPTDecoderLayer"
     layers_block_name = "model.decoder.layers"
     outside_layer_modules = [
@@ -16,4 +16,4 @@ class OPTGPTQForCausalLM(BaseGPTQForCausalLM):
     ]
 
 
-__all__ = ["OPTGPTQForCausalLM"]
+__all__ = ["OPTFMZipForCausalLM"]

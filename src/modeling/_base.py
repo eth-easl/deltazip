@@ -108,7 +108,7 @@ class BaseQuantizeConfig(PushToHubMixin):
         }
 
 
-class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
+class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     layer_type: str = None
     layers_block_name: str = None
     outside_layer_modules: List[str] = None
@@ -670,4 +670,4 @@ class BaseGPTQForCausalLM(nn.Module, PushToHubMixin):
         return cls(model, True, quantize_config)
 
 
-__all__ = ["BaseGPTQForCausalLM", "BaseQuantizeConfig"]
+__all__ = ["BaseFMZipModelForCausalLM", "BaseQuantizeConfig"]

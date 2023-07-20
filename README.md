@@ -19,7 +19,6 @@ Heavily inspired by [AutoGPTQ](https://github.com/PanQiWei/AutoGPTQ)
 
 ## Papers
 
-
 ```
 @inproceedings{
 isik2023gptzip,

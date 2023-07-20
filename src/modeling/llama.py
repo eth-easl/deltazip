@@ -17,7 +17,7 @@ from ..nn_modules.fused_llama_mlp import FusedLlamaMLPForQuantizedModel
 logger = getLogger(__name__)
 
 
-class LlamaGPTQForCausalLM(BaseGPTQForCausalLM):
+class LlamaFMZipForCausalLM(BaseFMZipModelForCausalLM):
     layer_type = "LlamaDecoderLayer"
     layers_block_name = "model.layers"
     outside_layer_modules = ["model.embed_tokens", "model.norm"]
@@ -32,4 +32,4 @@ class LlamaGPTQForCausalLM(BaseGPTQForCausalLM):
     fused_mlp_module_type = FusedLlamaMLPForQuantizedModel
 
 
-__all__ = ["LlamaGPTQForCausalLM"]
+__all__ = ["LlamaFMZipForCausalLM"]

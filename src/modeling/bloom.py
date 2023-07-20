@@ -1,7 +1,7 @@
 from ._base import *
 
 
-class BloomGPTQForCausalLM(BaseGPTQForCausalLM):
+class BloomFMZipForCausalLM(BaseFMZipModelForCausalLM):
     layer_type = "BloomBlock"
     layers_block_name = "transformer.h"
     outside_layer_modules = ["transformer.word_embeddings", "transformer.word_embeddings_layernorm", "transformer.ln_f"]
@@ -13,4 +13,4 @@ class BloomGPTQForCausalLM(BaseGPTQForCausalLM):
     ]
 
 
-__all__ = ["BloomGPTQForCausalLM"]
+__all__ = ["BloomFMZipForCausalLM"]
