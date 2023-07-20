@@ -9,9 +9,7 @@ It supports (or will support) the following algorithms:
 - [GPT-Zip](https://openreview.net/forum?id=hO0c2tG2xL)
 - [GDeflate (by nvcomp)](https://developer.nvidia.com/nvcomp)
 
-
 ## Lossless Comression
-
 
 ## Lossy Compression
 

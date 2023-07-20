@@ -350,7 +350,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             
             layers[i] = move_to_device(layer, CPU if force_layer_back_to_cpu else cur_layer_device)
             del layer
-            del gptq
+            del sparsegpt
             del layer_inputs
             layer_inputs, layer_outputs = layer_outputs, []
             torch.cuda.empty_cache()
