@@ -1,6 +1,6 @@
 from typing import Optional, Union
 
-from ._base import BaseQuantizeConfig, BaseFMZipModelForCausalLM
+from ._base import BaseCompressionConfig, BaseFMZipModelForCausalLM
 from ._utils import check_and_get_model_type
 from .bloom import BloomFMZipForCausalLM
 from .gpt_neox import GPTNeoXFMZipForCausalLM
@@ -26,22 +26,22 @@ class AutoFMZipModelForCausalLM:
     def __init__(self):
         raise EnvironmentError(
             "AutoFMZipModelForCausalLM is designed to be instantiated\n"
-            "using `AutoFMZipModelForCausalLM.from_pretrained` if want to quantize a pretrained model.\n"
-            "using `AutoFMZipModelForCausalLM.from_quantized` if want to inference with quantized model."
+            "using `AutoFMZipModelForCausalLM.from_pretrained` if want to compress a pretrained model.\n"
+            "using `AutoFMZipModelForCausalLM.from_compressed` if want to inference with compressed model."
         )
 
     @classmethod
     def from_pretrained(
         cls,
         pretrained_model_name_or_path: str,
-        quantize_config: BaseQuantizeConfig,
+        compress_config: BaseCompressionConfig,
         max_memory: Optional[dict] = None,
         **model_init_kwargs
     ) -> BaseFMZipModelForCausalLM:
         model_type = check_and_get_model_type(pretrained_model_name_or_path)
         return FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
-            quantize_config=quantize_config,
+            compress_config=compress_config,
             max_memory=max_memory,
             **model_init_kwargs
         )
@@ -58,7 +58,7 @@ class AutoFMZipModelForCausalLM:
         inject_fused_attention: bool = False,
         inject_fused_mlp: bool = False,
         use_cuda_fp16: bool = True,
-        quantize_config: Optional[BaseQuantizeConfig] = None,
+        compress_config: Optional[BaseCompressionConfig] = None,
         model_basename: Optional[str] = None,
         use_safetensors: bool = True,
         trust_remote_code: bool = False,
@@ -67,7 +67,7 @@ class AutoFMZipModelForCausalLM:
         **kwargs
     ) -> BaseFMZipModelForCausalLM:
         model_type = check_and_get_model_type(save_dir)
-        quant_func = FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_quantized
+        quant_func = FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
         keywords = {key: kwargs[key] for key in signature(quant_func).parameters if key in kwargs}
         return quant_func(
             save_dir=save_dir,
@@ -79,7 +79,7 @@ class AutoFMZipModelForCausalLM:
             inject_fused_attention=inject_fused_attention,
             inject_fused_mlp=inject_fused_mlp,
             use_cuda_fp16=use_cuda_fp16,
-            quantize_config=quantize_config,
+            compress_config=compress_config,
             model_basename=model_basename,
             use_safetensors=use_safetensors,
             trust_remote_code=trust_remote_code,

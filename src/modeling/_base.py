@@ -18,88 +18,22 @@ from ._const import *
 from ._utils import pack_model, get_module_by_name, find_layers, move_to_device, get_device, make_quant, unpack_model
 from ..nn_modules._fused_base import FusedBaseAttentionModule, FusedBaseMLPModule
 from ..core.gptq import GPTQ
+from ..core.quant import Quantizer
+from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 
 logger = getLogger(__name__)
 
 @dataclass
-class AutotuneQuantizeConfig(PushToHubMixin):
-    bits: List[int] = field(default_factory=lambda: [2, 3, 4, 8])
-    sparsities: List[float] = field(default_factory=lambda: [0.1, 0.33, 0.5, 0.66, 0.9, 0.95, 0.99])
-    group_size: int= field(default=-1)
-    damp_percent: float = field(default=0.01)
-    desc_act: bool = field(default=True)
-    sym: bool = field(default=True)
-    true_sequential: bool = field(default=True)
-    choices: dict = field(default_factory=lambda: {})
-
-    def __post_init__(self):
-        fields_info = fields(self)
-        for bit in self.bits:
-            if bit not in fields_info[0].metadata["choices"]:
-                raise ValueError(f"only support quantize to 2,3,4,8 bits.")
-        for sparsity in self.sparsities:
-            if sparsity < 0 or sparsity > 1:
-                raise ValueError(f"sparsity must be [0, 1)")
-        if self.group_size != -1 and self.group_size <= 0:
-            raise ValueError("unless equal to -1, group_size must greater then 0.")
-        if not (0 < self.damp_percent < 1):
-            raise ValueError("damp_percent must between 0 and 1.")
-    def save_pretrained(self, save_dir: str, **kwargs):
-        with open(join(save_dir, "quantize_config.json"), "w", encoding="utf-8") as f:
-            json.dump(self.to_dict(), f, indent=2)
-
-    @classmethod
-    def from_pretrained(cls, save_dir: str):
-        with open(join(save_dir, "quantize_config.json"), "r", encoding="utf-8") as f:
-            return cls(**json.load(f))
-
-    def to_dict(self):
-        return {
-            "bits": self.bits,
-            "group_size": self.group_size,
-            "damp_percent": self.damp_percent,
-            "desc_act": self.desc_act,
-            "sym": self.sym,
-            "true_sequential": self.true_sequential,
-        }
-
-@dataclass
-class BaseSparsificationConfig(PushToHubMixin):
-    sparsity: float = field(default=0.5)
-    sym: bool = field(default=True)
-    grouprows: int = field(default=1)
-
-    def __post_init__(self):
-        fields_info = fields(self)
-        if self.sparsity < 0 or self.sparsity > 1:
-            raise ValueError(f"sparsity must be [0, 1)")
-        if self.group_size != -1 and self.group_size <= 0:
-            raise ValueError("unless equal to -1, group_size must greater then 0.")
-        
-    def save_pretrained(self, save_dir: str, **kwargs):
-        with open(join(save_dir, "quantize_config.json"), "w", encoding="utf-8") as f:
-            json.dump(self.to_dict(), f, indent=2)
-
-    @classmethod
-    def from_pretrained(cls, save_dir: str):
-        with open(join(save_dir, "quantize_config.json"), "r", encoding="utf-8") as f:
-            return cls(**json.load(f))
-
-    def to_dict(self):
-        return {
-            "sparsity": self.sparsity,
-            "grouprows": self.grouprows,
-            "sym": self.sym,
-        }
-    
-@dataclass
-class BaseQuantizeConfig(PushToHubMixin):
+class BaseCompressionConfig(PushToHubMixin):
     bits: int = field(default=4, metadata={"choices": [2, 3, 4, 8]})
     # sparsity = how many parameters we set to zero after quantization
     sparsity: float = field(default=0)
+    prunen: int = field(default=1)
+    prunem: int = field(default=1)
     group_size: int = field(default=-1)
-
+    block_size: int = field(default=1)
+    group_rows: int = field(default=1)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
     sym: bool = field(default=True)
@@ -117,25 +51,25 @@ class BaseQuantizeConfig(PushToHubMixin):
             raise ValueError("damp_percent must between 0 and 1.")
 
     def save_pretrained(self, save_dir: str, **kwargs):
-        with open(join(save_dir, "quantize_config.json"), "w", encoding="utf-8") as f:
+        with open(join(save_dir, "compress_config.json"), "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
     def from_pretrained(cls, save_dir: str):
-        with open(join(save_dir, "quantize_config.json"), "r", encoding="utf-8") as f:
+        with open(join(save_dir, "compress_config.json"), "r", encoding="utf-8") as f:
             return cls(**json.load(f))
 
     def to_dict(self):
         return {
             "bits": self.bits,
             "group_size": self.group_size,
+            "group_rows": self.group_rows,
             "sparsity": self.sparsity,
             "damp_percent": self.damp_percent,
             "desc_act": self.desc_act,
             "sym": self.sym,
             "true_sequential": self.true_sequential,
         }
-
 
 class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     layer_type: str = None
@@ -147,23 +81,22 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     fused_attn_module_type: Optional[FusedBaseAttentionModule] = None
     fused_mlp_module_type: Optional[FusedBaseMLPModule] = None
 
-    def __init__(self, model: PreTrainedModel, quantized: bool, quantize_config: BaseQuantizeConfig):
+    def __init__(self, model: PreTrainedModel, compressed: bool, compress_config: BaseCompressionConfig):
         super().__init__()
-
         self.model = model
         self.model_type = self.model.config.model_type
-        self._quantized = quantized
-        self.quantize_config = quantize_config
+        self._compressed = compressed
+        self.compress_config = compress_config
         self.config = self.model.config
-
+    
     @property
-    def quantized(self):
-        return self._quantized
-
+    def compressed(self):
+        return self._compressed
+    
     @property
     def hf_device_map(self):
         return getattr(self.model, "hf_device_map", None)
-
+    
     @staticmethod
     def _resize_attention_mask(attention_mask: List[torch.LongTensor]):
         return attention_mask
@@ -172,7 +105,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     def _resize_position_ids(position_ids: List[torch.LongTensor]):
         return position_ids
 
-    def _prepare_examples_for_quantization(
+    def _prepare_examples_for_compression(
         self,
         examples: List[Dict[str, Union[List[int], torch.LongTensor]]],
         batch_size: int = 1,
@@ -184,7 +117,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensor = tensor.long()
                 return tensor.cpu().numpy().tolist()
             return [tensor]
-
         new_examples = []
         for example in examples:
             input_ids = _convert_tensor_to_list(example["input_ids"])
@@ -203,7 +135,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         pad_token_id = self.config.pad_token_id
         if not pad_token_id:
             pad_token_id = self.config.eos_token_id
-
         new_examples = [
             collate_data(new_examples[start: start + batch_size], pad_token_id)
             for start in range(0, len(new_examples), batch_size)
@@ -212,9 +143,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del new_example["labels"]
 
         return new_examples
-
+    
     @torch.inference_mode()
-    def quantize(
+    def lossy_compress(
         self,
         examples: List[Dict[str, Union[List[int], torch.LongTensor]]],
         batch_size: int = 1,
@@ -223,9 +154,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         autotune_warmup_after_quantized: bool = False,
         cache_examples_on_gpu: bool = True
     ):
-        if self.quantized:
-            raise EnvironmentError("can't execute quantize because the model is quantized.")
-
+        if self.compressed:
+            raise EnvironmentError("Model is already compressed.")
         device_map = self.hf_device_map
         if device_map:
             for name, device in device_map.items():
@@ -233,26 +163,27 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     module = get_module_by_name(self.model, name)
                     remove_hook_from_module(module, recurse=True)
                     accelerate.cpu_offload_with_hook(module, CUDA_0)
-
+        
         layer_inputs = []
         attention_masks = []
         position_ids = []
         layer_input_kwargs = []
         layer_outputs = []
 
-        examples = self._prepare_examples_for_quantization(examples, batch_size)
+        examples = self._prepare_examples_for_compression(examples, batch_size)
 
         class LayerHijacker(nn.Module):
-            """hijack layer's forward pass to cache data"""
-
+            """
+            hijack layer's forward pass to cache data
+            """
             def __init__(self, m, device):
                 super().__init__()
                 self.module = m
                 self.data_device = device if cache_examples_on_gpu else CPU
-
+            
             def forward(self, inp=None, **kwargs):
-                if inp is None:  # some models use all key-value arguments in forward pass call
-                    for kwarg_name in ["hidden_states"]:
+                if inp is None:
+                    for kwarg_name in ['hidden_states']:
                         if kwarg_name in kwargs:
                             inp = kwargs[kwarg_name]
                             break
@@ -269,7 +200,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             one_kwargs[k] = v
                 layer_input_kwargs.append(one_kwargs)
                 raise ValueError
-
         forward_pass_use_cache = self.model.config.use_cache
         self.model.config.use_cache = False
 
@@ -305,7 +235,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             except ValueError:
                 pass
         layers[0] = layers[0].module
-
+        
         move_to_device(layers[0], CPU if force_layer_back_to_cpu else cur_layer_device)
         for module_name in self.outside_layer_modules:
             module = get_module_by_name(self.model, module_name)
@@ -319,13 +249,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         position_ids = self._resize_position_ids(position_ids)
 
         inside_layer_modules = self.inside_layer_modules
-        if not self.quantize_config.true_sequential:
+        if not self.compress_config.true_sequential:
             inside_layer_modules = [sum(inside_layer_modules, [])]
-        quantizers = {}
+        compressors = {}
         for i in range(len(layers)):
-            logger.info(f"Start quantizing layer {i + 1}/{len(layers)}")
             layer = layers[i]
             force_layer_back_to_cpu = False
+
             if get_device(layer) == CPU:
                 move_to_device(layer, CUDA_0)
                 force_layer_back_to_cpu = True
@@ -334,22 +264,25 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             full = find_layers(layer)
             for names in inside_layer_modules:
                 subset = {n: full[n] for n in names}
-                gptq = {}
+                sparsegpt = {}
                 for name in subset:
-                    gptq[name] = GPTQ(subset[name])
-                    gptq[name].quantizer.configure(
-                        self.quantize_config.bits,
-                        perchannel=True,
-                        sym=self.quantize_config.sym,
-                        mse=False,
-                    )
+                    sparsegpt[name] = SparseGPT(subset[name])
+                    if self.compress_config.bits < 16:
+                        sparsegpt[name].quantizer = Quantizer()
+                        sparsegpt[name].quantizer.configure(
+                            self.compress_config.bits,
+                            perchannel = True,
+                            sym = self.compress_config.sym,
+                            mse = False
+                        )
 
+                
                 def add_batch(name):
                     def tmp(_, inp, out):
-                        gptq[name].add_batch(inp[0].data, out.data)
+                        sparsegpt[name].add_batch(inp[0].data, out.data)
 
                     return tmp
-
+                
                 handles = []
                 for name in subset:
                     handles.append(subset[name].register_forward_hook(add_batch(name)))
@@ -372,25 +305,27 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     layer(layer_input, **additional_layer_inputs)
                 for h in handles:
                     h.remove()
-
+                
+                # starting compression
                 for name in subset:
-                    logger.info(f'Quantizing {name} in layer {i + 1}/{len(layers)}...')
-                    scale, zero, g_idx = gptq[name].fasterquant(
-                        percdamp=self.quantize_config.damp_percent,
-                        group_size=self.quantize_config.group_size,
-                        actorder=self.quantize_config.desc_act
+                    logger.debug(f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}")
+                    scale, zero, g_idx = sparsegpt[name].fasterprune(
+                        self.compress_config.sparsity,
+                        prunen = self.compress_config.prunen,
+                        prunem = self.compress_config.prunem,
+                        percdamp = self.compress_config.damp_percent,
+                        blocksize= self.compress_config.block_size
                     )
-                    # after quantizing, apply sparsity
-                    logger.info(f"Sparsifying {name} in layer {i + 1}/{len(layers)}..., sparsity = {self.quantize_config.sparsity}")
-                    gptq[name].sparsify(self.quantize_config.sparsity)
-                    quantizers[f'{self.layers_block_name}.{i}.{name}'] = (
-                        gptq[name].quantizer.to(CPU if force_layer_back_to_cpu else cur_layer_device),
+
+                    compressors[f'{self.layers_block_name}.{i}.{name}'] = (
+                        sparsegpt[name].quantizer.to(CPU if force_layer_back_to_cpu else cur_layer_device),
                         move_to_device(scale, CPU if force_layer_back_to_cpu else cur_layer_device),
                         move_to_device(zero, CPU if force_layer_back_to_cpu else cur_layer_device),
                         move_to_device(g_idx, CPU if force_layer_back_to_cpu else cur_layer_device)
                     )
-                    gptq[name].free()
 
+                    sparsegpt[name].free()
+            
             for j in range(num_batches):
                 layer_input = move_to_device(layer_inputs[j], cur_layer_device)
                 layer_attention_mask = move_to_device(attention_masks[j], cur_layer_device)
@@ -412,27 +347,29 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     cur_layer_device if cache_examples_on_gpu else CPU
                 )
                 layer_outputs.append(layer_output)
-
+            
             layers[i] = move_to_device(layer, CPU if force_layer_back_to_cpu else cur_layer_device)
             del layer
             del gptq
             del layer_inputs
             layer_inputs, layer_outputs = layer_outputs, []
             torch.cuda.empty_cache()
-        self.quantizers = quantizers
+
+        self.compressors = compressors
         self.use_triton = use_triton
         self.use_cuda_fp16 = use_cuda_fp16
         self.autotune_warmup_after_quantized = autotune_warmup_after_quantized
         self.force_layer_back_to_cpu = force_layer_back_to_cpu
-        
+
         if device_map:
             self.model = remove_hook_from_module(self.model, recurse=True)
             self.model = accelerate.dispatch_model(self.model, device_map, offload_buffers=True)
+        
         self.model.config.use_cache = forward_pass_use_cache
-        self._quantized = True
+        self._compressed = True
 
         torch.cuda.empty_cache()
-
+    
     @property
     def device(self):
         return self.model.device
@@ -451,58 +388,48 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     def prepare_inputs_for_generation(self, *args, **kwargs):
         """shortcut for model.prepare_inputs_for_generation"""
         return self.model.prepare_inputs_for_generation(*args, **kwargs)
-    
+
+
     @torch.inference_mode()
-    def save_quantized(self, save_dir: str, use_safetensors: bool = False):
-        if not self.quantized:
-            raise EnvironmentError("can only save quantized model, please execute .quantize first.")
+    def save_compressed(self, save_dir: str):
+        if not self.compressed:
+            raise EnvironmentError("Model is not compressed.")
         pack_model(
-            model=self.model,
-            quantizers=self.quantizers,
-            bits=self.quantize_config.bits,
-            group_size=self.quantize_config.group_size,
+            model = self.model,
+            quantizers=self.compressors,
+            bits=self.compress_config.bits,
+            group_size=self.compress_config.group_size,
             use_triton=self.use_triton,
             use_cuda_fp16=self.use_cuda_fp16,
-            desc_act=self.quantize_config.desc_act,
+            desc_act=self.compress_config.desc_act,
             warmup_triton=self.autotune_warmup_after_quantized,
             force_layer_back_to_cpu=self.force_layer_back_to_cpu
         )
-        """save quantized model and configs to local disk"""
         os.makedirs(save_dir, exist_ok=True)
-
         self.model.to(CPU)
-
-        model_save_name = f"gptq_model-{self.quantize_config.bits}bit-{self.quantize_config.group_size}g"
-        if use_safetensors:
-            model_save_name += ".safetensors"
-            state_dict = self.model.state_dict()
-            state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
-            safe_save(state_dict, join(save_dir, model_save_name))
-        else:
-            model_save_name += ".bin"
-            torch.save(self.model.state_dict(), join(save_dir, model_save_name))
-
+        model_save_name = f"fmzip-compressed.safetensors"
+        state_dict = self.model.state_dict()
+        # todo: (xiaozhe): allow further lossless compression here
+        # rn, we do it separately such that we can save two versions for comparison
+        state_dict = {
+            k: v.clone().contiguous() for k, v in state_dict.items()
+        }
+        safe_save(state_dict, join(save_dir, model_save_name))
         self.model.config.save_pretrained(save_dir)
-        self.quantize_config.save_pretrained(save_dir)
-
-    def save_pretrained(self, save_dir: str, use_safetensors: bool = False, **kwargs):
-        """alias of save_quantized"""
-        logger.warning("you are using save_pretrained, which will re-direct to save_quantized.")
-        self.save_quantized(save_dir, use_safetensors)
-
+        self.compress_config.save_pretrained(save_dir)
+    
     @classmethod
     def from_pretrained(
         cls,
         pretrained_model_name_or_path: str,
-        quantize_config: BaseQuantizeConfig,
+        compress_config: BaseCompressionConfig,
         max_memory: Optional[dict] = None,
-        **model_init_kwargs
+        **model_init_kwargs,
     ):
         """load un-quantized pretrained model to cpu"""
 
         if not torch.cuda.is_available():
             raise EnvironmentError("Load pretrained model to do quantization requires CUDA available.")
-
         def skip(*args, **kwargs):
             pass
 
@@ -517,6 +444,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         # enforce some values despite user specified
         model_init_kwargs["torch_dtype"] = torch.float16
         model_init_kwargs["trust_remote_code"] = True
+
         if max_memory:
             if "disk" in max_memory:
                 raise NotImplementedError("disk offload not support yet.")
@@ -545,7 +473,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             model_init_kwargs["low_cpu_mem_usage"] = False
 
         torch.cuda.empty_cache()
-
         model = AutoModelForCausalLM.from_pretrained(pretrained_model_name_or_path, **model_init_kwargs)
         model_config = model.config.to_dict()
         seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]
@@ -559,10 +486,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             model.seqlen = 4096
         model.eval()
 
-        return cls(model, False, quantize_config)
+        return cls(model, False, compress_config)
 
     @classmethod
-    def from_quantized(
+    def from_compressed(
         cls,
         save_dir: str,
         device_map: Optional[str] = None,
@@ -573,7 +500,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         inject_fused_attention: bool = False,
         inject_fused_mlp: bool = False,
         use_cuda_fp16: bool = True,
-        quantize_config: Optional[BaseQuantizeConfig] = None,
+        compress_config: Optional[BaseCompressionConfig] = None,
         model_basename: Optional[str] = None,
         use_safetensors: bool = True,
         trust_remote_code: bool = False,
@@ -581,34 +508,25 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         unpack: bool = False,
         **kwargs
     ):
-        """load quantized model from local disk"""
-        # prepare configs and file names
-        config = AutoConfig.from_pretrained(save_dir, trust_remote_code=trust_remote_code)
+        """load compressed model from local disk"""
+        config = AutoConfig.from_pretrained(save_dir,trust_remote_code = trust_remote_code)
         if config.model_type not in SUPPORTED_MODELS:
             raise TypeError(f"{config.model_type} isn't supported yet.")
-
-        if quantize_config is None:
-            quantize_config = BaseQuantizeConfig.from_pretrained(save_dir)
-
+        if compress_config is None:
+            compress_config = BaseCompressionConfig.from_pretrained(save_dir)
+        
         if model_basename is None:
-            model_basename = f"gptq_model-{quantize_config.bits}bit-{quantize_config.group_size}g"
-
-        model_save_name = join(save_dir, model_basename)
-
-        extensions = []
-        if use_safetensors:
-            extensions.append(".safetensors")
-        else:
-            extensions += [".bin", ".pt"]
-
+            model_basename = "fmzip-compressed.safetensors"
+        
+        model_save_name = os.path.join(save_dir, model_basename)
+        extensions = ['.safetensors']
         for ext in extensions:
             if isfile(model_save_name + ext):
                 model_save_name += ext
                 break
         else:
-            raise FileNotFoundError(f"Could not find model at {model_save_name}")
+            raise FileNotFoundError(f"can't find model file with basename {model_basename} in {save_dir}")
 
-        # inject layers
         def skip(*args, **kwargs):
             pass
 
@@ -637,24 +555,23 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 make_quant(
                     model,
                     layers,
-                    quantize_config.bits,
-                    quantize_config.group_size,
+                    compress_config.bits,
+                    compress_config.group_size,
                     use_triton=use_triton,
                     use_cuda_fp16=use_cuda_fp16,
-                    desc_act=quantize_config.desc_act
+                    desc_act=compress_config.desc_act
                 )
             model.tie_weights()
         else:
             make_quant(
                 model,
                 layers,
-                quantize_config.bits,
-                quantize_config.group_size,
+                compress_config.bits,
+                compress_config.group_size,
                 use_triton=use_triton,
                 use_cuda_fp16=use_cuda_fp16,
-                desc_act=quantize_config.desc_act
+                desc_act=compress_config.desc_act
             )
-        # load checkpoint and dispatch
         if device is None and not device_map and not max_memory:
             device_map = "auto"
         if device is not None:
@@ -696,7 +613,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             model.seqlen = 2048
         
         model.eval()
-        return cls(model, True, quantize_config)
+        return cls(model, True, compress_config)
 
-
-__all__ = ["BaseFMZipModelForCausalLM", "BaseQuantizeConfig"]
+__all__ = ["BaseFMZipModelForCausalLM", "BaseCompressionConfig"]

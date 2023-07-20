@@ -1,29 +1,30 @@
 import os
 import json
 from transformers import AutoTokenizer
-from src import BaseQuantizeConfig, AutoFMZipModelForCausalLM
+from src import BaseCompressionConfig, AutoFMZipModelForCausalLM
 
 def main(args):
     print(args)
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)['text'] for line in fp.readlines()]
-    quantize_config = BaseQuantizeConfig(
-        bits = 2,
+    compress_config = BaseCompressionConfig(
+        bits = 4,
         group_size = 1024,
-        sparsity=0
+        sparsity=0.5
     )
     examples = [
         tokenizer(x) for x in examples
     ]
-    target_model = AutoFMZipModelForCausalLM.from_pretrained(args.target_model, quantize_config)
-    target_model.quantize(examples)
+    model = AutoFMZipModelForCausalLM.from_pretrained(args.target_model, compress_config=compress_config)
+    model.lossy_compress(examples)
+    model.save_pretrained("/home/xzyao/Documents/cache/compressed_models/")
 
 
 if __name__=="__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-model", type=str, default="facebook/opt-1.3b", required=False)
+    parser.add_argument("--base-model", type=str, default="facebook/opt-1.3b")
     parser.add_argument("--dataset", type=str, default="answer_verification")
     parser.add_argument("--target-model", type=str, default="facebook/opt-1.3b")
     args = parser.parse_args()
