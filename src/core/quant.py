@@ -23,7 +23,7 @@ class Quantizer(nn.Module):
         self,
         bits, perchannel=False, sym=True,
         mse=False, norm=2.4, grid=100, maxshrink=.8,
-        trits=False
+        trits=False, grouprows=1,
     ):
 
         self.maxq = torch.tensor(2 ** bits - 1)
@@ -35,6 +35,7 @@ class Quantizer(nn.Module):
         self.maxshrink = maxshrink
         if trits:
             self.maxq = torch.tensor(-1)
+        self.grouprows = grouprows
 
     def find_params(self, x, weight=False):
         dev = x.device
@@ -44,6 +45,8 @@ class Quantizer(nn.Module):
         if self.perchannel:
             if weight:
                 x = x.flatten(1)
+                if self.grouprows > 1:
+                    x = x.reshape((x.shape[0] // self.grouprows, -1))
             else:
                 if len(shape) == 4:
                     x = x.permute([1, 0, 2, 3])
@@ -105,6 +108,9 @@ class Quantizer(nn.Module):
             self.zero = self.zero.repeat(tmp)
 
         if weight:
+            if self.grouprows > 1:	
+                self.scale = self.scale.unsqueeze(1).repeat(1, self.grouprows)	
+                self.zero = self.zero.unsqueeze(1).repeat(1, self.grouprows)
             shape = [-1] + [1] * (len(shape) - 1)
             self.scale = self.scale.reshape(shape)
             self.zero = self.zero.reshape(shape)
