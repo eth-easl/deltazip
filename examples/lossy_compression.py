@@ -18,7 +18,7 @@ def main(args):
     ]
     model = AutoFMZipModelForCausalLM.from_pretrained(args.target_model, compress_config=compress_config)
     model.lossy_compress(examples)
-    model.save_pretrained("/home/xzyao/Documents/cache/compressed_models/")
+    model.save_compressed("/home/xzyao/Documents/cache/compressed_models/")
 
 
 if __name__=="__main__":
