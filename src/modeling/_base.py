@@ -65,6 +65,35 @@ class AutotuneQuantizeConfig(PushToHubMixin):
         }
 
 @dataclass
+class BaseSparsificationConfig(PushToHubMixin):
+    sparsity: float = field(default=0.5)
+    sym: bool = field(default=True)
+    grouprows: int = field(default=1)
+
+    def __post_init__(self):
+        fields_info = fields(self)
+        if self.sparsity < 0 or self.sparsity > 1:
+            raise ValueError(f"sparsity must be [0, 1)")
+        if self.group_size != -1 and self.group_size <= 0:
+            raise ValueError("unless equal to -1, group_size must greater then 0.")
+        
+    def save_pretrained(self, save_dir: str, **kwargs):
+        with open(join(save_dir, "quantize_config.json"), "w", encoding="utf-8") as f:
+            json.dump(self.to_dict(), f, indent=2)
+
+    @classmethod
+    def from_pretrained(cls, save_dir: str):
+        with open(join(save_dir, "quantize_config.json"), "r", encoding="utf-8") as f:
+            return cls(**json.load(f))
+
+    def to_dict(self):
+        return {
+            "sparsity": self.sparsity,
+            "grouprows": self.grouprows,
+            "sym": self.sym,
+        }
+    
+@dataclass
 class BaseQuantizeConfig(PushToHubMixin):
     bits: int = field(default=4, metadata={"choices": [2, 3, 4, 8]})
     # sparsity = how many parameters we set to zero after quantization
@@ -78,8 +107,8 @@ class BaseQuantizeConfig(PushToHubMixin):
 
     def __post_init__(self):
         fields_info = fields(self)
-        if self.sparsity < 0 or self.sparsity >= 1:
-            raise ValueError(f"sparsity must be [0, 1)")
+        if self.sparsity < 0 or self.sparsity > 1:
+            raise ValueError(f"sparsity must be [0, 1]")
         if self.bits not in fields_info[0].metadata["choices"]:
             raise ValueError(f"only support quantize to {fields_info[0].metadata['choices']} bits.")
         if self.group_size != -1 and self.group_size <= 0:
