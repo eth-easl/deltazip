@@ -9,13 +9,21 @@ It supports (or will support) the following algorithms:
 - [GPT-Zip](https://openreview.net/forum?id=hO0c2tG2xL)
 - [GDeflate (by nvcomp)](https://developer.nvidia.com/nvcomp)
 
+
 ## Lossless Comression
+
 
 ## Lossy Compression
 
-## Credits
 
-Heavily inspired by [AutoGPTQ](https://github.com/PanQiWei/AutoGPTQ)
+## Acknowledgements
+
+Heavily inspired by
+
+* [IST-DASLab/gptq](https://github.com/IST-DASLab/gptq)
+* [IST-DASLab/sparsegpt](https://github.com/IST-DASLab/sparsegpt)
+* [PanQiWei/AutoGPTQ](https://github.com/PanQiWei/AutoGPTQ)
+* [qwopqwop200/GPTQ-for-LLaMa](https://github.com/qwopqwop200/GPTQ-for-LLaMa)
 
 ## Papers
 

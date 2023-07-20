@@ -4,9 +4,9 @@ import time
 import torch
 import torch.nn as nn
 import transformers
+from loguru import logger
 
 from .quant import quantize, Quantizer
-
 
 DEBUG = False 
 
@@ -44,7 +44,7 @@ class SparseGPT:
         self.H += inp.matmul(inp.t())
 
     def fasterprune(
-        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=.01
+        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=.01, group_size=-1, actorder=False
     ):
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
@@ -65,6 +65,11 @@ class SparseGPT:
         H[dead, dead] = 1
         W[:, dead] = 0
 
+        if actorder:
+            perm = torch.argsort(torch.diag(H), descending=True)
+            W = W[:, perm]
+            H = H[perm][:, perm]
+
         Losses = torch.zeros(self.rows, device=self.dev)
 
         damp = percdamp * torch.mean(torch.diag(H))
@@ -74,7 +79,11 @@ class SparseGPT:
         H = torch.cholesky_inverse(H)
         H = torch.linalg.cholesky(H, upper=True)
         Hinv = H
-
+        
+        g_idx = []
+        scale = []
+        zero = []
+        now_idx = 1
         mask = None
 
         for i1 in range(0, self.columns, blocksize):
@@ -109,6 +118,14 @@ class SparseGPT:
                 q[mask1[:, i]] = 0
 
                 if hasattr(self, 'quantizer'):
+                    if group_size != -1:
+                        if (i1 + i) % group_size == 0:
+                            self.quantizer.find_params(W[:, (i1 + i):(i1 + i + group_size)], weight=True)
+
+                        if ((i1 + i) // group_size) - now_idx == -1:
+                            scale.append(self.quantizer.scale)
+                            zero.append(self.quantizer.zero)
+                            now_idx += 1
                     q = quantize(
                         q.unsqueeze(1), self.quantizer.scale, self.quantizer.zero, self.quantizer.maxq
                     ).flatten()
@@ -132,14 +149,31 @@ class SparseGPT:
                 print(torch.sum(Losses))
 
         torch.cuda.synchronize()
-        print('time %.2f' % (time.time() - tick))
-        print('error', torch.sum(Losses).item())
+        logger.info(f'duration: {(time.time() - tick)}')
+        logger.info(f'avg loss: {torch.sum(Losses).item() / self.nsamples}')
+        
+        group_size = group_size if group_size != -1 else self.columns
+        g_idx = [i // group_size for i in range(self.columns)]
+        g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
+        if actorder:
+            invperm = torch.argsort(perm)
+            Q = Q[:, invperm]
+            g_idx = g_idx[invperm]
 
         if isinstance(self.layer, transformers.Conv1D):
             W = W.t()
         self.layer.weight.data = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
+        
         if DEBUG:
             print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
+
+        if scale == []:
+            scale.append(self.quantizer.scale)
+            zero.append(self.quantizer.zero)
+
+        scale = torch.cat(scale, dim=1)
+        zero = torch.cat(zero, dim=1)
+        return scale, zero, g_idx
 
     def free(self):
         if DEBUG:

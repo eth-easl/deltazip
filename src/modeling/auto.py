@@ -47,7 +47,7 @@ class AutoFMZipModelForCausalLM:
         )
 
     @classmethod
-    def from_quantized(
+    def from_compressed(
         cls,
         save_dir: str,
         device_map: Optional[str] = None,
