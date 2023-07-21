@@ -10,7 +10,7 @@ def main(args):
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)["text"] for line in fp.readlines()]
     compress_config = BaseCompressionConfig(
-        bits=args.bits, group_size=args.group_size, sparsity=args.sparsity
+        bits=args.bits, group_size=args.group_size, sparsity=args.sparsity,prunen=0, prunem=0,
     )
     examples = [tokenizer(x) for x in examples]
     model = AutoFMZipModelForCausalLM.from_pretrained(

@@ -29,6 +29,6 @@ temp_dir = os.path.join(".cache", "compressed_model", pretraind_model.replace("/
 
 os.makedirs(temp_dir, exist_ok=True)
 
-model.save_pretrained(temp_dir)
+model.save_compressed(temp_dir)
 
 decompressed_model = AutoFMZipModelForCausalLM.from_compressed(temp_dir, unpack=True, device="cuda:0")
