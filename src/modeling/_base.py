@@ -516,16 +516,17 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             compress_config = BaseCompressionConfig.from_pretrained(save_dir)
         
         if model_basename is None:
-            model_basename = "fmzip-compressed.safetensors"
+            model_basename = "fmzip-compressed"
         
         model_save_name = os.path.join(save_dir, model_basename)
         extensions = ['.safetensors']
         for ext in extensions:
+            print(model_save_name + ext)
             if isfile(model_save_name + ext):
                 model_save_name += ext
                 break
         else:
-            raise FileNotFoundError(f"can't find model file with basename {model_basename} in {save_dir}")
+            raise FileNotFoundError(f"can't find model file with name {model_basename} in {save_dir}")
 
         def skip(*args, **kwargs):
             pass
