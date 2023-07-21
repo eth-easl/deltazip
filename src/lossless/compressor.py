@@ -7,6 +7,7 @@ from src.lossless.nvcomp import BitcompManager
 from src.lossless.nvcomp import GdeflateManager
 from src.lossless.nvcomp import CascadedManager
 from torch.utils.dlpack import to_dlpack, from_dlpack
+from multiprocessing import Pool
 
 dtype_maps = {
     'fp16': torch.float16,
@@ -46,15 +47,11 @@ class LosslessCompressor():
         to_compress_tensor = cp.from_dlpack(to_dlpack(tensor))
         tensor_shape = to_compress_tensor.shape
         compressed_tensor = self.comp_manager.compress(to_compress_tensor)
-        del to_compress_tensor
-        torch.cuda.empty_cache()
         return cp.asnumpy(compressed_tensor), tensor_shape
 
-    def decompress_tensor(self, compressed_tensor: cp.ndarray, tensor_shape: tuple):
+    def decompress_tensor(self, compressed_tensor: cp.array, tensor_shape: tuple):
         decompressed_tensor = self.comp_manager.decompress(compressed_tensor)
         torch_tensor = torch.reshape(from_dlpack(decompressed_tensor.toDlpack()), tensor_shape)
-        del decompressed_tensor
-        torch.cuda.empty_cache()
         return torch_tensor
 
     def compress_state_dict(self, state_dict: Dict[str, torch.Tensor]):
@@ -64,8 +61,10 @@ class LosslessCompressor():
             tensors[key], tensors_shape[key] = self.compress_tensor(state_dict[key])
         return tensors, tensors_shape
 
-    def decompress_state_dict(self, compressed_state_dict: Dict[str, torch.Tensor], tensor_shapes: Dict[str, tuple]):
+    def decompress_state_dict(self, compressed_state_dict: Dict[str, cp.array], tensor_shapes: Dict[str, tuple]):
         tensors = {}
-        for key in compressed_state_dict:
-            tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key])
+        # for key in compressed_state_dict:
+        #     tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key])
+        with Pool(8) as p:
+            tensors = p.starmap(self.decompress_tensor, zip(compressed_state_dict.values(), tensor_shapes.values()))
         return tensors

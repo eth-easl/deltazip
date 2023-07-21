@@ -1,16 +1,15 @@
-from logging import getLogger
 from typing import Union
 
 import torch
-import torch.nn as nn
-from transformers import AutoConfig
 import transformers
+import torch.nn as nn
+from loguru import logger
+from transformers import AutoConfig
 
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
 from ..utils.import_utils import dynamically_import_QuantLinear
 from ..nn_modules.qlinear import QuantLinear
 from ..utils.attr_utils import rsetattr
-logger = getLogger(__name__)
 
 
 def get_device(obj: Union[torch.Tensor, nn.Module]):
@@ -116,7 +115,7 @@ def pack_model(
         qlayers[name].pack(layers[name], scale, zero, g_idx)
         qlayers[name].to(layer_device)
     logger.info('Model packed.')
-
+    # after packing, we further apply lossless compression
 
 def check_and_get_model_type(model_dir):
     config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
