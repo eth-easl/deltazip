@@ -26,10 +26,10 @@ bytes_nums = {
 }
 
 class CompressedInferenceService():
-    def __init__(self, base_model: str, dtype='fp16') -> None:
+    def __init__(self, base_model: str, dtype='fp16', revision='main') -> None:
         self._dtype = dtype
         self.dtype = dtype_maps[dtype]
-        self._init_base_model(base_model)
+        self._init_base_model(base_model, revision)
         self.services = {}
         self.services[base_model] = {
             'dest': 'gpu_memory',
@@ -40,16 +40,16 @@ class CompressedInferenceService():
         self.comp_manager = manager()
         self.comp_manager.input_type = cp_dtype_maps[dtype]
 
-    def _init_base_model(self, base_model: str):
-        logger.debug("Loading base model: {}".format(base_model))
-        self.base_model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype=self.dtype)
+    def _init_base_model(self, base_model: str, revision: str):
+        logger.debug(f"Loading base model: {base_model}/{revision}")
+        self.base_model = AutoModelForCausalLM.from_pretrained(base_model, torch_dtype=self.dtype, revision=revision)
         self.base_model.cuda()
         self.base_model.requires_grad_(False)
         logger.debug("Done loading base model")
 
-    def compress_model(self, target_model: str, dest: str, low_gpu_mem=True, delta=True)-> Tuple[float, float]:
-        logger.debug("Loading target model: {}".format(target_model))
-        target_model = AutoModelForCausalLM.from_pretrained(target_model, torch_dtype=self.dtype)
+    def compress_model(self, target_model: str, dest: str, low_gpu_mem=True, delta=True, revision='main')-> Tuple[float, float]:
+        logger.debug(f"Loading target model: {target_model}/{revision}")
+        target_model = AutoModelForCausalLM.from_pretrained(target_model, torch_dtype=self.dtype, revision=revision)
         if low_gpu_mem:
             self.base_model = self.base_model.cpu()
             torch.cuda.empty_cache()
