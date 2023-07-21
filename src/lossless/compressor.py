@@ -10,14 +10,17 @@ from torch.utils.dlpack import to_dlpack, from_dlpack
 from multiprocessing import Pool
 
 dtype_maps = {
+    'int8': torch.int8,
     'fp16': torch.float16,
     'fp32': torch.float32,
 }
 cp_dtype_maps = {
+    'int8': cp.int8,
     'fp16': cp.float16,
     'fp32': cp.float32,
 }
 bytes_nums = {
+    'int8': 1,
     'fp16': 2,
     'fp32': 4,
 }

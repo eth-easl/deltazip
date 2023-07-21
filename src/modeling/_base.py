@@ -9,7 +9,7 @@ from logging import getLogger
 from os.path import join, isfile
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field, fields
-from safetensors.torch import save_file as safe_save
+from safetensors.numpy import save_file as safe_save
 from accelerate.hooks import remove_hook_from_module
 from transformers.utils.hub import PushToHubMixin
 from transformers import AutoConfig, AutoModelForCausalLM, PreTrainedModel
@@ -22,6 +22,7 @@ from ..core.quant import Quantizer
 from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
+
 logger = getLogger(__name__)
 
 @dataclass
@@ -91,7 +92,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self.compress_config = compress_config
         self.config = self.model.config
         if self.compress_config.lossless.lower() != 'none':
-            self.lossless_compressor = LosslessCompressor(self.compress_config.lossless, dtype=self.compress_config.dtype)
+            self.lossless_compressor = LosslessCompressor(self.compress_config.lossless, dtype='int8')
     @property
     def compressed(self):
         return self._compressed
@@ -418,7 +419,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             k: v.clone().contiguous() for k, v in state_dict.items()
         }
         if hasattr(self, "lossless_compressor"):
-            state_dict, tensor_shapes = self.lossless_compressor.compress(state_dict)
+            state_dict, tensor_shapes = self.lossless_compressor.compress_state_dict(state_dict)
             with open(join(save_dir, "tensor_shapes.json"), "w", encoding="utf-8") as f:
                 json.dump(tensor_shapes, f, indent=2)
         safe_save(state_dict, join(save_dir, model_save_name))
