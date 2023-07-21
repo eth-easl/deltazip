@@ -11,7 +11,7 @@ def main(args):
     compress_config = BaseCompressionConfig(
         bits = 4,
         group_size = 1024,
-        sparsity=0.5
+        sparsity=0.1
     )
     examples = [
         tokenizer(x) for x in examples
@@ -27,5 +27,7 @@ if __name__=="__main__":
     parser.add_argument("--base-model", type=str, default="facebook/opt-1.3b")
     parser.add_argument("--dataset", type=str, default="answer_verification")
     parser.add_argument("--target-model", type=str, default="facebook/opt-1.3b")
+    parser.add_argument("--sparsity", type=float, default=0.5)
+    parser.add_argument("--bits", type=int, default=4)
     args = parser.parse_args()
     main(args)

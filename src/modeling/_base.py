@@ -29,8 +29,8 @@ class BaseCompressionConfig(PushToHubMixin):
     bits: int = field(default=4, metadata={"choices": [2, 3, 4, 8]})
     # sparsity = how many parameters we set to zero after quantization
     sparsity: float = field(default=0)
-    prunen: int = field(default=1)
-    prunem: int = field(default=1)
+    prunen: int = field(default=2)
+    prunem: int = field(default=4)
     group_size: int = field(default=-1)
     block_size: int = field(default=1)
     group_rows: int = field(default=1)
