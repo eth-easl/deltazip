@@ -2,7 +2,7 @@ import os
 import torch
 from copy import deepcopy
 from transformers import AutoTokenizer, TextGenerationPipeline
-from src import AutoGPTQForCausalLM, BaseQuantizeConfig
+from src import AutoFMZipModelForCausalLM, BaseQuantizeConfig
 
 pretrained_model_dir = "facebook/opt-125m"
 quantized_model_dir = "outputs/opt-125m-2bit-1024g"
@@ -19,14 +19,14 @@ def main():
         bits=2,
         group_size=1024,
     )
-    model = AutoGPTQForCausalLM.from_pretrained(pretrained_model_dir, quantize_config)
+    model = AutoFMZipModelForCausalLM.from_pretrained(pretrained_model_dir, quantize_config)
 
     model.quantize(examples)
     post_quantized_model = deepcopy(model)
 
     model.save_quantized(quantized_model_dir, use_safetensors=True)
 
-    unpacked_model = AutoGPTQForCausalLM.from_quantized(quantized_model_dir, unpack=True, device="cuda:0")
+    unpacked_model = AutoFMZipModelForCausalLM.from_quantized(quantized_model_dir, unpack=True, device="cuda:0")
 
     # compare the post-quantized model and the unpacked model
     post_quantized_model.to("cuda:0")

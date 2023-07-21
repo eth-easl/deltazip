@@ -1,2 +1,3 @@
-from .modeling import AutoGPTQForCausalLM
-from .modeling import BaseQuantizeConfig
+from .modeling import BaseFMZipModelForCausalLM
+from .modeling import BaseCompressionConfig
+from .modeling import AutoFMZipModelForCausalLM

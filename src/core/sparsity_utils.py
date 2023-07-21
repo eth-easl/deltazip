@@ -7,6 +7,8 @@ def hard_threshold(x, fraction_of_zero=0.1):
     """
     if fraction_of_zero == 0:
         return x
+    if fraction_of_zero == 1:
+        return torch.zeros_like(x)
     y, _ = torch.sort(x.view(-1).abs().clone())
     num_params = torch.numel(x)
     thresh_index = int(num_params * fraction_of_zero)

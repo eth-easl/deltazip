@@ -1,4 +1,4 @@
-from ._base import BaseGPTQForCausalLM, BaseQuantizeConfig
+from ._base import BaseFMZipModelForCausalLM, BaseCompressionConfig
 from .auto import *
 from .bloom import *
 from .gpt2 import *

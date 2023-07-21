@@ -1,7 +1,7 @@
 from ._base import *
 
 
-class MOSSGPTQForCausalLM(BaseGPTQForCausalLM):
+class MOSSFMZipForCausalLM(BaseFMZipModelForCausalLM):
     layer_type = "MossBlock"
     layers_block_name = "transformer.h"
     outside_layer_modules = ["transformer.wte", "transformer.ln_f"]
@@ -13,4 +13,4 @@ class MOSSGPTQForCausalLM(BaseGPTQForCausalLM):
     ]
 
 
-__all__ = ["MOSSGPTQForCausalLM"]
+__all__ = ["MOSSFMZipForCausalLM"]
