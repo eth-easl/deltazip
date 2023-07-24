@@ -91,8 +91,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self._compressed = compressed
         self.compress_config = compress_config
         self.config = self.model.config
-        if self.compress_config.lossless.lower() != 'none':
-            self.lossless_compressor = LosslessCompressor(self.compress_config.lossless, dtype='int8')
+        self.lossless_compressor = LosslessCompressor(self.compress_config.lossless, dtype='int8')
+    
     @property
     def compressed(self):
         return self._compressed
@@ -601,11 +601,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 no_split_module_classes=[cls.layer_type]
             )
         else:
-            if use_safetensors:
-                from safetensors.torch import load_file as safe_load
-                model.load_state_dict(safe_load(model_save_name), strict=False)
-            else:
-                model.load_state_dict(torch.load(model_save_name), strict=False)
+            from safetensors.torch import load_file as safe_load
+            model.load_state_dict(safe_load(model_save_name), strict=False)
             model = accelerate.dispatch_model(model, device_map)
         if unpack:
             unpack_model(model)

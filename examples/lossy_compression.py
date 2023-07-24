@@ -3,7 +3,6 @@ import json
 from transformers import AutoTokenizer
 from src import BaseCompressionConfig, AutoFMZipModelForCausalLM
 
-
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
@@ -28,7 +27,6 @@ def main(args):
     model.save_compressed(
         os.path.join(base_directory, directory_name)
     )
-
 
 if __name__ == "__main__":
     import argparse
