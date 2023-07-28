@@ -3,7 +3,7 @@ import json
 import torch
 import transformers
 from tqdm import tqdm
-from src import AutoFMZipModelForCausalLM, BaseQuantizeConfig
+from fmzip import AutoFMZipModelForCausalLM, BaseQuantizeConfig
 
 def main(args):
     print(args)

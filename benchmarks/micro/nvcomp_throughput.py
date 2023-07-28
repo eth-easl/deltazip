@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import cupy as cp
 from timeit import default_timer as timer
-from src.lossless.compressor import LosslessCompressor
+from fmzip.lossless.compressor import LosslessCompressor
 
 TENSOR_SIZE = 16384
 

@@ -1,11 +1,11 @@
 import torch
 import cupy as cp
 from typing import Dict
-from src.lossless.nvcomp import LZ4Manager
-from src.lossless.nvcomp import SnappyManager
-from src.lossless.nvcomp import BitcompManager
-from src.lossless.nvcomp import GdeflateManager
-from src.lossless.nvcomp import CascadedManager
+from fmzip.lossless.nvcomp import LZ4Manager
+from fmzip.lossless.nvcomp import SnappyManager
+from fmzip.lossless.nvcomp import BitcompManager
+from fmzip.lossless.nvcomp import GdeflateManager
+from fmzip.lossless.nvcomp import CascadedManager
 from torch.utils.dlpack import to_dlpack, from_dlpack
 from multiprocessing import Pool
 

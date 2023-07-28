@@ -4,7 +4,7 @@ from huggingface_hub import HfApi
 from transformers import AutoModelForCausalLM
 import pandas as pd
 import random
-from src.lossless.service import CompressedInferenceService
+from fmzip.lossless.service import CompressedInferenceService
 
 base_model_name = "EleutherAI/pythia-2.8b-deduped"
 base_branch = "120000"

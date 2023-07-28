@@ -2,7 +2,7 @@ import os
 import torch
 from copy import deepcopy
 from transformers import AutoTokenizer, TextGenerationPipeline
-from src import AutoFMZipModelForCausalLM, BaseQuantizeConfig
+from fmzip import AutoFMZipModelForCausalLM, BaseQuantizeConfig
 
 pretrained_model_dir = "facebook/opt-125m"
 quantized_model_dir = "outputs/opt-125m-2bit-1024g"

@@ -14,7 +14,7 @@ from accelerate import init_empty_weights
 from torch.utils.dlpack import from_dlpack
 from transformers import AutoModelForCausalLM
 
-from src.lossless.nvcomp import GdeflateManager as manager
+from fmzip.lossless.nvcomp import GdeflateManager as manager
 
 def benchmark(args):
     # timer_start = timer()

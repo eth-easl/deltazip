@@ -1,7 +1,7 @@
 import os
 import json
 from transformers import AutoTokenizer
-from src import BaseCompressionConfig, AutoFMZipModelForCausalLM
+from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
 
 def main(args):
     print(args)

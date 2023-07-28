@@ -10,7 +10,7 @@ from torch.utils.dlpack import to_dlpack
 from timeit import default_timer as timer
 from torch.utils.dlpack import from_dlpack
 from transformers import AutoModelForCausalLM
-from src.lossless.nvcomp import GdeflateManager as manager
+from fmzip.lossless.nvcomp import GdeflateManager as manager
 
 dtype_maps = {
     'fp16': torch.float16,

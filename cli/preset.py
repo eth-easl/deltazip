@@ -2,7 +2,7 @@ import os
 import json
 import argparse
 from transformers import AutoTokenizer
-from src import BaseQuantizeConfig, AutoFMZipModelForCausalLM
+from fmzip import BaseQuantizeConfig, AutoFMZipModelForCausalLM
 
 def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)

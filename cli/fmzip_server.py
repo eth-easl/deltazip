@@ -1,10 +1,9 @@
 import argparse
 from transformers import AutoTokenizer
-from fmzip import AutoFMZipModelForCausalLM
+
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
-    base_model = AutoFM
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -16,7 +15,7 @@ if __name__=="__main__":
     parser.add_argument("--group-size", type=int, default=1024)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
-    parser.add_argument("--lossless", type=str, default="gdeflate", choices=['gdeflate'])
-    parser.add_argument("--delta", type=str, choices=['subtract', 'xor'], default='subtract')
+    parser.add_argument("--lossless", type=str, default="gdeflate")
+    parser.add_argument("--delta")
     args = parser.parse_args()
     main(args)

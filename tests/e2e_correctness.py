@@ -2,7 +2,7 @@ import os
 import torch
 from copy import deepcopy
 from transformers import AutoTokenizer, TextGenerationPipeline
-from src import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
 pretraind_model = 'facebook/opt-125m'
 
