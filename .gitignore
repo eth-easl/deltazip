@@ -3,3 +3,4 @@
 outputs/
 .vscode/
 .experiments
+build/

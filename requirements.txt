@@ -1,4 +1,4 @@
-transformers>=4.28.1
+transformers
 accelerate
 xformers
 rouge-score
@@ -7,3 +7,6 @@ py7zr
 zarr
 cupy-cuda11x
 cchardet
+scikit-build
+pytest
+numcodecs
