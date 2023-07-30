@@ -8,6 +8,7 @@ def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)["text"] for line in fp.readlines()]
+    examples = examples[:128]
     compress_config = BaseCompressionConfig(
         bits=args.bits,
         group_size=args.group_size,

@@ -25,11 +25,11 @@ def main(args):
     target_model.requires_grad_(False)
     
     
-    if args.base_model:
+    if args.base_model != "":
         # import copy
         # target_model_copy = copy.deepcopy(target_model)
         print("[info] base model is defined, delta mode enabled")
-        base_model = AutoFMZipModelForCausalLM(args.base_model)
+        base_model = AutoFMZipModelForCausalLM.from_pretrained(args.base_model, compress_config=compress_config)
         base_model.requires_grad_(False)
     
         # now perform the delta op
@@ -57,7 +57,7 @@ def main(args):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-model", type=Union[str, None], default=None)
+    parser.add_argument("--base-model", type=str, default="")
     parser.add_argument("--dataset", type=str, default="answer_verification", help="The dataset to use for training, must be a path to a jsonl file.")
     parser.add_argument("--n-samples", type=int, default=-1, help="How many data samples used for calibration, -1 means all.")
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")

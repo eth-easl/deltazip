@@ -167,7 +167,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     module = get_module_by_name(self.model, name)
                     remove_hook_from_module(module, recurse=True)
                     accelerate.cpu_offload_with_hook(module, CUDA_0)
-        
+
         layer_inputs = []
         attention_masks = []
         position_ids = []
