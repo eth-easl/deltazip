@@ -17,14 +17,6 @@ from transformers import AutoModelForCausalLM
 from fmzip.lossless.nvcomp import GdeflateManager as manager
 
 def benchmark(args):
-    # timer_start = timer()
-    # origin_model = AutoModelForCausalLM.from_pretrained(args.model_type)
-    # origin_model.cuda()
-    # timer_end = timer()
-    # logger.info("Default loading time: {}s".format(timer_end - timer_start))
-    # del origin_model
-
-    # torch.cuda.empty_cache()
     comp_manager = manager()
     comp_manager.input_type = cp.float32
     tensors = {}

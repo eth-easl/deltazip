@@ -6,11 +6,11 @@ import cupy as cp
 import accelerate
 import transformers
 import torch.nn as nn
-from logging import getLogger
+from loguru import logger
 from os.path import join, isfile
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field, fields
-from safetensors.numpy import safe_open
+from safetensors.numpy import load_file as safe_load
 from safetensors.numpy import save_file as safe_save
 from accelerate.hooks import remove_hook_from_module
 from transformers.utils.hub import PushToHubMixin
@@ -24,8 +24,6 @@ from ..core.quant import Quantizer
 from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
-
-logger = getLogger(__name__)
 
 @dataclass
 class BaseCompressionConfig(PushToHubMixin):
@@ -614,13 +612,18 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         
         # now load compressed data
         losslesscompressor = LosslessCompressor(compress_config.lossless)
-        cp_tensors = {}
-        with safe_open(model_save_name, framework='np', device='cpu') as f:
-            for key in f.keys():
-                cp_tensors[key] = cp.array(f.get_tensor(key))
+        tensors = safe_load(model_save_name)
+
+        for key in tensors.keys():
+            if any([key.startswith(ignore_layer) for ignore_layer in ignore_layers]):
+                logger.info(f"{key} not been quantized, will be loaded as fp16.")
+                tensors[key] = cp.array(tensors[key],dtype=cp.float16, copy=False)
+            else:
+                tensors[key] = cp.array(tensors[key], copy=False)
         with open(tensor_shapes_file, "r", encoding="utf-8") as f:
             tensor_shapes = json.load(f)
-        tensors = losslesscompressor.decompress_state_dict(cp_tensors, tensor_shapes)
+        tensors = losslesscompressor.decompress_state_dict(tensors, tensor_shapes)
+        
         model.load_state_dict(tensors, strict=True)
         if unpack:
             unpack_model(model)
