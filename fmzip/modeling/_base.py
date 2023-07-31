@@ -2,6 +2,7 @@ import os
 import copy
 import json
 import torch
+import cupy as cp
 import accelerate
 import transformers
 import torch.nn as nn
@@ -9,6 +10,7 @@ from logging import getLogger
 from os.path import join, isfile
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field, fields
+from safetensors.numpy import safe_open
 from safetensors.numpy import save_file as safe_save
 from accelerate.hooks import remove_hook_from_module
 from transformers.utils.hub import PushToHubMixin
@@ -72,6 +74,7 @@ class BaseCompressionConfig(PushToHubMixin):
             "desc_act": self.desc_act,
             "sym": self.sym,
             "true_sequential": self.true_sequential,
+            'lossless': self.lossless,
         }
 
 class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
@@ -84,15 +87,18 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     fused_attn_module_type: Optional[FusedBaseAttentionModule] = None
     fused_mlp_module_type: Optional[FusedBaseMLPModule] = None
 
-    def __init__(self, model: PreTrainedModel, compressed: bool, compress_config: BaseCompressionConfig):
+    def __init__(self, 
+            model: PreTrainedModel,
+            compressed: bool,
+            compress_config: BaseCompressionConfig
+        ):
         super().__init__()
         self.model = model
         self.model_type = self.model.config.model_type
         self._compressed = compressed
         self.compress_config = compress_config
         self.config = self.model.config
-        self.lossless_compressor = LosslessCompressor(self.compress_config.lossless, dtype='int8')
-    
+        
     @property
     def compressed(self):
         return self._compressed
@@ -416,8 +422,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         state_dict = {
             k: v.clone().contiguous() for k, v in state_dict.items()
         }
-        if hasattr(self, "lossless_compressor"):
-            state_dict, tensor_shapes = self.lossless_compressor.compress_state_dict(state_dict)
+        if self.compress_config.lossless != 'none':
+            lossless_compressor = LosslessCompressor(self.compress_config.lossless, dtype='int8')
+            state_dict, tensor_shapes = lossless_compressor.compress_state_dict(state_dict)
             with open(join(save_dir, "tensor_shapes.json"), "w", encoding="utf-8") as f:
                 json.dump(tensor_shapes, f, indent=2)
         safe_save(state_dict, join(save_dir, model_save_name))
@@ -525,6 +532,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             model_basename = "fmzip-compressed"
         
         model_save_name = os.path.join(save_dir, model_basename)
+        tensor_shapes_file = os.path.join(save_dir, "tensor_shapes.json")
         extensions = ['.safetensors']
         for ext in extensions:
             print(model_save_name + ext)
@@ -590,18 +598,30 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 model, max_memory=max_memory,
                 no_split_module_classes=[cls.layer_type]
             )
-        if strict:
-            model = accelerate.load_checkpoint_and_dispatch(
-                model,
-                model_save_name,
-                device_map,
-                max_memory,
-                no_split_module_classes=[cls.layer_type]
-            )
-        else:
-            from safetensors.torch import load_file as safe_load
-            model.load_state_dict(safe_load(model_save_name), strict=False)
-            model = accelerate.dispatch_model(model, device_map)
+        # if strict:
+        #     model = accelerate.load_checkpoint_and_dispatch(
+        #         model,
+        #         model_save_name,
+        #         device_map,
+        #         max_memory,
+        #         no_split_module_classes=[cls.layer_type]
+        #     )
+        # else:
+        #     from safetensors.torch import load_file as safe_load
+            
+        #     model.load_state_dict(safe_load(model_save_name), strict=False)
+        #     model = accelerate.dispatch_model(model, device_map)
+        
+        # now load compressed data
+        losslesscompressor = LosslessCompressor(compress_config.lossless, dtype='int8')
+        cp_tensors = {}
+        with safe_open(model_save_name, framework='np', device='cpu') as f:
+            for key in f.keys():
+                cp_tensors[key] = cp.array(f.get_tensor(key))
+        with open(tensor_shapes_file, "r", encoding="utf-8") as f:
+            tensor_shapes = json.load(f)
+        tensors = losslesscompressor.decompress_state_dict(cp_tensors, tensor_shapes)
+        model.load_state_dict(tensors, strict=True)
         if unpack:
             unpack_model(model)
         # set seqlen

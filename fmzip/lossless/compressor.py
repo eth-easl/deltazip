@@ -8,7 +8,6 @@ from fmzip.lossless.nvcomp import GdeflateManager
 from fmzip.lossless.nvcomp import CascadedManager
 from loguru import logger
 from torch.utils.dlpack import to_dlpack, from_dlpack
-from multiprocessing import Pool
 
 dtype_maps = {
     'int8': torch.int8,
@@ -20,14 +19,9 @@ cp_dtype_maps = {
     'fp16': cp.float16,
     'fp32': cp.float32,
 }
-bytes_nums = {
-    'int8': 1,
-    'fp16': 2,
-    'fp32': 4,
-}
 
 class LosslessCompressor():
-    def __init__(self, algorithm: str, dtype='fp16') -> None:
+    def __init__(self, algorithm: str='gdeflate', dtype='fp16') -> None:
         self._dtype = dtype
         if algorithm == 'gdeflate':
             self.comp_manager = GdeflateManager()
@@ -41,7 +35,7 @@ class LosslessCompressor():
             self.comp_manager = CascadedManager()
         else:
             raise ValueError(f"Unsupported algorithm: {algorithm},  supported algorithms: ['gdeflate', 'lz4', 'snappy', 'bitcomp', 'cascaded']")
-        self.comp_manager.input_type = cp_dtype_maps[dtype]
+        self.comp_manager.input_type = cp_dtype_maps[self._dtype]
     
     def compress_tensor(self, tensor: torch.Tensor):
         tensor.requires_grad_(False)
@@ -70,6 +64,7 @@ class LosslessCompressor():
         tensors = {}
         # for key in compressed_state_dict:
         #     tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key])
-        with Pool(8) as p:
-            tensors = p.starmap(self.decompress_tensor, zip(compressed_state_dict.values(), tensor_shapes.values()))
+        for key in compressed_state_dict.keys():
+            logger.debug(f"Decompressing {key}")
+            tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key])
         return tensors
