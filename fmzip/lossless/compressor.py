@@ -6,6 +6,7 @@ from fmzip.lossless.nvcomp import SnappyManager
 from fmzip.lossless.nvcomp import BitcompManager
 from fmzip.lossless.nvcomp import GdeflateManager
 from fmzip.lossless.nvcomp import CascadedManager
+from loguru import logger
 from torch.utils.dlpack import to_dlpack, from_dlpack
 from multiprocessing import Pool
 
@@ -61,6 +62,7 @@ class LosslessCompressor():
         tensors = {}
         tensors_shape = {}
         for key in state_dict:
+            logger.debug(f"Lossless compressing {key}")
             tensors[key], tensors_shape[key] = self.compress_tensor(state_dict[key])
         return tensors, tensors_shape
 

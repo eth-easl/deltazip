@@ -39,7 +39,7 @@ class BaseCompressionConfig(PushToHubMixin):
     desc_act: bool = field(default=True)
     sym: bool = field(default=True)
     true_sequential: bool = field(default=True)
-    lossless: bool = field(default=False)
+    lossless: str = field(default='none')
     dtype: str = field(default="fp16")
 
     def __post_init__(self):
@@ -413,8 +413,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self.model.to(CPU)
         model_save_name = f"fmzip-compressed.safetensors"
         state_dict = self.model.state_dict()
-        # todo: (xiaozhe): allow further lossless compression here
-        # rn, we do it separately such that we can save two versions for comparison
         state_dict = {
             k: v.clone().contiguous() for k, v in state_dict.items()
         }

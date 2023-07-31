@@ -39,6 +39,7 @@ def main(args):
             target_model = xor(base_model, target_model)
         else:
             raise ValueError(f"Unknown delta mode: {args.delta}")
+    
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)['text'] for line in fp.readlines()]
@@ -59,7 +60,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="")
     parser.add_argument("--dataset", type=str, default="answer_verification", help="The dataset to use for training, must be a path to a jsonl file.")
-    parser.add_argument("--n-samples", type=int, default=-1, help="How many data samples used for calibration, -1 means all.")
+    parser.add_argument("--n-samples", type=int, default=1024, help="How many data samples used for calibration, -1 means all.")
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
     parser.add_argument("--sparsity", type=float, default=0.5)
     parser.add_argument("--bits", type=int, default=4)
