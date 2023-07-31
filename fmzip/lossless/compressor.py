@@ -15,6 +15,7 @@ dtype_maps = {
     'fp32': torch.float32,
     'int32': torch.int32
 }
+
 cp_dtype_maps = {
     'int8': cp.int8,
     'fp16': cp.float16,
@@ -36,7 +37,6 @@ class LosslessCompressor():
             self.comp_manager = CascadedManager()
         else:
             raise ValueError(f"Unsupported algorithm: {algorithm},  supported algorithms: ['gdeflate', 'lz4', 'snappy', 'bitcomp', 'cascaded']")
-        # self.comp_manager.input_type = cp_dtype_maps[self._dtype]
     
     def compress_tensor(self, tensor: torch.Tensor):
         tensor.requires_grad_(False)
@@ -47,7 +47,7 @@ class LosslessCompressor():
         tensor_shape = to_compress_tensor.shape
         logger.debug(f"compressiong dtype {tensor.dtype}")
         if tensor.dtype == torch.int8:
-            self.comp_manager.input_type = cp.sint8
+            self.comp_manager.input_type = cp.int8
         elif tensor.dtype == torch.float16:
             self.comp_manager.input_type = cp.float16
         elif tensor.dtype == torch.int32:
@@ -55,35 +55,26 @@ class LosslessCompressor():
         else:
             raise ValueError(f"Unsupported dtype: {tensor.dtype}")
         compressed_tensor = self.comp_manager.compress(to_compress_tensor)
-        return cp.asnumpy(compressed_tensor), tensor_shape
+        return cp.asnumpy(compressed_tensor), tensor_shape, tensor.dtype
 
-    def decompress_tensor(self, compressed_tensor: cp.array, tensor_shape: tuple):
-        if compressed_tensor.dtype in [cp.int8, cp.uint8]:
-            self.comp_manager.input_type = cp.int8
-        elif compressed_tensor.dtype == cp.float16:
-            self.comp_manager.input_type = cp.float16
-        elif compressed_tensor.dtype == torch.int32:
-            self.comp_manager.input_type = cp.int32
-        else:
-            raise ValueError(f"Unsupported dtype: {compressed_tensor.dtype}")
-        logger.debug(f"decompressiong dtype {compressed_tensor.dtype}")
-        print(compressed_tensor.shape)
+    def decompress_tensor(self, compressed_tensor: cp.array, tensor_shape: tuple, dtype='fp16'):
+        self.comp_manager.input_type = cp_dtype_maps[dtype]
         decompressed_tensor = self.comp_manager.decompress(compressed_tensor)
-
         torch_tensor = torch.reshape(from_dlpack(decompressed_tensor.toDlpack()), tensor_shape)
         return torch_tensor
 
     def compress_state_dict(self, state_dict: Dict[str, torch.Tensor]):
         tensors = {}
         tensors_shape = {}
+        tensors_dtype = {}
         for key in state_dict:
             logger.debug(f"Lossless compressing {key}")
-            tensors[key], tensors_shape[key] = self.compress_tensor(state_dict[key])
-        return tensors, tensors_shape
+            tensors[key], tensors_shape[key], tensors_dtype[key] = self.compress_tensor(state_dict[key])
+        return tensors, tensors_shape, tensors_dtype
 
-    def decompress_state_dict(self, compressed_state_dict: Dict[str, cp.array], tensor_shapes: Dict[str, tuple]):
+    def decompress_state_dict(self, compressed_state_dict: Dict[str, cp.array], tensor_shapes: Dict[str, tuple], tensor_dtypes: Dict[str, str]=None):
         tensors = {}
         for key in compressed_state_dict.keys():
             logger.debug(f"Decompressing {key} to shape {tensor_shapes[key]}")
-            tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key])
+            tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key], tensor_dtypes[key])
         return tensors

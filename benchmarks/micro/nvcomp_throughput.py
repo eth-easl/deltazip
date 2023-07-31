@@ -4,8 +4,8 @@ import cupy as cp
 from timeit import default_timer as timer
 from fmzip.lossless.compressor import LosslessCompressor
 
-TENSOR_SIZE_X = 50304
-TENSOR_SIZE_Y = 2560
+TENSOR_SIZE_X = 32768
+TENSOR_SIZE_Y = 16384
 
 # make a random tensor
 x = torch.rand(TENSOR_SIZE_X, TENSOR_SIZE_Y, device='cuda', dtype=torch.float16)
@@ -16,10 +16,15 @@ compressor = LosslessCompressor('gdeflate')
 # compress
 start = timer()
 compressed_tensor, tensor_shape = compressor.compress_tensor(x)
+print(compressed_tensor)
+print(tensor_shape)
 end = timer()
 print(f"Compressing {TENSOR_SIZE_X}x{TENSOR_SIZE_Y} tensor takes {end - start} seconds")
+
+
 # decompress
-compressed_tensor = cp.array(compressed_tensor, dtype=cp.float16)
+compressed_tensor = cp.array(compressed_tensor)
+print(compressed_tensor.shape)
 start = timer()
 
 decompressed_tensor = compressor.decompress_tensor(compressed_tensor, tensor_shape)

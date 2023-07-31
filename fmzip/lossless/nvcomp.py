@@ -1,3 +1,4 @@
+
 # Copyright (c) 2021-2022, NVIDIA CORPORATION. All rights reserved.
 # See file LICENSE for terms.
 
@@ -142,12 +143,9 @@ class nvCompManager:
         cp.ndarray
             An array of `self.dtype` produced after decompressing the input argument.
         """
-        print(data.shape)
         self.decompression_config = (
             self._manager.configure_decompression_with_compressed_buffer(asarray(data))
         )
-        print("config")
-        print(self.decompression_config)
         decomp_buffer = cp.empty(
             self.decompression_config["decomp_data_size"], dtype="uint8"
         )

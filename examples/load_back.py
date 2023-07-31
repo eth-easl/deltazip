@@ -3,7 +3,7 @@ from fmzip import AutoFMZipModelForCausalLM
 
 def main(args):
     model = AutoFMZipModelForCausalLM.from_compressed(args.model_path)
-    tokenizer = AutoTokenizer.from_pretrained("facebook/opt-1.3b")
+    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-2.8b-deduped")
     prompt = "The meaning of life is"
     output = model.generate(
         **tokenizer(prompt, return_tensors="pt").to(model.device), 
