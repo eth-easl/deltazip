@@ -423,7 +423,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             k: v.clone().contiguous() for k, v in state_dict.items()
         }
         if self.compress_config.lossless != 'none':
-            lossless_compressor = LosslessCompressor(self.compress_config.lossless, dtype='int8')
+            lossless_compressor = LosslessCompressor(self.compress_config.lossless)
             state_dict, tensor_shapes = lossless_compressor.compress_state_dict(state_dict)
             with open(join(save_dir, "tensor_shapes.json"), "w", encoding="utf-8") as f:
                 json.dump(tensor_shapes, f, indent=2)
@@ -613,7 +613,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         #     model = accelerate.dispatch_model(model, device_map)
         
         # now load compressed data
-        losslesscompressor = LosslessCompressor(compress_config.lossless, dtype='int8')
+        losslesscompressor = LosslessCompressor(compress_config.lossless)
         cp_tensors = {}
         with safe_open(model_save_name, framework='np', device='cpu') as f:
             for key in f.keys():
