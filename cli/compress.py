@@ -44,7 +44,10 @@ def main(args):
             target_model = xor(base_model, target_model)
         else:
             raise ValueError(f"Unknown delta mode: {args.delta}")
-    
+    for name, param in target_model.named_parameters():
+        # check if nan exists
+        if torch.isnan(param).any():
+            raise ValueError(f"NaN exists in {name}")
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)['text'] for line in fp.readlines()]

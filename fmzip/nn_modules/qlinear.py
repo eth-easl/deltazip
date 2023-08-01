@@ -32,7 +32,7 @@ class QuantLinear(nn.Module):
         self.infeatures = infeatures
         self.outfeatures = outfeatures
         self.bits = bits
-        # self.group_size = group_size if group_size != -1 else infeatures
+        self.group_size = group_size if group_size != -1 else infeatures
         self.group_size = infeatures
         self.maxq = 2 ** self.bits - 1
 

@@ -352,6 +352,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
+                        group_size=self.compress_config.group_size,
                         blocksize=self.compress_config.block_size,
                     )
 
