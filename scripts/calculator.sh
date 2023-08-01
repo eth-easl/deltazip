@@ -1,1 +1,0 @@
-python playground/calculator.py --compression-rate 3 --model-sizes 6.7 13 30 --dtype 2 --decompression-throughput 45 --disk-gpu-bandwidth 3.5 --add-back-overhead 3
