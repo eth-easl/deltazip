@@ -4,7 +4,7 @@ import copy
 import torch
 import argparse
 from transformers import AutoTokenizer
-from src import BaseQuantizeConfig, AutoGPTQForCausalLM
+from fmzip import BaseQuantizeConfig, AutoFMZipModelForCausalLM
 
 def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
@@ -23,8 +23,8 @@ def main(args):
         sparsity=args.sparsity,
     )
 
-    base_model  = AutoGPTQForCausalLM.from_pretrained(args.base_model, quantize_config)
-    target_model = AutoGPTQForCausalLM.from_pretrained(args.target_model, quantize_config)
+    base_model  = AutoFMZipModelForCausalLM.from_pretrained(args.base_model, quantize_config)
+    target_model = AutoFMZipModelForCausalLM.from_pretrained(args.target_model, quantize_config)
     original_target_model = copy.deepcopy(target_model)
     # now find the delta model
     # don't rely on zip() because the order of the parameters may change (?)

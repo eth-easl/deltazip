@@ -2,7 +2,7 @@ import os
 import json
 import argparse
 from transformers import AutoTokenizer
-from src import BaseQuantizeConfig, AutoGPTQForCausalLM
+from fmzip import BaseQuantizeConfig, AutoFMZipModelForCausalLM
 
 def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
@@ -21,7 +21,7 @@ def main(args):
         sparsity=args.sparsity,
     )
 
-    target_model = AutoGPTQForCausalLM.from_pretrained(args.target_model, quantize_config)
+    target_model = AutoFMZipModelForCausalLM.from_pretrained(args.target_model, quantize_config)
 
     # now quantize the target model
     target_model.quantize(examples)

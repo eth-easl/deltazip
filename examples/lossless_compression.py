@@ -1,5 +1,5 @@
 import os
-from src.lossless.service import CompressedInferenceService
+from fmzip.lossless.service import CompressedInferenceService
 from loguru import logger
 
 base_model = "EleutherAI/gpt-j-6b"

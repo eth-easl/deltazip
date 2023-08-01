@@ -7,7 +7,7 @@ from safetensors import safe_open
 from torch.utils.dlpack import to_dlpack
 from torch.utils.dlpack import from_dlpack
 from transformers import AutoModelForCausalLM
-from src.lossless.nvcomp import GdeflateManager as manager
+from fmzip.lossless.nvcomp import GdeflateManager as manager
 from timeit import default_timer as timer
 from argparse import ArgumentParser
 from loguru import logger

@@ -3,7 +3,7 @@ import json
 import torch
 import transformers
 from tqdm import tqdm
-from src import AutoGPTQForCausalLM, BaseQuantizeConfig
+from fmzip import AutoFMZipModelForCausalLM, BaseQuantizeConfig
 
 def main(args):
     print(args)
@@ -11,8 +11,8 @@ def main(args):
     # because we are not going to quantize the model
     quantize_config = None
 
-    unpacked_model = AutoGPTQForCausalLM.from_quantized(args.delta_path, unpack=True, device="cuda:0")
-    base_model = AutoGPTQForCausalLM.from_pretrained(args.base_model, quantize_config)
+    unpacked_model = AutoFMZipModelForCausalLM.from_quantized(args.delta_path, unpack=True, device="cuda:0")
+    base_model = AutoFMZipModelForCausalLM.from_pretrained(args.base_model, quantize_config)
     base_model.to("cuda:0")
     with torch.no_grad():
         for name1, param1 in unpacked_model.named_parameters():

@@ -3,11 +3,11 @@ import json
 import torch
 import transformers
 from tqdm import tqdm
-from src import AutoGPTQForCausalLM, BaseQuantizeConfig
+from fmzip import AutoFMZipModelForCausalLM, BaseQuantizeConfig
 
 def main(args):
     print(args)
-    unpacked_model = AutoGPTQForCausalLM.from_quantized(args.target_model, unpack=True, device="cuda:0")
+    unpacked_model = AutoFMZipModelForCausalLM.from_quantized(args.target_model, unpack=True, device="cuda:0")
     # now start to run inference
     # Load test sets
     tokenizer = transformers.AutoTokenizer.from_pretrained(args.base_model, use_fast=True, padding_side='left')
