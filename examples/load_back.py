@@ -2,7 +2,7 @@ from transformers import AutoTokenizer
 from fmzip import AutoFMZipModelForCausalLM
 
 def main(args):
-    model = AutoFMZipModelForCausalLM.from_compressed(args.model_path, strict=False)
+    model = AutoFMZipModelForCausalLM.from_compressed(args.model_path, strict=False,device='cuda')
     tokenizer = AutoTokenizer.from_pretrained("facebook/opt-125m")
     prompt = "The meaning of life is"
     output = model.generate(
@@ -10,7 +10,7 @@ def main(args):
         do_sample=True, 
         top_p=0.9, 
         top_k=0, 
-        temperature=0.9, 
+        temperature=0.1, 
         max_length=100, 
         min_length=10, 
         num_return_sequences=1

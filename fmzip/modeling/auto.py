@@ -67,9 +67,9 @@ class AutoFMZipModelForCausalLM:
         **kwargs
     ) -> BaseFMZipModelForCausalLM:
         model_type = check_and_get_model_type(save_dir)
-        quant_func = FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
-        keywords = {key: kwargs[key] for key in signature(quant_func).parameters if key in kwargs}
-        return quant_func(
+        decompress_func = FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
+        keywords = {key: kwargs[key] for key in signature(decompress_func).parameters if key in kwargs}
+        return decompress_func(
             save_dir=save_dir,
             device_map=device_map,
             max_memory=max_memory,

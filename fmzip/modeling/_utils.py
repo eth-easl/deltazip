@@ -43,14 +43,7 @@ def get_module_by_name(model, module_name: str):
 
 
 def make_quant(module, names, bits, group_size, name='', use_triton=False, use_cuda_fp16=True, desc_act=False):
-    if use_triton:
-        from ..nn_modules.qlinear_triton import QuantLinear
-    else:
-        if not desc_act or group_size == -1:
-            from ..nn_modules.qlinear_old import QuantLinear
-        else:
-            from ..nn_modules.qlinear import QuantLinear
-
+    from ..nn_modules.qlinear import QuantLinear
     if isinstance(module, QuantLinear):
         return
     for attr in dir(module):
@@ -68,10 +61,8 @@ def make_quant(module, names, bits, group_size, name='', use_triton=False, use_c
             elif type(tmp) == transformers.pytorch_utils.Conv1D:            
                 in_features = tmp.weight.shape[0]
                 out_features = tmp.weight.shape[1]
-            if (not(desc_act) or group_size == -1) and not use_triton:
-                new_layer = QuantLinear(bits, group_size, in_features, out_features, tmp.bias is not None, use_cuda_fp16=use_cuda_fp16)
-            else:
-                new_layer = QuantLinear(bits, group_size, in_features, out_features, tmp.bias is not None)
+            
+            new_layer = QuantLinear(bits, group_size, in_features, out_features, tmp.bias is not None)
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))
     for name1, child in module.named_children():
@@ -81,9 +72,9 @@ def unpack_model(model):
     logger.info('Unpacking model...')
     layers = find_layers(model, layers=[QuantLinear])
     for name in layers:
+        # todo(xiaozhe): if 'model' in names we should eliminate it
         rsetattr(model, name, layers[name].unpack())
     logger.info('Model unpacked.')
-
 def pack_model(
     model,
     quantizers,

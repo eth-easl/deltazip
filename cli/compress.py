@@ -53,8 +53,8 @@ def main(args):
     ]
     target_model.lossy_compress(examples)
     # write to folder
-    os.makedirs(args.out_dir, exist_ok=True)
-    target_model.save_compressed(args.out_dir)
+    os.makedirs(args.outdir, exist_ok=True)
+    target_model.save_compressed(args.outdir)
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
@@ -64,11 +64,11 @@ if __name__=="__main__":
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
     parser.add_argument("--sparsity", type=float, default=0.5)
     parser.add_argument("--bits", type=int, default=4)
-    parser.add_argument("--group-size", type=int, default=1024)
+    parser.add_argument("--group-size", type=int, default=-1)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
     parser.add_argument("--lossless", type=str, default="gdeflate", choices=['gdeflate'])
     parser.add_argument("--delta", type=str, choices=['subtract', 'xor'], default='subtract')
-    parser.add_argument("--out-dir", type=str, default=".cache/compressed_models")
+    parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     args = parser.parse_args()
     main(args)

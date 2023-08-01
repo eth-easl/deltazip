@@ -622,7 +622,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"{name} not been quantized, will be ignored when make_quant."
                     )
                     del layers[name]
-        
             make_quant(
                 model,
                 layers,
@@ -645,20 +644,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             device_map = accelerate.infer_auto_device_map(
                 model, max_memory=max_memory, no_split_module_classes=[cls.layer_type]
             )
-        # if strict:
-        #     model = accelerate.load_checkpoint_and_dispatch(
-        #         model,
-        #         model_save_name,
-        #         device_map,
-        #         max_memory,
-        #         no_split_module_classes=[cls.layer_type]
-        #     )
-        # else:
-        #     from safetensors.torch import load_file as safe_load
-
-        #     model.load_state_dict(safe_load(model_save_name), strict=False)
-        #     model = accelerate.dispatch_model(model, device_map)
-
         # now load compressed data
         losslesscompressor = LosslessCompressor(compress_config.lossless)
         
