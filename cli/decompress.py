@@ -1,41 +1,52 @@
 import os
 import json
+import torch
 import argparse
 from typing import Union
 from transformers import AutoTokenizer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
+from loguru import logger
 
 def main(args):
     tokenizer = AutoTokenizer.from_pretrained("facebook/opt-125m")
-    
-    delta_model = AutoFMZipModelForCausalLM.from_compressed(args.target_model, strict=False,device='cuda', unpack=True)
-    
-
-    prompt = "The meaning of life is"
-    # add delta to base model
-    base_model = AutoFMZipModelForCausalLM.from_pretrained(args.base_model, compress_config=delta_model.compress_config)
-    base_model = base_model.to(delta_model.device)
-    base_model.requires_grad_(False)
-
-    if args.delta == "subtract":
-        delta_model = subtract_inverse(base_model, delta_model.model)
-    elif args.delta == "xor":
-        delta_model = xor_inverse(base_model, delta_model.model)
-    delta_model = delta_model.to('cuda')
-    delta_model = delta_model.half()
-    
-    output = delta_model.generate(
-        **tokenizer(prompt, return_tensors="pt").to(delta_model.device), 
-        do_sample=True, 
-        top_p=0.9, 
-        top_k=0, 
-        temperature=0.1, 
-        max_length=100, 
-        min_length=10, 
-        num_return_sequences=1
-    )
-    print(tokenizer.decode(output[0], skip_special_tokens=True))
+    # just placeholder..., we don't need it for base model
+    compress_config = BaseCompressionConfig(
+            bits = 2,
+            group_size=-1,
+            sparsity=1,
+            prunen=0,
+            prunem=0,
+            lossless='gdeflate',
+        )
+    with torch.inference_mode():
+        logger.info("Loading base model")
+        base_model = AutoFMZipModelForCausalLM.from_pretrained(args.base_model, compress_config=compress_config, torch_dtype=torch.float16)
+        base_model = base_model.to(torch.device('cuda'))
+        logger.info("Loading target model")
+        delta_model = AutoFMZipModelForCausalLM.from_compressed(args.
+        target_model, strict=False, device=base_model.device, unpack=True)
+        logger.info("reverse delta")
+        delta_model.half()
+        if args.delta == "subtract":
+            delta_model = subtract_inverse(base_model, delta_model.model)
+        elif args.delta == "xor":
+            delta_model = xor_inverse(base_model, delta_model.model)
+        logger.info("ready to generate")
+        
+        prompt = "The meaning of life is"
+        # add delta to base model
+        output = delta_model.generate(
+            **tokenizer(prompt, return_tensors="pt").to(delta_model.device), 
+            do_sample=True, 
+            top_p=0.9, 
+            top_k=0, 
+            temperature=0.1, 
+            max_length=100, 
+            min_length=10, 
+            num_return_sequences=1
+        )
+        print(tokenizer.decode(output[0], skip_special_tokens=True))
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()

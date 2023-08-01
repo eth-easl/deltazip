@@ -679,7 +679,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 "can't get model's sequence length from model config, will set to 2048."
             )
             model.seqlen = 2048
-
+        # now move to device
+        # todo (xiaozhe): for larger models, we will need to split model to multiple devices, for now, just to(device).
+        model = model.to(device)
         model.eval()
         return cls(model, True, compress_config)
 
