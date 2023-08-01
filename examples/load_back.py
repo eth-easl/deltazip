@@ -2,8 +2,8 @@ from transformers import AutoTokenizer
 from fmzip import AutoFMZipModelForCausalLM
 
 def main(args):
-    model = AutoFMZipModelForCausalLM.from_compressed(args.model_path)
-    tokenizer = AutoTokenizer.from_pretrained("EleutherAI/pythia-2.8b-deduped")
+    model = AutoFMZipModelForCausalLM.from_compressed(args.model_path, strict=False)
+    tokenizer = AutoTokenizer.from_pretrained("facebook/opt-125m")
     prompt = "The meaning of life is"
     output = model.generate(
         **tokenizer(prompt, return_tensors="pt").to(model.device), 

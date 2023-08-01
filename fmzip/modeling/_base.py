@@ -8,13 +8,16 @@ import transformers
 import torch.nn as nn
 from loguru import logger
 from os.path import join, isfile
+from safetensors.numpy import safe_open
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field, fields
-from safetensors.numpy import load_file as safe_load
+from transformers.utils.hub import PushToHubMixin
 from safetensors.numpy import save_file as safe_save
 from accelerate.hooks import remove_hook_from_module
-from transformers.utils.hub import PushToHubMixin
 from transformers import AutoConfig, AutoModelForCausalLM, PreTrainedModel
+from transformers.modeling_utils import no_init_weights
+from transformers.utils.generic import ContextManagers
+
 
 from ._const import *
 from ._utils import (
@@ -459,20 +462,18 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
         if self.compress_config.lossless != "none":
             lossless_compressor = LosslessCompressor(self.compress_config.lossless)
+
             (
                 state_dict,
                 tensor_shapes,
                 tensors_dtype,
             ) = lossless_compressor.compress_state_dict(state_dict)
 
-            with open(join(save_dir, "tensor_shapes.json"), "w", encoding="utf-8") as f:
-                json.dump(tensor_shapes, f, indent=2)
         safe_save(
             tensor_dict=state_dict,
             filename=join(save_dir, model_save_name),
-            metadata={"dtype": tensors_dtype, "shape": tensor_shapes},
+            metadata={"dtype": json.dumps(tensors_dtype), "shape": json.dumps(tensor_shapes)},
         )
-
         self.model.config.save_pretrained(save_dir)
         self.compress_config.save_pretrained(save_dir)
 
@@ -562,7 +563,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         device_map: Optional[str] = None,
         max_memory: Optional[dict] = None,
         device: Optional[Union[str, int]] = None,
-        strict: bool = True,
+        strict: bool = False,
         use_triton: bool = False,
         inject_fused_attention: bool = False,
         inject_fused_mlp: bool = False,
@@ -573,6 +574,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         trust_remote_code: bool = False,
         warmup_triton: bool = True,
         unpack: bool = False,
+        low_cpu_mem_usage: bool = False,
         **kwargs,
     ):
         """load compressed model from local disk"""
@@ -588,10 +590,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             model_basename = "fmzip-compressed"
 
         model_save_name = os.path.join(save_dir, model_basename)
-        tensor_shapes_file = os.path.join(save_dir, "tensor_shapes.json")
         extensions = [".safetensors"]
         for ext in extensions:
-            print(model_save_name + ext)
             if isfile(model_save_name + ext):
                 model_save_name += ext
                 break
@@ -608,40 +608,21 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         torch.nn.init.normal_ = skip
 
         transformers.modeling_utils._init_weights = False
-        if strict:
-            with accelerate.init_empty_weights():
-                torch.set_default_dtype(torch.half)
-                model = AutoModelForCausalLM.from_config(
-                    config, trust_remote_code=trust_remote_code
-                )
-                torch.set_default_dtype(torch.float)
-        else:
-            torch.set_default_dtype(torch.half)
-            model = AutoModelForCausalLM.from_config(
-                config, trust_remote_code=trust_remote_code
-            )
-            torch.set_default_dtype(torch.float)
-        layers = find_layers(model)
-        ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
-        for name in list(layers.keys()):
-            if any([name.startswith(ignore_layer) for ignore_layer in ignore_layers]):
-                logger.info(
-                    f"{name} not been quantized, will be ignored when make_quant."
-                )
-                del layers[name]
-        if strict:
-            with accelerate.init_empty_weights():
-                make_quant(
-                    model,
-                    layers,
-                    compress_config.bits,
-                    compress_config.group_size,
-                    use_triton=use_triton,
-                    use_cuda_fp16=use_cuda_fp16,
-                    desc_act=compress_config.desc_act,
-                )
-            model.tie_weights()
-        else:
+        init_contexts = [no_init_weights()]
+        if low_cpu_mem_usage:
+            init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
+
+        with ContextManagers(init_contexts):
+            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code, torch_dtype=torch.float)
+            layers = find_layers(model)
+            ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
+            for name in list(layers.keys()):
+                if any([name.startswith(ignore_layer) for ignore_layer in ignore_layers]):
+                    logger.info(
+                        f"{name} not been quantized, will be ignored when make_quant."
+                    )
+                    del layers[name]
+        
             make_quant(
                 model,
                 layers,
@@ -651,6 +632,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 use_cuda_fp16=use_cuda_fp16,
                 desc_act=compress_config.desc_act,
             )
+            model.tie_weights()
         if device is None and not device_map and not max_memory:
             device_map = "auto"
         if device is not None:
@@ -679,22 +661,24 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
 
         # now load compressed data
         losslesscompressor = LosslessCompressor(compress_config.lossless)
-        tensors = safe_load(model_save_name)
-        tensor_dtypes = {}
+        
+        metadata = None
+        tensors = {}
+        
+        with safe_open(model_save_name, framework='numpy') as f:
+            metadata = f.metadata()
+            keys = f.keys()
+            for key in keys:
+                tensors[key] = f.get_tensor(key)
+        tensor_dtypes = json.loads(metadata["dtype"])
+        tensor_shapes = json.loads(metadata["shape"])
+        
         for key in tensors.keys():
             tensors[key] = cp.array(tensors[key], copy=False)
-            if any([key.startswith(ignore_layer) for ignore_layer in ignore_layers]):
-                tensor_dtypes[key] = "fp16"
-            else:
-                tensor_dtypes[key] = "int8"
-        print(tensor_dtypes)
-        with open(tensor_shapes_file, "r", encoding="utf-8") as f:
-            tensor_shapes = json.load(f)
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes
         )
-
-        model.load_state_dict(tensors, strict=True)
+        model.load_state_dict(tensors, strict=False)
         if unpack:
             unpack_model(model)
         # set seqlen

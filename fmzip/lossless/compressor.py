@@ -43,19 +43,22 @@ class LosslessCompressor():
         if not tensor.is_cuda:
             tensor = tensor.cuda()
         # zero-copy to cupy format
+        tensor_shape = tensor.shape
         to_compress_tensor = cp.from_dlpack(to_dlpack(tensor))
-        tensor_shape = to_compress_tensor.shape
         logger.debug(f"compressiong dtype {tensor.dtype}")
         if tensor.dtype == torch.int8:
+            dtype = 'int8'
             self.comp_manager.input_type = cp.int8
         elif tensor.dtype == torch.float16:
+            dtype = 'fp16'
             self.comp_manager.input_type = cp.float16
         elif tensor.dtype == torch.int32:
+            dtype = 'int32'
             self.comp_manager.input_type = cp.int32
         else:
             raise ValueError(f"Unsupported dtype: {tensor.dtype}")
         compressed_tensor = self.comp_manager.compress(to_compress_tensor)
-        return cp.asnumpy(compressed_tensor), tensor_shape, tensor.dtype
+        return cp.asnumpy(compressed_tensor), tensor_shape, dtype
 
     def decompress_tensor(self, compressed_tensor: cp.array, tensor_shape: tuple, dtype='fp16'):
         self.comp_manager.input_type = cp_dtype_maps[dtype]
@@ -68,13 +71,17 @@ class LosslessCompressor():
         tensors_shape = {}
         tensors_dtype = {}
         for key in state_dict:
-            logger.debug(f"Lossless compressing {key}")
+            logger.debug(f"compressiong {key}, shape: {state_dict[key].shape}, dtype: {state_dict[key].dtype}")
             tensors[key], tensors_shape[key], tensors_dtype[key] = self.compress_tensor(state_dict[key])
         return tensors, tensors_shape, tensors_dtype
 
-    def decompress_state_dict(self, compressed_state_dict: Dict[str, cp.array], tensor_shapes: Dict[str, tuple], tensor_dtypes: Dict[str, str]=None):
+    def decompress_state_dict(
+            self, 
+            compressed_state_dict: Dict[str, cp.array], 
+            tensor_shapes: Dict[str, tuple], 
+            tensor_dtypes: Dict[str, str]=None
+        ):
         tensors = {}
         for key in compressed_state_dict.keys():
-            logger.debug(f"Decompressing {key} to shape {tensor_shapes[key]}")
             tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key], tensor_dtypes[key])
         return tensors
