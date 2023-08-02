@@ -1,0 +1,1 @@
+python cli/naive.py --model-path .cache/raw_models/gsd/global_step19

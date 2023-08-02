@@ -1,3 +1,4 @@
+
 import math
 import time
 
@@ -27,7 +28,7 @@ class SparseGPT:
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
         self.nsamples = 0
 
-    def add_batch(self, inp, out, blocksize=1024):
+    def add_batch(self, inp, out):
         if DEBUG:
             self.inp1 = inp
             self.out1 = out
@@ -46,6 +47,7 @@ class SparseGPT:
     def fasterprune(
         self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=.01, group_size=-1, actorder=False
     ):
+        group_size = self.columns
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
             W = W.flatten(1)
@@ -83,7 +85,6 @@ class SparseGPT:
         g_idx = []
         scale = []
         zero = []
-        now_idx = 1
         mask = None
 
         for i1 in range(0, self.columns, blocksize):
@@ -118,14 +119,8 @@ class SparseGPT:
                 q[mask1[:, i]] = 0
 
                 if hasattr(self, 'quantizer'):
-                    if group_size != -1:
-                        if (i1 + i) % group_size == 0:
-                            self.quantizer.find_params(W[:, (i1 + i):(i1 + i + group_size)], weight=True)
-
-                        if ((i1 + i) // group_size) - now_idx == -1:
-                            scale.append(self.quantizer.scale)
-                            zero.append(self.quantizer.zero)
-                            now_idx += 1
+                    scale.append(self.quantizer.scale)
+                    zero.append(self.quantizer.zero)
                     q = quantize(
                         q.unsqueeze(1), self.quantizer.scale, self.quantizer.zero, self.quantizer.maxq
                     ).flatten()
@@ -151,8 +146,7 @@ class SparseGPT:
         torch.cuda.synchronize()
         logger.info(f'duration: {(time.time() - tick)}')
         logger.info(f'avg loss: {torch.sum(Losses).item() / self.nsamples}')
-        
-        group_size = group_size if group_size != -1 else self.columns
+
         g_idx = [i // group_size for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
         if actorder:

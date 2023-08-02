@@ -72,9 +72,9 @@ def unpack_model(model):
     logger.info('Unpacking model...')
     layers = find_layers(model, layers=[QuantLinear])
     for name in layers:
-        # todo(xiaozhe): if 'model' in names we should eliminate it
         rsetattr(model, name, layers[name].unpack())
     logger.info('Model unpacked.')
+
 def pack_model(
     model,
     quantizers,

@@ -54,6 +54,9 @@ class LosslessCompressor():
         elif tensor.dtype == torch.int32:
             dtype = 'int32'
             self.comp_manager.input_type = cp.int32
+        elif tensor.dtype == torch.float32:
+            dtype = 'fp32'
+            self.comp_manager.input_type = cp.float32
         else:
             raise ValueError(f"Unsupported dtype: {tensor.dtype}")
         compressed_tensor = self.comp_manager.compress(to_compress_tensor)

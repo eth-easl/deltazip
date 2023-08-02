@@ -21,10 +21,8 @@ def main(args):
     )
     print("[info] compress config:", compress_config)
     target_model = AutoFMZipModelForCausalLM.from_pretrained(
-        args.target_model, compress_config=compress_config,
-        torch_dtype=torch.float16
+        args.target_model, compress_config=compress_config,torch_dtype=torch.float16
     )
-
     target_model.requires_grad_(False)
     
     if args.base_model != "":

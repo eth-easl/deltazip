@@ -7,34 +7,42 @@ from transformers import AutoTokenizer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 from loguru import logger
+import time
 
 def main(args):
-    tokenizer = AutoTokenizer.from_pretrained("facebook/opt-125m")
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
     # just placeholder..., we don't need it for base model
     compress_config = BaseCompressionConfig(
-            bits = 2,
-            group_size=-1,
+            bits = 4,
+            group_size=128,
             sparsity=1,
             prunen=0,
             prunem=0,
             lossless='gdeflate',
         )
     with torch.inference_mode():
-        logger.info("Loading base model")
-        base_model = AutoFMZipModelForCausalLM.from_pretrained(args.base_model, compress_config=compress_config, torch_dtype=torch.float16)
+        base_model = AutoFMZipModelForCausalLM.from_pretrained(
+            args.base_model,
+            compress_config=compress_config, torch_dtype=torch.float16
+        )
         base_model = base_model.to(torch.device('cuda'))
         logger.info("Loading target model")
-        delta_model = AutoFMZipModelForCausalLM.from_compressed(args.
-        target_model, strict=False, device=base_model.device, unpack=True)
+        delta_model = AutoFMZipModelForCausalLM.from_compressed(
+            args.target_model, 
+            strict=False, 
+            device='cpu',
+            unpack=True
+        )
+        delta_model = delta_model.half()
+        delta_model = delta_model.to(torch.device('cuda'))
         logger.info("reverse delta")
-        delta_model.half()
         if args.delta == "subtract":
-            delta_model = subtract_inverse(base_model, delta_model.model)
+            delta_model = subtract_inverse(base_model, delta_model)
         elif args.delta == "xor":
-            delta_model = xor_inverse(base_model, delta_model.model)
+            delta_model = xor_inverse(base_model, delta_model)
         logger.info("ready to generate")
         
-        prompt = "The meaning of life is"
+        prompt = "Alan Turing is "
         # add delta to base model
         output = delta_model.generate(
             **tokenizer(prompt, return_tensors="pt").to(delta_model.device), 

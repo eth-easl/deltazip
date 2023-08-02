@@ -614,7 +614,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
 
         with ContextManagers(init_contexts):
-            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code, torch_dtype=torch.float)
+            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16)
             layers = find_layers(model)
             ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
             for name in list(layers.keys()):
@@ -623,11 +623,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"{name} not been quantized, will be ignored when make_quant."
                     )
                     del layers[name]
+            print("group size is ", compress_config.group_size)
             make_quant(
                 model,
                 layers,
-                compress_config.bits,
-                compress_config.group_size,
+                bits = compress_config.bits,
+                group_size = compress_config.group_size,
                 use_triton=use_triton,
                 use_cuda_fp16=use_cuda_fp16,
                 desc_act=compress_config.desc_act,
@@ -665,6 +666,14 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             tensors, tensor_shapes, tensor_dtypes
         )
         model.load_state_dict(tensors, strict=False)
+        del tensor_dtypes
+        del tensor_shapes
+        del tensors
+        del layers
+        torch.cuda.empty_cache()
+        model = model.to(device)
+        # now move to device
+        # todo (xiaozhe): for larger models, we will need to split model to multiple devices, for now, just to(device).
         if unpack:
             unpack_model(model)
         # set seqlen
@@ -680,9 +689,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 "can't get model's sequence length from model config, will set to 2048."
             )
             model.seqlen = 2048
-        # now move to device
-        # todo (xiaozhe): for larger models, we will need to split model to multiple devices, for now, just to(device).
-        model = model.to(device)
+        
+        
         model.eval()
         return cls(model, True, compress_config)
 
