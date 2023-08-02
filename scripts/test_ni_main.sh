@@ -1,1 +1,0 @@
-python cli/ni_main.py --base-model .cache/models/opt-1.3b/word_semantics --task word_semantics

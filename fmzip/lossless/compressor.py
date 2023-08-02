@@ -6,8 +6,8 @@ from fmzip.lossless.nvcomp import SnappyManager
 from fmzip.lossless.nvcomp import BitcompManager
 from fmzip.lossless.nvcomp import GdeflateManager
 from fmzip.lossless.nvcomp import CascadedManager
-from loguru import logger
 from torch.utils.dlpack import to_dlpack, from_dlpack
+from loguru import logger
 
 dtype_maps = {
     'int8': torch.int8,
@@ -42,7 +42,6 @@ class LosslessCompressor():
         tensor.requires_grad_(False)
         if not tensor.is_cuda:
             tensor = tensor.cuda()
-        # zero-copy to cupy format
         tensor_shape = tensor.shape
         to_compress_tensor = cp.from_dlpack(to_dlpack(tensor))
         logger.debug(f"compressiong dtype {tensor.dtype}")
@@ -55,6 +54,9 @@ class LosslessCompressor():
         elif tensor.dtype == torch.int32:
             dtype = 'int32'
             self.comp_manager.input_type = cp.int32
+        elif tensor.dtype == torch.float32:
+            dtype = 'fp32'
+            self.comp_manager.input_type = cp.float32
         else:
             raise ValueError(f"Unsupported dtype: {tensor.dtype}")
         compressed_tensor = self.comp_manager.compress(to_compress_tensor)
