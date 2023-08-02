@@ -1,10 +1,11 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from loguru import logger
+
 def main(args):
     print(args)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path)
     with torch.inference_mode():
-        tokenizer = AutoTokenizer.from_pretrained(args.model_path)
         logger.info("Start loading model")
         target_model = AutoModelForCausalLM.from_pretrained(args.model_path, torch_dtype=torch.float16)
         target_model = target_model.to(torch.device('cuda'))
