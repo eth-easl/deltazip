@@ -27,7 +27,7 @@ def main(args):
         start = timer()
         delta_model = AutoFMZipModelForCausalLM.from_compressed(
             args.target_model, 
-            strict=False, 
+            strict=False,
             device='cpu',
             unpack=True
         )
