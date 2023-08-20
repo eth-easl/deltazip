@@ -45,7 +45,7 @@ class BaseCompressionConfig(PushToHubMixin):
     prunen: int = field(default=2)
     prunem: int = field(default=4)
     group_size: int = field(default=-1)
-    block_size: int = field(default=1)
+    block_size: int = field(default=128)
     group_rows: int = field(default=1)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
@@ -352,7 +352,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
-                        group_size=self.compress_config.group_size,
                         blocksize=self.compress_config.block_size,
                     )
 

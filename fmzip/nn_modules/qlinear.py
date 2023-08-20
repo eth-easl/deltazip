@@ -176,7 +176,6 @@ class QuantLinear(nn.Module):
     def unpack(self):
         if self.wf.device != self.qzeros.device:
             self.wf = self.wf.to(self.qzeros.device)
-
         if self.bits in [2, 4, 8]:
             zeros = torch.bitwise_right_shift(
                 torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),

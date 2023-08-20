@@ -16,6 +16,7 @@ def main(args):
             prunen=0,
             prunem=0,
             lossless='gdeflate',
+            damp_percent=0.02
         )
     with torch.inference_mode():
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
