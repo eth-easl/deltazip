@@ -139,7 +139,8 @@ class SparseGPT:
         torch.cuda.synchronize()
         logger.info(f'duration: {(time.time() - tick)}')
         logger.info(f'avg loss: {torch.sum(Losses).item() / self.nsamples}')
-
+        avg_loss = torch.sum(Losses).item() / self.nsamples
+        
         g_idx = [i // group_size for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
         if actorder:
@@ -160,7 +161,7 @@ class SparseGPT:
 
         scale = torch.cat(scale, dim=1)
         zero = torch.cat(zero, dim=1)
-        return scale, zero, g_idx
+        return scale, zero, g_idx, avg_loss
 
     def free(self):
         if DEBUG:

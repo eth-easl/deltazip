@@ -36,6 +36,60 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 
+@dataclass
+class AutoCompressionConfig(PushToHubMixin):
+    tolerance: float = field(default=1e-9)
+    bits: List[int] = field(default=[2,3,4,8])
+    sparsity: List[float] = field(default=[0, 0.5, 0.75, 0.9, 0.99])
+    prunen: int = field(default=2)
+    prunem: int = field(default=4)
+    block_size: int = field(default=128)
+    group_rows: int = field(default=1)
+    damp_percent: float = field(default=0.01)
+    desc_act: bool = field(default=True)
+    sym: bool = field(default=True)
+    true_sequential: bool = field(default=True)
+    lossless: str = field(default="none")
+    dtype: str = field(default="fp16")
+    final_bit: int = field(default=8, metadata={"choices": [2,3,4,8]})
+    final_sparsity: float = field(default=0)
+    
+    def __post_init__(self):
+        fields_info = fields(self)
+        for bit in self.bits:
+            if bit not in [2,3,4,8]:
+                raise ValueError(f"bit must be one of [2,3,4,8]. Got {bit}")
+        for sparsity in self.sparsity:
+            if not (0 <= sparsity <= 1):
+                raise ValueError(f"sparsity must between 0 and 1. Got {sparsity}")
+        if self.group_size != -1 and self.group_size <= 0:
+            raise ValueError("unless equal to -1, group_size must greater then 0.")
+        if not (0 < self.damp_percent < 1):
+            raise ValueError("damp_percent must between 0 and 1.")
+
+    def save_pretrained(self, save_dir: str, **kwargs):
+        with open(join(save_dir, "auto_compress_config.json"), "w", encoding="utf-8") as f:
+            json.dump(self.to_dict(), f, indent=2)
+
+    @classmethod
+    def from_pretrained(cls, save_dir: str):
+        with open(join(save_dir, "auto_compress_config.json"), "r", encoding="utf-8") as f:
+            return cls(**json.load(f))
+
+    def to_dict(self):
+        return {
+            "bits_space": self.bits,
+            "sparsity_space": self.sparsity,
+            "bits": self.final_bit,
+            "group_size": self.group_size,
+            "group_rows": self.group_rows,
+            "sparsity": self.final_sparsity,
+            "damp_percent": self.damp_percent,
+            "desc_act": self.desc_act,
+            "sym": self.sym,
+            "true_sequential": self.true_sequential,
+            "lossless": self.lossless,
+        }
 
 @dataclass
 class BaseCompressionConfig(PushToHubMixin):
@@ -104,7 +158,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self,
         model: PreTrainedModel,
         compressed: bool,
-        compress_config: BaseCompressionConfig,
+        compress_config: Union[AutoCompressionConfig, BaseCompressionConfig],
     ):
         super().__init__()
         self.model = model
@@ -161,6 +215,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     "labels": labels,
                 }
             )
+        
         pad_token_id = self.config.pad_token_id
         if not pad_token_id:
             pad_token_id = self.config.eos_token_id
@@ -347,7 +402,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     logger.debug(
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
-                    scale, zero, g_idx = sparsegpt[name].fasterprune(
+
+                    scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
                         self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
