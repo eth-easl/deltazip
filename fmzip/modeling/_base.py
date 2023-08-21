@@ -49,8 +49,8 @@ class AutoCompressionConfig(PushToHubMixin):
     true_sequential: bool = field(default=True)
     lossless: str = field(default="none")
     dtype: str = field(default="fp16")
-    final_bit: Dict[str, int] = field(default_factory=lambda: {"attn": 8, "mlp": 8})
-    final_sparsity: Dict[str, float] = field(default_factory=lambda: {"attn": 0.9, "mlp": 0.9})
+    final_bit: Dict[str, int] = field(default_factory=lambda: {})
+    final_sparsity: Dict[str, float] = field(default_factory=lambda: {})
     
     def __post_init__(self):
         for bit in self.bits:
@@ -76,9 +76,9 @@ class AutoCompressionConfig(PushToHubMixin):
             "bits_space": self.bits,
             "sparsity_space": self.sparsity,
             "bits": self.final_bit,
+            "sparsity": self.final_sparsity,
             "group_size": self.group_size,
             "group_rows": self.group_rows,
-            "sparsity": self.final_sparsity,
             "damp_percent": self.damp_percent,
             "desc_act": self.desc_act,
             "sym": self.sym,
@@ -440,11 +440,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         best_config = config
                         break
                 logger.info(f"[GRID SEARCH RESULT]: {search_space}, [BEST CONFIG]: {best_config}")
+                self.compress_config.final_bit[f'layer.{i}.{name}'] = best_config['bit']
                 # step 4: now actually compress the component here
                 del sparsegpt[name]
                 torch.cuda.empty_cache()
                 for name in subset:
-                    logger.info(name)
                     sparsegpt[name] = SparseGPT(subset[name])
                     sparsegpt[name].quantizer = Quantizer()
                     sparsegpt[name].quantizer.configure(

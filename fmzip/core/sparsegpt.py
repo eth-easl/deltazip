@@ -73,14 +73,24 @@ class SparseGPT:
             H = H[perm][:, perm]
 
         Losses = torch.zeros(self.rows, device=self.dev)
-
-        damp = percdamp * torch.mean(torch.diag(H))
-        diag = torch.arange(self.columns, device=self.dev)
-        H[diag, diag] += damp
-        H = torch.linalg.cholesky(H)
-        H = torch.cholesky_inverse(H)
-        H = torch.linalg.cholesky(H, upper=True)
-        Hinv = H
+        # we repeat the process and find percdamp that doesn't cause instability
+        success_damp = False
+        while not success_damp:
+            damp = percdamp * torch.mean(torch.diag(H))
+            diag = torch.arange(self.columns, device=self.dev)
+            H[diag, diag] += damp
+            H = torch.linalg.cholesky(H)
+            H = torch.cholesky_inverse(H)
+            H = torch.linalg.cholesky(H, upper=True)
+            Hinv = H
+            # check if Hinv contains nan
+            if not torch.isnan(Hinv).any():
+                success_damp = True
+            else:
+                logger.warning(f"NaN in Hinv, increasing percdamp to {percdamp + 0.01}")
+                percdamp = percdamp + 0.01
+                if percdamp >= 0.1:
+                    raise ValueError("percdamp too high, aborting")
         
         g_idx = []
         scale = []
