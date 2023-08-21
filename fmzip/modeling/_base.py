@@ -363,7 +363,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             search_space.append({
                                 "bit": bit,
                                 "sparsity": sparsity,
-                                "loss": -1
+                                "loss": -1,
                             })
                     search_space = sorted(search_space, key=lambda x: x["bit"] * (1-x["sparsity"]))
                 # step 2: start grid search
@@ -384,7 +384,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         def tmp(_, inp, out):
                             sparsegpt[name].add_batch(inp[0].data, out.data)
                         return tmp
-                    
+
                     handles = []
                     for name in subset:
                         # we still need to register forward hook to subset[name]
@@ -416,7 +416,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     # starting compression
                     for name in subset:
                         logger.debug(
-                            f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {config['sparsity']}, bits: {config['bit']}"
+                            f"Search Compression {name} in layer {i+1}/{len(layers)} - sparsity: {config['sparsity']}, bits: {config['bit']}"
                         )
                         scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
                             config['sparsity'],
@@ -434,10 +434,134 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     if early_stop:
                         break
                 # step 3: now find the best config (the first one that meets the tolerance)
-                best_config = [c for c in search_space if c["loss"] < self.compress_config.tolerance][0]
+                best_config = search_space[-1] # by default take the last one (with minimal compression ratio, even if it does not meet the tolerance)
+                for config in search_space:
+                    if config["loss"] < self.compress_config.tolerance:
+                        best_config = config
+                        break
                 logger.info(f"[GRID SEARCH RESULT]: {search_space}, [BEST CONFIG]: {best_config}")
-                # step 4: now actually compress the layer
+                # step 4: now actually compress the component here
+                del sparsegpt[name]
+                torch.cuda.empty_cache()
+                for name in subset:
+                    logger.info(name)
+                    sparsegpt[name] = SparseGPT(subset[name])
+                    sparsegpt[name].quantizer = Quantizer()
+                    sparsegpt[name].quantizer.configure(
+                        best_config['bit'],
+                        perchannel=True,
+                        sym=self.compress_config.sym,
+                        mse=False,
+                    )
                 
+                def add_batch(name):
+                    def tmp(_, inp, out):
+                        sparsegpt[name].add_batch(inp[0].data, out.data)
+                    return tmp
+                handles = []
+                for name in subset:
+                    handles.append(subset[name].register_forward_hook(add_batch(name)))
+                for j in range(num_batches):
+                    layer_input = move_to_device(layer_inputs[j], cur_layer_device)
+                    layer_attention_mask = move_to_device(
+                        attention_masks[j], cur_layer_device
+                    )
+                    additional_layer_inputs = {"attention_mask": layer_attention_mask}
+                    if (
+                        layer_position_ids := None
+                        if not position_ids
+                        else move_to_device(position_ids[j], cur_layer_device)
+                    ) is not None:
+                        additional_layer_inputs["position_ids"] = layer_position_ids
+                    for k, v in layer_input_kwargs[j].items():
+                        if isinstance(v, torch.Tensor):
+                            additional_layer_inputs[k] = move_to_device(
+                                v, cur_layer_device
+                            )
+                        else:
+                            additional_layer_inputs[k] = v
+                    layer(layer_input, **additional_layer_inputs)
+                
+                for h in handles:
+                    h.remove()
+                
+                for name in subset:
+                    logger.debug(
+                        f"Real Compression {name} in layer {i+1}/{len(layers)} - sparsity: {best_config['sparsity']}, bits: {best_config['bit']}"
+                    )
+
+                    scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
+                        best_config['sparsity'],
+                        prunen=self.compress_config.prunen,
+                        prunem=self.compress_config.prunem,
+                        percdamp=self.compress_config.damp_percent,
+                        blocksize=self.compress_config.block_size,
+                    )
+
+                    compressors[f"{self.layers_block_name}.{i}.{name}"] = (
+                        sparsegpt[name].quantizer.to(
+                            CPU if force_layer_back_to_cpu else cur_layer_device
+                        ),
+                        move_to_device(
+                            scale, CPU if force_layer_back_to_cpu else cur_layer_device
+                        ),
+                        move_to_device(
+                            zero, CPU if force_layer_back_to_cpu else cur_layer_device
+                        ),
+                        move_to_device(
+                            g_idx, CPU if force_layer_back_to_cpu else cur_layer_device
+                        ),
+                    )
+
+                    sparsegpt[name].free()
+
+            for j in range(num_batches):
+                layer_input = move_to_device(layer_inputs[j], cur_layer_device)
+                layer_attention_mask = move_to_device(
+                    attention_masks[j], cur_layer_device
+                )
+                additional_layer_inputs = {"attention_mask": layer_attention_mask}
+                if (
+                    layer_position_ids := None
+                    if not position_ids
+                    else move_to_device(position_ids[j], cur_layer_device)
+                ) is not None:
+                    additional_layer_inputs["position_ids"] = layer_position_ids
+                for k, v in layer_input_kwargs[j].items():
+                    if isinstance(v, torch.Tensor):
+                        additional_layer_inputs[k] = move_to_device(v, cur_layer_device)
+                    else:
+                        additional_layer_inputs[k] = v
+                layer_output = move_to_device(
+                    layer(layer_input, **additional_layer_inputs)[0],
+                    cur_layer_device if cache_examples_on_gpu else CPU,
+                )
+                layer_outputs.append(layer_output)
+
+            layers[i] = move_to_device(
+                layer, CPU if force_layer_back_to_cpu else cur_layer_device
+            )
+            del layer
+            del sparsegpt
+            del layer_inputs
+            layer_inputs, layer_outputs = layer_outputs, []
+            torch.cuda.empty_cache()
+        
+        self.compressors = compressors
+        self.use_triton = use_triton
+        self.use_cuda_fp16 = use_cuda_fp16
+        self.autotune_warmup_after_quantized = autotune_warmup_after_quantized
+        self.force_layer_back_to_cpu = force_layer_back_to_cpu
+
+        if device_map:
+            self.model = remove_hook_from_module(self.model, recurse=True)
+            self.model = accelerate.dispatch_model(
+                self.model, device_map, offload_buffers=True
+            )
+
+        self.model.config.use_cache = forward_pass_use_cache
+        self._compressed = True
+        torch.cuda.empty_cache()
 
     @torch.inference_mode()
     def lossy_compress(
