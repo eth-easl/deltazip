@@ -26,9 +26,16 @@ class QuantLinear(nn.Module):
         kernel_switch_threshold=128,
     ):
         super().__init__()
-        if bits not in [2, 3, 4, 8]:
-            raise NotImplementedError("Only 2,3,4,8 bits are supported.")
-
+        # if bits is integer
+        if isinstance(bits, int):
+            if bits not in [2, 3, 4, 8]:
+                raise NotImplementedError("Only 2,3,4,8 bits are supported.")
+        elif isinstance(bits, dict):
+            for b in bits.values():
+                if b not in [2, 3, 4, 8]:
+                    raise NotImplementedError("Only 2,3,4,8 bits are supported.")
+        else:
+            raise NotImplementedError("Unrecognized bits type.")
         self.infeatures = infeatures
         self.outfeatures = outfeatures
         self.bits = bits

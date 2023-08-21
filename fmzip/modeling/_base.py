@@ -73,11 +73,10 @@ class AutoCompressionConfig(PushToHubMixin):
 
     def to_dict(self):
         return {
-            "bits_space": self.bits,
-            "sparsity_space": self.sparsity,
-            "bits": self.final_bit,
-            "sparsity": self.final_sparsity,
-            "group_size": self.group_size,
+            "bits": self.bits,
+            "sparsity": self.sparsity,
+            "final_bit": self.final_bit,
+            "final_sparsity": self.final_sparsity,
             "group_rows": self.group_rows,
             "damp_percent": self.damp_percent,
             "desc_act": self.desc_act,
@@ -440,7 +439,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         best_config = config
                         break
                 logger.info(f"[GRID SEARCH RESULT]: {search_space}, [BEST CONFIG]: {best_config}")
-                self.compress_config.final_bit[f'layer.{i}.{name}'] = best_config['bit']
+                self.compress_config.final_bit[f'{self.layers_block_name}.{i}.{name}'] = best_config['bit']
+                self.compress_config.final_sparsity[f'{self.layers_block_name}.{i}.{name}'] = best_config['sparsity']
                 # step 4: now actually compress the component here
                 del sparsegpt[name]
                 torch.cuda.empty_cache()
@@ -833,13 +833,14 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
 
     @torch.inference_mode()
     def save_compressed(self, save_dir: str):
+        print(self.compress_config.final_bit)
         if not self.compressed:
             raise EnvironmentError("Model is not compressed.")
         pack_model(
             model=self.model,
             quantizers=self.compressors,
-            bits=self.compress_config.bits,
-            group_size=self.compress_config.group_size,
+            group_size=-1,
+            bits=self.compress_config.bits if isinstance(self.compress_config.bits, int) else self.compress_config.final_bit,
             use_triton=self.use_triton,
             use_cuda_fp16=self.use_cuda_fp16,
             desc_act=self.compress_config.desc_act,
@@ -959,7 +960,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         inject_fused_attention: bool = False,
         inject_fused_mlp: bool = False,
         use_cuda_fp16: bool = True,
-        compress_config: Optional[BaseCompressionConfig] = None,
+        compress_config: Optional[Union[BaseCompressionConfig, AutoCompressionConfig]] = None,
         model_basename: Optional[str] = None,
         use_safetensors: bool = True,
         trust_remote_code: bool = False,
@@ -975,8 +976,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if config.model_type not in SUPPORTED_MODELS:
             raise TypeError(f"{config.model_type} isn't supported yet.")
         if compress_config is None:
-            compress_config = BaseCompressionConfig.from_pretrained(save_dir)
-
+            # check if "auto_compression_config.json" exists
+            print(join(save_dir, "auto_compress_config.json"))
+            if isfile(join(save_dir, "auto_compress_config.json")):
+                compress_config = AutoCompressionConfig.from_pretrained(save_dir)
+            else:
+                compress_config = BaseCompressionConfig.from_pretrained(save_dir)
+        print(compress_config)
         if model_basename is None:
             model_basename = "fmzip-compressed"
 
@@ -1013,12 +1019,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"{name} not been quantized, will be ignored when make_quant."
                     )
                     del layers[name]
-            print("group size is ", compress_config.group_size)
             make_quant(
                 model,
                 layers,
-                bits = compress_config.bits,
-                group_size = compress_config.group_size,
+                bits = compress_config.bits if isinstance(compress_config, BaseCompressionConfig) else compress_config.final_bit,
+                group_size = -1,
                 use_triton=use_triton,
                 use_cuda_fp16=use_cuda_fp16,
                 desc_act=compress_config.desc_act,
