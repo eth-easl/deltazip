@@ -12,8 +12,8 @@ def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
     
     compress_config = AutoCompressionConfig(
-        bits = [2,3],
-        sparsity=[0.5, 0.9],
+        bits = [2],
+        sparsity=[0.5],
         prunen=args.prunen,
         prunem=args.prunem,
         lossless=args.lossless,
