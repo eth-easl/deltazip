@@ -52,9 +52,6 @@ def generate(args):
             output = delta_model.generate(
                 **tokenizer(prompt, return_tensors="pt").to(delta_model.device), 
                 do_sample=args.do_sample, 
-                top_p=args.top_p, 
-                top_k=args.top_k, 
-                temperature=args.temperature, 
                 max_new_tokens=args.max_length, 
                 min_length=10, 
                 num_return_sequences=1
@@ -73,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument("--input-file", type=str, default="")
     parser.add_argument("--input-field", type=str, default="input")
     parser.add_argument("--output-file", type=str, default="")
-    parser.add_argument("--do-sample", action="store_true", default=True)
+    parser.add_argument("--do-sample", action="store_true", default=False)
     parser.add_argument("--top-p", type=float, default=0.9)
     parser.add_argument("--top-k", type=int, default=1)
     parser.add_argument("--temperature", type=float, default=0.1)
