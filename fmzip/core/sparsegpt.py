@@ -89,8 +89,8 @@ class SparseGPT:
             else:
                 logger.warning(f"NaN in Hinv, increasing percdamp to {percdamp + 0.01}")
                 percdamp = percdamp + 0.01
-                if percdamp >= 0.1:
-                    raise ValueError("percdamp too high, aborting")
+                if percdamp >= 0.05:
+                    raise ValueError("percdamp too high (>=0.05), aborting")
         
         g_idx = []
         scale = []
