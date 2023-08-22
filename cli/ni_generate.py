@@ -1,3 +1,4 @@
+import os
 import json
 import torch
 import argparse
@@ -56,8 +57,11 @@ def generate(args):
                 min_length=10, 
                 num_return_sequences=1
             )
-            datum["prediction"] = [tokenizer.decode(output[0], skip_special_tokens=True)]
-
+            output = tokenizer.decode(output[0], skip_special_tokens=True)
+            # remove the prompt from the output
+            output = output.replace(prompt, "")
+            datum["prediction"] = [output]
+            
         with open(args.output_file, "w") as f:
             for datum in data:
                 f.write(json.dumps(datum) + "\n")

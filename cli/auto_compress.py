@@ -12,7 +12,7 @@ def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
     compress_config = AutoCompressionConfig(
         tolerance=args.tolerance,
-        bits = [2, 3, 4],
+        bits = [2, 3, 4, 8],
         sparsity=[0.5,0.75,0.9, 0.99],
         prunen=args.prunen,
         prunem=args.prunem,
