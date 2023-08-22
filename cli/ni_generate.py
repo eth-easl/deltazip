@@ -9,7 +9,7 @@ from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 
 def generate(args):
     print(args)
-    # just placeholder..., we don't need it for base model
+    # just placeholder, we don't need it for base model...
     # (todo:xiaozhe) remove the need of compress_config
     compress_config = BaseCompressionConfig(
         bits = 4,
@@ -21,6 +21,7 @@ def generate(args):
         damp_percent=0.02
     )
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
+    tokenizer.pad_token_id = tokenizer.eos_token_id
     with torch.inference_mode():
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
             args.base_model,
@@ -54,12 +55,12 @@ def generate(args):
                 top_p=args.top_p, 
                 top_k=args.top_k, 
                 temperature=args.temperature, 
-                max_length=args.max_length, 
+                max_new_tokens=args.max_length, 
                 min_length=10, 
                 num_return_sequences=1
             )
             datum["prediction"] = [tokenizer.decode(output[0], skip_special_tokens=True)]
-            
+
         with open(args.output_file, "w") as f:
             for datum in data:
                 f.write(json.dumps(datum) + "\n")
