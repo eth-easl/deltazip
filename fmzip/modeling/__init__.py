@@ -1,4 +1,4 @@
-from ._base import BaseFMZipModelForCausalLM, BaseCompressionConfig
+from ._base import AutoCompressionConfig, BaseCompressionConfig, BaseFMZipModelForCausalLM 
 from .auto import *
 from .bloom import *
 from .gpt2 import *

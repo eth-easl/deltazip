@@ -1,1 +1,0 @@
-python cli/compress.py --base-model facebook/opt-125m --target-model Aalaa/opt-125m-wikitext2 --dataset /home/xzyao/Documents/datasets/ni_calib/train/answer_verification.jsonl --bits 4 --sparsity 0.8 --outdir .cache/compressed_models/opt-125m-QA-squad --delta subtract --lossless gdeflate
