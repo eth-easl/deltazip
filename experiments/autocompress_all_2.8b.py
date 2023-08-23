@@ -11,7 +11,7 @@ jobs = []
 for task in tasks:
     steps = os.listdir(os.path.join(in_folder, task))
     for step in steps:
-        job = f"python cli/auto_compress.py --target-model {os.path.join(in_folder, task, step)} --outdir {os.path.join(out_dir, task, step)} --dataset {os.path.join(ar_dataset, task+'.train.jsonl')} --n-samples 256 --lossless gdeflate --delta subtract --base-model EleutherAI/pythia-2.8b-deduped --n-samples 1024 --perc-damp 0.01 --tolerance 1e-10"
+        job = f"python cli/auto_compress.py --target-model {os.path.join(in_folder, task, step)} --outdir {os.path.join(out_dir, task, step)} --dataset {os.path.join(ar_dataset, task+'.train.jsonl')} --n-samples 256 --lossless gdeflate --delta subtract --base-model EleutherAI/pythia-2.8b-deduped --n-samples 1024 --perc-damp 0.01 --tolerance 1e-10 --bits 2 3 4 --sparsities 0.5 0.75"
         jobs.append(job)
 os.system("ts -S 4")
 for job in jobs:
