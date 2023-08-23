@@ -1,11 +1,14 @@
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
 from loguru import logger
+from timeit import default_timer as timer
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
 def main(args):
     print(args)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_path)
     with torch.inference_mode():
-        tokenizer = AutoTokenizer.from_pretrained(args.model_path)
         logger.info("Start loading model")
+        start = timer()
         target_model = AutoModelForCausalLM.from_pretrained(args.model_path, torch_dtype=torch.float16)
         target_model = target_model.to(torch.device('cuda'))
         
@@ -22,6 +25,8 @@ def main(args):
         )
         print(tokenizer.decode(output[0], skip_special_tokens=True))
         logger.info("First generation finished")
+        end = timer()
+        logger.info(f"[Naive] Total time: {end - start} seconds")
 
 if __name__=="__main__":
     import argparse

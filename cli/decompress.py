@@ -1,13 +1,10 @@
-import os
-import json
 import torch
 import argparse
-from typing import Union
+from loguru import logger
 from transformers import AutoTokenizer
+from timeit import default_timer as timer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
-from loguru import logger
-import time
 
 def main(args):
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
@@ -19,6 +16,7 @@ def main(args):
             prunen=0,
             prunem=0,
             lossless='gdeflate',
+            damp_percent=0.02
         )
     with torch.inference_mode():
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
@@ -27,9 +25,10 @@ def main(args):
         )
         base_model = base_model.to(torch.device('cuda'))
         logger.info("Loading target model")
+        start = timer()
         delta_model = AutoFMZipModelForCausalLM.from_compressed(
             args.target_model, 
-            strict=False, 
+            strict=False,
             device='cpu',
             unpack=True
         )
@@ -54,7 +53,10 @@ def main(args):
             min_length=10, 
             num_return_sequences=1
         )
-        print(tokenizer.decode(output[0], skip_special_tokens=True))
+        print(
+            tokenizer.decode(output[0], skip_special_tokens=True))
+        end = timer()
+        logger.info(f"[FMZip] Total time: {end - start} seconds")
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()

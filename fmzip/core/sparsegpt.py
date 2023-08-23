@@ -45,7 +45,7 @@ class SparseGPT:
         self.H += inp.matmul(inp.t())
 
     def fasterprune(
-        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=.01, group_size=-1, actorder=False
+        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=.01, actorder=False
     ):
         group_size = self.columns
         W = self.layer.weight.data.clone()
@@ -73,30 +73,37 @@ class SparseGPT:
             H = H[perm][:, perm]
 
         Losses = torch.zeros(self.rows, device=self.dev)
-
-        damp = percdamp * torch.mean(torch.diag(H))
-        diag = torch.arange(self.columns, device=self.dev)
-        H[diag, diag] += damp
-        H = torch.linalg.cholesky(H)
-        H = torch.cholesky_inverse(H)
-        H = torch.linalg.cholesky(H, upper=True)
-        Hinv = H
+        # we repeat the process and find percdamp that doesn't cause instability
+        success_damp = False
+        while not success_damp:
+            damp = percdamp * torch.mean(torch.diag(H))
+            diag = torch.arange(self.columns, device=self.dev)
+            H[diag, diag] += damp
+            H = torch.linalg.cholesky(H)
+            H = torch.cholesky_inverse(H)
+            H = torch.linalg.cholesky(H, upper=True)
+            Hinv = H
+            # check if Hinv contains nan
+            if not torch.isnan(Hinv).any():
+                success_damp = True
+            else:
+                logger.warning(f"NaN in Hinv, increasing percdamp to {percdamp + 0.01}")
+                percdamp = percdamp + 0.01
+                if percdamp >= 0.05:
+                    raise ValueError("percdamp too high (>=0.05), aborting")
         
         g_idx = []
         scale = []
         zero = []
         mask = None
-
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
             count = i2 - i1
-
             W1 = W[:, i1:i2].clone()
             Q1 = torch.zeros_like(W1)
             Err1 = torch.zeros_like(W1)
             Losses1 = torch.zeros_like(W1)
             Hinv1 = Hinv[i1:i2, i1:i2]
-
             if prunen == 0: 
                 if mask is not None:
                     mask1 = mask[:, i1:i2]
@@ -106,7 +113,6 @@ class SparseGPT:
                     mask1 = tmp <= thresh
             else:
                 mask1 = torch.zeros_like(W1) == 1
-
             for i in range(count):
                 w = W1[:, i]
                 d = Hinv1[i, i]
@@ -119,12 +125,9 @@ class SparseGPT:
                 q[mask1[:, i]] = 0
 
                 if hasattr(self, 'quantizer'):
-                    scale.append(self.quantizer.scale)
-                    zero.append(self.quantizer.zero)
                     q = quantize(
                         q.unsqueeze(1), self.quantizer.scale, self.quantizer.zero, self.quantizer.maxq
                     ).flatten()
-
                 Q1[:, i] = q
                 Losses1[:, i] = (w - q) ** 2 / d ** 2
 
@@ -137,16 +140,17 @@ class SparseGPT:
 
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
-            if DEBUG:
-                self.layer.weight.data[:, :i2] = W[:, :i2]
-                self.layer.weight.data[:, i2:] = W[:, i2:]
-                print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
-                print(torch.sum(Losses))
+            # if DEBUG:
+            #     self.layer.weight.data[:, :i2] = W[:, :i2]
+            #     self.layer.weight.data[:, i2:] = W[:, i2:]
+            #     print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
+            #     print(torch.sum(Losses))
 
         torch.cuda.synchronize()
         logger.info(f'duration: {(time.time() - tick)}')
         logger.info(f'avg loss: {torch.sum(Losses).item() / self.nsamples}')
-
+        avg_loss = torch.sum(Losses).item() / self.nsamples
+        
         g_idx = [i // group_size for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
         if actorder:
@@ -167,7 +171,7 @@ class SparseGPT:
 
         scale = torch.cat(scale, dim=1)
         zero = torch.cat(zero, dim=1)
-        return scale, zero, g_idx
+        return scale, zero, g_idx, avg_loss
 
     def free(self):
         if DEBUG:
