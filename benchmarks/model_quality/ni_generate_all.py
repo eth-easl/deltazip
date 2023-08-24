@@ -17,7 +17,7 @@ for task in tasks:
         test_datafile = os.path.join(data_dir, task+".test.jsonl")
         job = f"python cli/ni_generate.py --base-model EleutherAI/pythia-2.8b-deduped --target-model {os.path.join(compressed_models, task, step)} --delta subtract --input-file {test_datafile} --input-field input --max-length 64 --output-file {os.path.join(CACHE_PATH, 'experiments/fmzip/generation_results', task, step)}.jsonl"
         jobs.append(job)
-# os.system("ts -S 1")
+os.system("TS_VISIBLE_DEVICES=1,2,3 ts -S 3")
 for job in jobs:
-    # os.system(f"ts --gpu 1 {job}")
-    os.system(f"{job}")
+    os.system(f"TS_VISIBLE_DEVICES=1,2,3 ts --gpus 1 {job}")
+    # os.system(f"{job}")
