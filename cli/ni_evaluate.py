@@ -13,8 +13,6 @@ def postprocess(text):
     # if starts with \n, take the remaining
     if text.startswith("\n"):
         text = text.split("\n")[1]
-    # take the first word
-    text = text.split(" ")[0]
     # if there's \n left, take the first part
     text = text.split("\n")[0]
     return text

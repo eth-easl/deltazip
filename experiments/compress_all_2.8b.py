@@ -13,6 +13,7 @@ for task in tasks:
     for step in steps:
         job = f"python cli/compress.py --target-model {os.path.join(in_folder, task, step)} --outdir {os.path.join(out_dir, task, step)} --dataset {os.path.join(ar_dataset, task+'.train.jsonl')} --n-samples 256 --bits 3 --group-size 128 --sparsity 0.5 --lossless gdeflate --delta subtract --base-model EleutherAI/pythia-2.8b-deduped"
         jobs.append(job)
+
 os.system("ts -S 4")
 for job in jobs:
     os.system(f"ts --gpus 1 {job}")
