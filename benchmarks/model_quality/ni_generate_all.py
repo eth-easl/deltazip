@@ -15,7 +15,7 @@ for task in tasks:
         output_file = os.path.join(output_dir, task)
         os.makedirs(output_file, exist_ok=True)
         test_datafile = os.path.join(data_dir, task+".test.jsonl")
-        job = f"python cli/ni_generate.py --base-model EleutherAI/pythia-2.8b-deduped --target-model {os.path.join(compressed_models, task, step)} --delta subtract --input-file {test_datafile} --input-field input --max-length 64 --output-file {os.path.join(CACHE_PATH, 'experiments/fmzip/generation_results', task, step)}.jsonl"
+        job = f"python cli/ni_evaluate.py --base-model EleutherAI/pythia-2.8b-deduped --target-model {os.path.join(compressed_models, task, step)} --delta subtract --input-file {test_datafile} --input-field input --max-length 32 --output-file {os.path.join(output_dir, task, step)}.jsonl"
         jobs.append(job)
 os.system("TS_VISIBLE_DEVICES=1,2,3 ts -S 4")
 for job in jobs:

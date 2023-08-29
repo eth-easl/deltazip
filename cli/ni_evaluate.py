@@ -14,10 +14,10 @@ def postprocess(text):
     if text.startswith("\n"):
         text = text.split("\n")[1]
     # take the first word
-    re_formatted_answer = text.split(" ")[0]
+    text = text.split(" ")[0]
     # if there's \n left, take the first part
-    re_formatted_answer = text.split("\n")[0]
-    return re_formatted_answer
+    text = text.split("\n")[0]
+    return text
 
 def generate(args):
     print(args)
@@ -55,7 +55,6 @@ def generate(args):
             delta_model = subtract_inverse(base_model, delta_model)
         elif args.delta == "xor":
             delta_model = xor_inverse(base_model, delta_model)
-        logger.info("ready to generate")
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]
         # to leave more memory for higher-throughput generation, put the base model to cpu
@@ -66,12 +65,13 @@ def generate(args):
             tokenizer = tokenizer,
             device='cuda'
         )
+        logger.info("Pipeline Ready")
         prompts = [datum[args.input_field] for datum in data]
-        outputs = pipe(prompts, max_new_tokens=args.max_length, temperature=args.temperature, top_k=args.top_k, top_p=args.top_p)
+        outputs = pipe(prompts, max_new_tokens=args.max_length, temperature=args.temperature, top_k=args.top_k, top_p=args.top_p, return_full_text=False)
         results = []
         for datum, output in zip(data, outputs):
             result = datum
-            result['prediction'] = [o['generated_text'] for o in output]
+            result['prediction'] = [postprocess(o['generated_text']) for o in output]
             results.append(result)
         with open(args.output_file, "w") as f:
             for datum in data:
