@@ -2,18 +2,20 @@ import os
 import json
 import torch
 import argparse
-from typing import Union
 from transformers import AutoTokenizer
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig, AutoCompressionConfig
 from fmzip.utils.delta_utils import subtract, xor
+from fmzip import AutoFMZipModelForCausalLM, AutoCompressionConfig
 
 def main(args):
     print(args)
-    tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.target_model,
+        use_fast=True
+    )
     compress_config = AutoCompressionConfig(
         tolerance=args.tolerance,
         bits = [2, 3, 4, 8],
-        sparsity=[0.5,0.75,0.9, 0.99],
+        sparsity=[0.25, 0.5, 0.75],
         prunen=args.prunen,
         prunem=args.prunem,
         lossless=args.lossless,
@@ -48,7 +50,9 @@ def main(args):
             raise ValueError(f"NaN exists in {name}")
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
-        examples = [json.loads(line)['text'] for line in fp.readlines()]
+        examples = [
+            json.loads(line)['text'] for line in fp.readlines()
+        ]
     if args.n_samples <= 0:
         examples = examples
     else:
