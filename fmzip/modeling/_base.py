@@ -448,7 +448,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     sparsegpt[name] = SparseGPT(subset[name])
                     sparsegpt[name].quantizer = Quantizer()
                     sparsegpt[name].quantizer.configure(
-                        best_config['bit'],
+                        self.compress_config.final_bit[f'{self.layers_block_name}.{i}.{name}'],
                         perchannel=True,
                         sym=self.compress_config.sym,
                         mse=False,
@@ -491,7 +491,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     )
 
                     scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
-                        best_config['sparsity'],
+                        self.compress_config.final_sparsity[f'{self.layers_block_name}.{i}.{name}'],
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
