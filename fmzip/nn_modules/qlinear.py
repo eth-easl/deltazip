@@ -1,12 +1,9 @@
 import math
-from logging import getLogger
-
 import numpy as np
 import torch
 import torch.nn as nn
 import transformers
-
-logger = getLogger(__name__)
+from loguru import logger
 
 try:
     import quant_cuda
@@ -19,7 +16,6 @@ class QuantLinear(nn.Module):
     def __init__(
         self,
         bits,
-        group_size,
         infeatures,
         outfeatures,
         bias,
@@ -47,11 +43,10 @@ class QuantLinear(nn.Module):
         )
         self.register_buffer(
             'qzeros',
-            torch.zeros((math.ceil(infeatures), outfeatures // 32 * self.bits), dtype=torch.int32)
-        )
+            torch.zeros((infeatures, outfeatures // 32 * self.bits), dtype=torch.int32))
         self.register_buffer(
             'scales',
-            torch.zeros((math.ceil(infeatures), outfeatures), dtype=torch.float16)
+            torch.zeros((infeatures, outfeatures), dtype=torch.float16)
         )
         self.register_buffer(
             'g_idx',
@@ -61,7 +56,6 @@ class QuantLinear(nn.Module):
             self.register_buffer('bias', torch.zeros((outfeatures), dtype=torch.float16))
         else:
             self.bias = None
-
         # is performed by unpacking the weights and using torch.matmul
         if self.bits in [2, 4, 8]:
             self.wf = torch.tensor(list(range(0, 32, self.bits)), dtype=torch.int32).unsqueeze(0)
@@ -183,6 +177,7 @@ class QuantLinear(nn.Module):
     def unpack(self):
         if self.wf.device != self.qzeros.device:
             self.wf = self.wf.to(self.qzeros.device)
+        logger.debug(self.bits)
         if self.bits in [2, 4, 8]:
             zeros = torch.bitwise_right_shift(
                 torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
@@ -197,6 +192,7 @@ class QuantLinear(nn.Module):
                 torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
                 self.wf.unsqueeze(-1)
             ).to(torch.int16 if self.bits == 8 else torch.int8)
+            logger.info(f"sparsity: {torch.sum(weight == 0).item() / weight.numel()}")
             torch.bitwise_and(weight, (2 ** self.bits) - 1, out=weight)
         elif self.bits == 3:
             zeros = self.qzeros.reshape(
@@ -223,6 +219,7 @@ class QuantLinear(nn.Module):
             raise NotImplementedError("Only 2,3,4,8 bits are supported.")
 
         weight = weight.reshape(weight.shape[0] * weight.shape[1], weight.shape[2])
+        
         num_itr = 1
         if num_itr == 1:
             weights = (self.scales[self.g_idx.long()] * (weight - zeros[self.g_idx.long()]))
@@ -240,6 +237,8 @@ class QuantLinear(nn.Module):
         linear = torch.nn.Linear(self.infeatures, self.outfeatures, bias=self.bias is not None)
         
         linear.weight = nn.Parameter(weights.t().float())
+        # print sparsity of the weight
+        
         if self.bias is not None:
             linear.bias = nn.Parameter(self.bias)
         return linear

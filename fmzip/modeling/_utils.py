@@ -61,10 +61,12 @@ def make_quant(module, names, bits, group_size, name='', use_triton=False, use_c
             elif type(tmp) == transformers.pytorch_utils.Conv1D:            
                 in_features = tmp.weight.shape[0]
                 out_features = tmp.weight.shape[1]
-            # if bits is a dict
             if isinstance(bits, dict):
-                bits = bits[name1]
-            new_layer = QuantLinear(bits, group_size, in_features, out_features, tmp.bias is not None)
+                real_bits = bits[name1]
+                print(f"Quantizing {name1} with {real_bits} bits")
+            else:
+                real_bits = bits
+            new_layer = QuantLinear(real_bits, in_features, out_features, tmp.bias is not None)
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))
     for name1, child in module.named_children():

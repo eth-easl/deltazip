@@ -109,8 +109,12 @@ class SparseGPT:
                     mask1 = mask[:, i1:i2]
                 else:
                     tmp = W1 ** 2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
+                    # sparsity: mask1 is a boolean mask, True means the weight is pruned
+                    # the larger the sparsity, the more weights are pruned (higher compression ratio)
                     thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
                     mask1 = tmp <= thresh
+                    ## debug: check how many weights are pruned
+                    ## logger.debug(f"sparsity: {torch.sum(mask1).item() / mask1.numel()}")
             else:
                 mask1 = torch.zeros_like(W1) == 1
             for i in range(count):
@@ -161,7 +165,8 @@ class SparseGPT:
         if isinstance(self.layer, transformers.Conv1D):
             W = W.t()
         self.layer.weight.data = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
-        
+        # check how many zeros in the weight data
+        # logger.debug(f"sparsity: {torch.sum(self.layer.weight.data == 0).item() / self.layer.weight.data.numel()}")
         if DEBUG:
             print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
 
