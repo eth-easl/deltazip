@@ -9,7 +9,7 @@ from fmzip.utils.delta_utils import subtract, xor
 
 def main(args):
     print(args)
-    tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
     
     compress_config = BaseCompressionConfig(
         bits = args.bits,

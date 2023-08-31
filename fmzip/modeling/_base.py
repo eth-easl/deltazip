@@ -349,7 +349,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if not self.compress_config.true_sequential:
             inside_layer_modules = [sum(inside_layer_modules, [])]
 
-        compressors = {}
+        self.compressors = {}
 
         for i in range(len(layers)):
             layer = layers[i]
@@ -511,7 +511,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         blocksize=self.compress_config.block_size,
                     )
 
-                    compressors[f"{self.layers_block_name}.{i}.{name}"] = (
+                    self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
                         sparsegpt[name].quantizer.to(
                             CPU if force_layer_back_to_cpu else cur_layer_device
                         ),
@@ -688,7 +688,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         inside_layer_modules = self.inside_layer_modules
         if not self.compress_config.true_sequential:
             inside_layer_modules = [sum(inside_layer_modules, [])]
-        compressors = {}
+        self.compressors = {}
         for i in range(len(layers)):
             layer = layers[i]
             force_layer_back_to_cpu = False
@@ -759,7 +759,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         blocksize=self.compress_config.block_size,
                     )
 
-                    compressors[f"{self.layers_block_name}.{i}.{name}"] = (
+                    self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
                         sparsegpt[name].quantizer.to(
                             CPU if force_layer_back_to_cpu else cur_layer_device
                         ),
@@ -773,7 +773,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             g_idx, CPU if force_layer_back_to_cpu else cur_layer_device
                         ),
                     )
-
                     sparsegpt[name].free()
 
             for j in range(num_batches):
@@ -808,7 +807,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             layer_inputs, layer_outputs = layer_outputs, []
             torch.cuda.empty_cache()
 
-        self.compressors = compressors
         self.use_triton = use_triton
         self.use_cuda_fp16 = use_cuda_fp16
         self.autotune_warmup_after_quantized = autotune_warmup_after_quantized

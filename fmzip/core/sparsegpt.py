@@ -47,7 +47,6 @@ class SparseGPT:
     def fasterprune(
         self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=.01, actorder=False
     ):
-        group_size = self.columns
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
             W = W.flatten(1)
@@ -155,7 +154,7 @@ class SparseGPT:
         logger.info(f'avg loss: {torch.sum(Losses).item() / self.nsamples}')
         avg_loss = torch.sum(Losses).item() / self.nsamples
         
-        g_idx = [i // group_size for i in range(self.columns)]
+        g_idx = [i // self.columns for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
         if actorder:
             invperm = torch.argsort(perm)
