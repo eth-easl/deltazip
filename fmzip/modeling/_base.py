@@ -87,7 +87,7 @@ class AutoCompressionConfig(PushToHubMixin):
 
 @dataclass
 class BaseCompressionConfig(PushToHubMixin):
-    bits: int = field(default=4, metadata={"choices": [2, 3, 4, 8]})
+    bits: int = field(default=4, metadata={"choices": [2, 3, 4, 8, 16]})
     # sparsity = how many parameters we set to zero after quantization
     sparsity: float = field(default=0)
     prunen: int = field(default=2)
@@ -221,6 +221,18 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del new_example["labels"]
 
         return new_examples
+
+    @torch.inference_mode()
+    def lossless_compress(
+        self,
+        examples: List[Dict[str, Union[List[int], torch.LongTensor]]],
+        batch_size: int = 1,
+        use_triton: bool = False,
+        use_cuda_fp16: bool = True,
+        autotune_warmup_after_quantized: bool = False,
+        cache_examples_on_gpu: bool = True,
+    ):
+        self._compressed = True
 
     @torch.inference_mode()
     def auto_lossy_compress(
@@ -447,6 +459,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 for name in subset:
                     sparsegpt[name] = SparseGPT(subset[name])
                     sparsegpt[name].quantizer = Quantizer()
+                    print(self.compress_config.final_bit)
                     sparsegpt[name].quantizer.configure(
                         self.compress_config.final_bit[f'{self.layers_block_name}.{i}.{name}'],
                         perchannel=True,
@@ -811,7 +824,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self._compressed = True
 
         torch.cuda.empty_cache()
-
+    
     @property
     def device(self):
         return self.model.device
@@ -833,20 +846,19 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
 
     @torch.inference_mode()
     def save_compressed(self, save_dir: str):
-        print(self.compress_config.final_bit)
         if not self.compressed:
             raise EnvironmentError("Model is not compressed.")
-        pack_model(
-            model=self.model,
-            quantizers=self.compressors,
-            group_size=-1,
-            bits=self.compress_config.bits if isinstance(self.compress_config.bits, int) else self.compress_config.final_bit,
-            use_triton=self.use_triton,
-            use_cuda_fp16=self.use_cuda_fp16,
-            desc_act=self.compress_config.desc_act,
-            warmup_triton=self.autotune_warmup_after_quantized,
-            force_layer_back_to_cpu=self.force_layer_back_to_cpu,
-        )
+        if isinstance(self.compress_config, AutoCompressionConfig) or self.compress_config.bits in [2,3,4,8]:
+            pack_model(
+                model=self.model,
+                quantizers=self.compressors,
+                bits=self.compress_config.bits if isinstance(self.compress_config.bits, int) else self.compress_config.final_bit,
+                use_triton=self.use_triton,
+                use_cuda_fp16=self.use_cuda_fp16,
+                desc_act=self.compress_config.desc_act,
+                warmup_triton=self.autotune_warmup_after_quantized,
+                force_layer_back_to_cpu=self.force_layer_back_to_cpu,
+            )
         os.makedirs(save_dir, exist_ok=True)
         self.model.to(CPU)
         model_save_name = f"fmzip-compressed.safetensors"
@@ -1009,38 +1021,40 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if low_cpu_mem_usage:
             init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
 
-        with ContextManagers(init_contexts):
+        if isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
+            with ContextManagers(init_contexts):
+                model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16)
+                layers = find_layers(model)
+                ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
+                for name in list(layers.keys()):
+                    if any([name.startswith(ignore_layer) for ignore_layer in ignore_layers]):
+                        logger.info(
+                            f"{name} not been quantized, will be ignored when make_quant."
+                        )
+                        del layers[name]
+                make_quant(
+                    model,
+                    layers,
+                    bits = compress_config.bits if isinstance(compress_config, BaseCompressionConfig) else compress_config.final_bit,
+                    use_triton=use_triton,
+                    use_cuda_fp16=use_cuda_fp16,
+                    desc_act=compress_config.desc_act,
+                )
+                model.tie_weights()
+            if device is None and not device_map and not max_memory:
+                device_map = "auto"
+            if device is not None:
+                device = torch.device(device)
+                if not max_memory and not device_map:
+                    device_map = {
+                        "": device.index if device.type == "cuda" else device.type
+                    }
+            if not device_map:
+                device_map = accelerate.infer_auto_device_map(
+                    model, max_memory=max_memory, no_split_module_classes=[cls.layer_type]
+                )
+        else:
             model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16)
-            layers = find_layers(model)
-            ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
-            for name in list(layers.keys()):
-                if any([name.startswith(ignore_layer) for ignore_layer in ignore_layers]):
-                    logger.info(
-                        f"{name} not been quantized, will be ignored when make_quant."
-                    )
-                    del layers[name]
-            make_quant(
-                model,
-                layers,
-                bits = compress_config.bits if isinstance(compress_config, BaseCompressionConfig) else compress_config.final_bit,
-                group_size = -1,
-                use_triton=use_triton,
-                use_cuda_fp16=use_cuda_fp16,
-                desc_act=compress_config.desc_act,
-            )
-            model.tie_weights()
-        if device is None and not device_map and not max_memory:
-            device_map = "auto"
-        if device is not None:
-            device = torch.device(device)
-            if not max_memory and not device_map:
-                device_map = {
-                    "": device.index if device.type == "cuda" else device.type
-                }
-        if not device_map:
-            device_map = accelerate.infer_auto_device_map(
-                model, max_memory=max_memory, no_split_module_classes=[cls.layer_type]
-            )
         # now load compressed data
         losslesscompressor = LosslessCompressor(compress_config.lossless)
         
@@ -1061,15 +1075,16 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             tensors, tensor_shapes, tensor_dtypes
         )
         model.load_state_dict(tensors, strict=False)
-        del tensor_dtypes
-        del tensor_shapes
-        del tensors
-        del layers
-        torch.cuda.empty_cache()
+        if isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
+            del tensor_dtypes
+            del tensor_shapes
+            del tensors
+            del layers
+            torch.cuda.empty_cache()
         model = model.to(device)
         # now move to device
         # todo (xiaozhe): for larger models, we will need to split model to multiple devices, for now, just to(device).
-        if unpack:
+        if unpack and isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
             unpack_model(model)
         # set seqlen
         model_config = model.config.to_dict()
@@ -1084,8 +1099,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 "can't get model's sequence length from model config, will set to 2048."
             )
             model.seqlen = 2048
-        
-        
         model.eval()
         return cls(model, True, compress_config)
 

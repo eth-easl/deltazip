@@ -42,7 +42,7 @@ def get_module_by_name(model, module_name: str):
             return module
 
 
-def make_quant(module, names, bits, group_size, name='', use_triton=False, use_cuda_fp16=True, desc_act=False):
+def make_quant(module, names, bits, name='', use_triton=False, use_cuda_fp16=True, desc_act=False):
     from ..nn_modules.qlinear import QuantLinear
     if isinstance(module, QuantLinear):
         return
@@ -70,7 +70,7 @@ def make_quant(module, names, bits, group_size, name='', use_triton=False, use_c
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))
     for name1, child in module.named_children():
-        make_quant(child, names, bits, group_size, name + '.' + name1 if name != '' else name1, use_triton=use_triton, use_cuda_fp16=use_cuda_fp16,desc_act=desc_act)
+        make_quant(child, names, bits, name + '.' + name1 if name != '' else name1, use_triton=use_triton, use_cuda_fp16=use_cuda_fp16,desc_act=desc_act)
 
 def unpack_model(model):
     logger.info('Unpacking model...')
@@ -83,14 +83,13 @@ def pack_model(
     model,
     quantizers,
     bits,
-    group_size,
     use_triton=False,
     use_cuda_fp16=True,
     desc_act=False,
     warmup_triton: bool = False,
     force_layer_back_to_cpu: bool = False
 ):
-    QuantLinear = dynamically_import_QuantLinear(use_triton=use_triton, desc_act=desc_act, group_size=group_size)
+    QuantLinear = dynamically_import_QuantLinear(use_triton=use_triton, desc_act=desc_act, group_size=-1)
 
     if force_layer_back_to_cpu:
         model.to(CPU)
@@ -98,7 +97,7 @@ def pack_model(
     logger.info('Packing model...')
     layers = find_layers(model)
     layers = {n: layers[n] for n in quantizers}
-    make_quant(model, quantizers, bits, group_size, use_triton=use_triton, use_cuda_fp16=use_cuda_fp16, desc_act=desc_act)
+    make_quant(model, quantizers, bits, use_triton=use_triton, use_cuda_fp16=use_cuda_fp16, desc_act=desc_act)
     qlayers = find_layers(model, [QuantLinear])
     for name in qlayers:
         logger.info(name)
@@ -107,6 +106,9 @@ def pack_model(
         layer_device = qlayers[name].device
         qlayers[name].to(CPU)
         layers[name], scale, zero, g_idx = layers[name].to(CPU), scale.to(CPU), zero.to(CPU), g_idx.to(CPU)
+        # check sparsity
+        for name in layers.keys():
+            logger.info(f"sparsity: {torch.sum(layers[name].weight.data == 0).item() / layers[name].weight.data.numel()}")
         qlayers[name].pack(layers[name], scale, zero, g_idx)
         qlayers[name].to(layer_device)
     logger.info('Model packed.')
