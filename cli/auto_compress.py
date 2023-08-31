@@ -3,6 +3,7 @@ import json
 import torch
 import argparse
 from transformers import AutoTokenizer
+from fmzip import AutoFMZipModelForCausalLM, AutoCompressionConfig
 from fmzip.utils.delta_utils import subtract, xor
 from fmzip import AutoFMZipModelForCausalLM, AutoCompressionConfig
 
@@ -14,8 +15,8 @@ def main(args):
     )
     compress_config = AutoCompressionConfig(
         tolerance=args.tolerance,
-        bits = [2, 3, 4, 8],
-        sparsity=[0.25, 0.5, 0.75],
+        bits=args.bits,
+        sparsity=args.sparsities,
         prunen=args.prunen,
         prunem=args.prunem,
         lossless=args.lossless,
@@ -23,16 +24,17 @@ def main(args):
     )
     print("[info] compress config:", compress_config)
     target_model = AutoFMZipModelForCausalLM.from_pretrained(
-        args.target_model, compress_config=compress_config,torch_dtype=torch.float16
+        args.target_model,
+        compress_config=compress_config,
+        torch_dtype=torch.float16
     )
     target_model.requires_grad_(False)
-    
     if args.base_model != "":
         # import copy
         # target_model_copy = copy.deepcopy(target_model)
         print("[info] base model is defined, delta mode enabled")
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
-            args.base_model, 
+            args.base_model,
             compress_config=compress_config
         )
         base_model.requires_grad_(False)
@@ -70,9 +72,11 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="")
     parser.add_argument("--dataset", type=str, default="answer_verification", help="The dataset to use for training, must be a path to a jsonl file.")
+    parser.add_argument('--bits', nargs='+', help='<Required> search space for bits', required=True, type=int)
+    parser.add_argument('--sparsities', nargs='+', help='<Required> search space for sparsities', required=True, type=float)
     parser.add_argument("--n-samples", type=int, default=1024, help="How many data samples used for calibration, -1 means all.")
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
-    parser.add_argument("--tolerance", type=float, default=1e-9)
+    parser.add_argument("--tolerance", type=float, default=1e-10)
     parser.add_argument("--group-size", type=int, default=-1)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
