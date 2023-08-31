@@ -1,1 +1,1 @@
-python cli/decompress_debug.py --base-model EleutherAI/pythia-2.8b-deduped --target-model /home/xzyao/Documents/projects/war_room/global_step24 --delta subtract
+python cli/decompress_debug.py --base-model EleutherAI/pythia-2.8b-deduped --target-model .cache/compressed_models/p2.8b_gsd_133

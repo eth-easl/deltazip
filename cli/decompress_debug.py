@@ -7,17 +7,17 @@ from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 
 def main(args):
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
+    # tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
     # just placeholder..., we don't need it for base model
-    compress_config = BaseCompressionConfig(
-            bits = 4,
-            group_size=128,
-            sparsity=1,
-            prunen=0,
-            prunem=0,
-            lossless='gdeflate',
-            damp_percent=0.02
-        )
+    # compress_config = BaseCompressionConfig(
+    #         bits = 4,
+    #         group_size=128,
+    #         sparsity=1,
+    #         prunen=0,
+    #         prunem=0,
+    #         lossless='gdeflate',
+    #         damp_percent=0.02
+    #     )
     with torch.inference_mode():
         start = timer()
         #base_model = AutoFMZipModelForCausalLM.from_pretrained(
@@ -33,7 +33,7 @@ def main(args):
             args.target_model, 
             strict=False,
             device='cpu',
-            unpack=True
+            unpack=False
         )
         # check how sparse each parameter is
         sparsity = {}

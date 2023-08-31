@@ -2,20 +2,19 @@ import os
 import json
 import torch
 import argparse
+from typing import Union
 from transformers import AutoTokenizer
+from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import subtract, xor
-from fmzip import AutoFMZipModelForCausalLM, AutoCompressionConfig
 
 def main(args):
     print(args)
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.target_model,
-        use_fast=True
-    )
-    compress_config = AutoCompressionConfig(
-        tolerance=args.tolerance,
-        bits = [3, 4],
-        sparsity=[0.5, 0.75],
+    tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
+    
+    compress_config = BaseCompressionConfig(
+        bits = 16,
+        group_size=args.group_size,
+        sparsity=0,
         prunen=args.prunen,
         prunem=args.prunem,
         lossless=args.lossless,
@@ -50,9 +49,7 @@ def main(args):
             raise ValueError(f"NaN exists in {name}")
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
-        examples = [
-            json.loads(line)['text'] for line in fp.readlines()
-        ]
+        examples = [json.loads(line)['text'] for line in fp.readlines()]
     if args.n_samples <= 0:
         examples = examples
     else:
@@ -61,7 +58,7 @@ def main(args):
     examples = [
         tokenizer(x) for x in examples
     ]
-    target_model.auto_lossy_compress(examples)
+    target_model.lossless_compress(examples)
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
     target_model.save_compressed(args.outdir)
@@ -72,7 +69,8 @@ if __name__=="__main__":
     parser.add_argument("--dataset", type=str, default="answer_verification", help="The dataset to use for training, must be a path to a jsonl file.")
     parser.add_argument("--n-samples", type=int, default=1024, help="How many data samples used for calibration, -1 means all.")
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
-    parser.add_argument("--tolerance", type=float, default=1e-9)
+    parser.add_argument("--sparsity", type=float, default=0.5)
+    parser.add_argument("--bits", type=int, default=4)
     parser.add_argument("--group-size", type=int, default=-1)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
