@@ -33,7 +33,7 @@ def main(args):
             args.target_model, 
             strict=False,
             device='cpu',
-            unpack=False
+            unpack=True
         )
         # check how sparse each parameter is
         sparsity = {}
