@@ -2,12 +2,12 @@ import os
 
 CACHE_PATH = os.environ.get("YAO_CACHE", "")
 
-compressed_models = os.path.join(CACHE_PATH, "experiments/fmzip/compressed_models/3b0.5s/pythia-2.8b-deduped")
+compressed_models = os.path.join(CACHE_PATH, "experiments/fmzip/compressed_models/auto/pythia-2.8b-deduped")
 
 data_dir = os.path.join(CACHE_PATH, "datasets/qi/test")
 
 tasks = os.listdir(compressed_models)
-output_dir = os.path.join(CACHE_PATH, "experiments/fmzip/generation_results_3b0.5s")
+output_dir = os.path.join(CACHE_PATH, "experiments/fmzip/generation_results_auto")
 jobs = []
 for task in tasks:
     steps = os.listdir(os.path.join(compressed_models, task))

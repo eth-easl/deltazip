@@ -560,7 +560,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             layer_inputs, layer_outputs = layer_outputs, []
             torch.cuda.empty_cache()
         
-        self.compressors = compressors
         self.use_triton = use_triton
         self.use_cuda_fp16 = use_cuda_fp16
         self.autotune_warmup_after_quantized = autotune_warmup_after_quantized
