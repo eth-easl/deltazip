@@ -43,14 +43,14 @@ class QuantLinear(nn.Module):
         )
         self.register_buffer(
             'qzeros',
-            torch.zeros((infeatures, outfeatures // 32 * self.bits), dtype=torch.int32))
+            torch.zeros((1, outfeatures // 32 * self.bits), dtype=torch.int32))
         self.register_buffer(
             'scales',
-            torch.zeros((infeatures, outfeatures), dtype=torch.float16)
+            torch.zeros((1, outfeatures), dtype=torch.float16)
         )
         self.register_buffer(
             'g_idx',
-            torch.tensor([i for i in range(infeatures)], dtype=torch.int32)
+            torch.tensor([i // infeatures for i in range(infeatures)], dtype=torch.int32)
         )
         if bias:
             self.register_buffer('bias', torch.zeros((outfeatures), dtype=torch.float16))
@@ -192,8 +192,8 @@ class QuantLinear(nn.Module):
                 torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
                 self.wf.unsqueeze(-1)
             ).to(torch.int16 if self.bits == 8 else torch.int8)
-            logger.info(f"sparsity: {torch.sum(weight == 0).item() / weight.numel()}")
             torch.bitwise_and(weight, (2 ** self.bits) - 1, out=weight)
+            logger.info(f"sparsity: {torch.sum(weight == 0).item() / weight.numel()}")
         elif self.bits == 3:
             zeros = self.qzeros.reshape(
                 self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1

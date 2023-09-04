@@ -8,8 +8,8 @@ from transformers import AutoConfig
 
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
 from ..utils.import_utils import dynamically_import_QuantLinear
-from ..nn_modules.qlinear import QuantLinear
 from ..utils.attr_utils import rsetattr
+from fmzip.nn_modules.qlinear import QuantLinear
 
 
 def get_device(obj: Union[torch.Tensor, nn.Module]):
@@ -27,7 +27,6 @@ def move_to_device(obj: Union[torch.Tensor, nn.Module], device: torch.device):
 def find_layers(module, layers=None, name=''):
     if not layers:
         layers = [transformers.pytorch_utils.Conv1D, nn.Conv2d, nn.Linear]
-
     if type(module) in layers:
         return {name: module}
     res = {}
@@ -63,12 +62,12 @@ def make_quant(module, names, bits, name='', use_triton=False, use_cuda_fp16=Tru
                 out_features = tmp.weight.shape[1]
             if isinstance(bits, dict):
                 real_bits = bits[name1]
-                print(f"Quantizing {name1} with {real_bits} bits")
             else:
                 real_bits = bits
             new_layer = QuantLinear(real_bits, in_features, out_features, tmp.bias is not None)
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))
+
     for name1, child in module.named_children():
         make_quant(child, names, bits, name + '.' + name1 if name != '' else name1, use_triton=use_triton, use_cuda_fp16=use_cuda_fp16,desc_act=desc_act)
 
@@ -89,12 +88,8 @@ def pack_model(
     warmup_triton: bool = False,
     force_layer_back_to_cpu: bool = False
 ):
-    QuantLinear = dynamically_import_QuantLinear(use_triton=use_triton, desc_act=desc_act, group_size=-1)
-
     if force_layer_back_to_cpu:
         model.to(CPU)
-
-    logger.info('Packing model...')
     layers = find_layers(model)
     layers = {n: layers[n] for n in quantizers}
     make_quant(model, quantizers, bits, use_triton=use_triton, use_cuda_fp16=use_cuda_fp16, desc_act=desc_act)
@@ -106,9 +101,7 @@ def pack_model(
         layer_device = qlayers[name].device
         qlayers[name].to(CPU)
         layers[name], scale, zero, g_idx = layers[name].to(CPU), scale.to(CPU), zero.to(CPU), g_idx.to(CPU)
-        # check sparsity
-        for name in layers.keys():
-            logger.info(f"sparsity: {torch.sum(layers[name].weight.data == 0).item() / layers[name].weight.data.numel()}")
+        logger.info(f"g_idx: {g_idx.shape}")
         qlayers[name].pack(layers[name], scale, zero, g_idx)
         qlayers[name].to(layer_device)
     logger.info('Model packed.')

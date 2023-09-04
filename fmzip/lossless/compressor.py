@@ -44,7 +44,7 @@ class LosslessCompressor():
             tensor = tensor.cuda()
         tensor_shape = tensor.shape
         to_compress_tensor = cp.from_dlpack(to_dlpack(tensor))
-        logger.debug(f"compressiong dtype {tensor.dtype}")
+        # logger.debug(f"compressiong dtype {tensor.dtype}")
         if tensor.dtype == torch.int8:
             dtype = 'int8'
             self.comp_manager.input_type = cp.int8
@@ -73,7 +73,7 @@ class LosslessCompressor():
         tensors_shape = {}
         tensors_dtype = {}
         for key in state_dict:
-            logger.debug(f"compressiong {key}, shape: {state_dict[key].shape}, dtype: {state_dict[key].dtype}")
+            # logger.debug(f"compressiong {key}, shape: {state_dict[key].shape}, dtype: {state_dict[key].dtype}")
             tensors[key], tensors_shape[key], tensors_dtype[key] = self.compress_tensor(state_dict[key])
         return tensors, tensors_shape, tensors_dtype
 

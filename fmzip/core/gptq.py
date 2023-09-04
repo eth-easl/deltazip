@@ -149,6 +149,7 @@ class GPTQ:
 
         group_size = group_size if group_size != -1 else self.columns
         g_idx = [i // group_size for i in range(self.columns)]
+        
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=Q.device)
         if actorder:
             invperm = torch.argsort(perm)
