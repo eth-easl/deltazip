@@ -1,10 +1,8 @@
 import os
 import sys
-from pathlib import Path
-from setuptools import setup, Extension, find_packages
-import subprocess
-import math
 import platform
+import subprocess
+from setuptools import setup, find_packages
 
 os.environ["CC"] = "g++"
 os.environ["CXX"] = "g++"
@@ -116,10 +114,10 @@ if BUILD_CUDA_EXT:
             "exllama_kernels",
             [
                 "fmzip/core/csrc/exllama/exllama_ext.cpp",
-                "fmzip/core/exllama/cuda_buffers.cu",
-                "fmzip/core/exllama/cuda_func/column_remap.cu",
-                "fmzip/core/exllama/cuda_func/q4_matmul.cu",
-                "fmzip/core/exllama/cuda_func/q4_matrix.cu"
+                "fmzip/core/csrc/exllama/cuda_buffers.cu",
+                "fmzip/core/csrc/exllama/cuda_func/column_remap.cu",
+                "fmzip/core/csrc/exllama/cuda_func/q4_matmul.cu",
+                "fmzip/core/csrc/exllama/cuda_func/q4_matrix.cu"
             ],
             extra_link_args=[]
         )

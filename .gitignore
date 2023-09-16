@@ -5,3 +5,4 @@ outputs/
 .experiments
 build/
 *.log
+*.egg-info/
