@@ -177,7 +177,6 @@ class QuantLinear(nn.Module):
     def unpack(self):
         if self.wf.device != self.qzeros.device:
             self.wf = self.wf.to(self.qzeros.device)
-        logger.debug(self.bits)
         if self.bits in [2, 4, 8]:
             zeros = torch.bitwise_right_shift(
                 torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
@@ -193,7 +192,6 @@ class QuantLinear(nn.Module):
                 self.wf.unsqueeze(-1)
             ).to(torch.int16 if self.bits == 8 else torch.int8)
             torch.bitwise_and(weight, (2 ** self.bits) - 1, out=weight)
-            logger.info(f"sparsity: {torch.sum(weight == 0).item() / weight.numel()}")
         elif self.bits == 3:
             zeros = self.qzeros.reshape(
                 self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1

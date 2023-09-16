@@ -1080,8 +1080,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             torch.cuda.empty_cache()
         model = model.to(device)
         # now move to device
-        # todo (xiaozhe): for larger models, we will need to split model to multiple devices, for now, just to(device).
-        if unpack and isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
+        if unpack and (isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]):
             unpack_model(model)
         # set seqlen
         model_config = model.config.to_dict()
