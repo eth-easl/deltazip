@@ -1,14 +1,14 @@
 from packaging.version import parse as parse_version
 
 
-def dynamically_import_QuantLinear(use_triton: bool, desc_act: bool, group_size: int):
+def dynamically_import_QuantLinear(use_triton: bool, desc_act: bool, group_size: int, use_cuda: bool = False):
     if use_triton:
         from ..nn_modules.qlinear_triton import QuantLinear
     else:
-        if not desc_act or group_size == -1:
+        if not use_cuda:
             from ..nn_modules.qlinear_old import QuantLinear
         else:
-            from ..nn_modules.qlinear import QuantLinear
+            from ..nn_modules.qlinear_cuda import QuantLinear
 
     return QuantLinear
 

@@ -1,1 +1,1 @@
-from .text_generation import TextGenerationPipeline
+from .text_generation import MixedPrecisionModel

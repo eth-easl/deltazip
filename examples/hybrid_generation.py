@@ -1,6 +1,7 @@
 # Mixed Precision Generation
-from fmzip.pipelines import TextGenerationPipeline
+from fmzip.pipelines import MixedPrecisionModel
 
-pipeline = TextGenerationPipeline("EleutherAI/pythia-2.8b-deduped")
-pipeline.load_delta(".cache/compressed_models/p2.8b_gsd_133")
+mpm = MixedPrecisionModel("EleutherAI/pythia-2.8b-deduped")
+mpm.load_delta(".cache/compressed_models/p2.8b_gsd_133")
 
+mpm.generate([{"text": "Hello world", "model": ".cache/compressed_models/p2.8b_gsd_133"}])

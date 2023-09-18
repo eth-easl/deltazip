@@ -1,6 +1,5 @@
 from ._base import *
 
-
 class GPTNeoXFMZipForCausalLM(BaseFMZipModelForCausalLM):
     layer_type = "GPTNeoXLayer"
     layers_block_name = "gpt_neox.layers"
@@ -12,5 +11,8 @@ class GPTNeoXFMZipForCausalLM(BaseFMZipModelForCausalLM):
         ["mlp.dense_4h_to_h"]
     ]
     lm_head_name = "embed_out"
+
+def parallelize_neox():
+    pass
 
 __all__ = ["GPTNeoXFMZipForCausalLM"]

@@ -749,7 +749,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     logger.debug(
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
-
                     scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
                         self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
@@ -757,7 +756,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         percdamp=self.compress_config.damp_percent,
                         blocksize=self.compress_config.block_size,
                     )
-
                     self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
                         sparsegpt[name].quantizer.to(
                             CPU if force_layer_back_to_cpu else cur_layer_device
