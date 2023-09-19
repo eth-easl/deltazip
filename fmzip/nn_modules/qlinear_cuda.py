@@ -26,7 +26,7 @@ class QuantLinear(nn.Module):
         infeatures,
         outfeatures,
         bias,
-        kernel_switch_threshold=128,
+        kernel_switch_threshold=0,
         trainable=False
     ):
         super().__init__()
@@ -208,7 +208,7 @@ class QuantLinear(nn.Module):
             else:
                 raise NotImplementedError("Only 2,3,4,8 bits are supported.")
         else:
-            logger.warning("Unsupport kernel size, fallback to python implementation.")
+            logger.warning(f"Large kernel size {x.shape[0]}>{self.kernel_switch_threshold}, fallback to python implementation.")
             if self.wf.device != self.qzeros.device:
                 self.wf = self.wf.to(self.qzeros.device)
 

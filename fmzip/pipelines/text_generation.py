@@ -37,7 +37,7 @@ class MixedPrecisionModel:
         self.model_pool = {}
         self.key_list = []
 
-    def generate(self, queries: List[Tuple]):
+    def generate(self, queries: List[Tuple], **kwargs):
         parallelize_neox()
         batch = self.prepare_batch(
             queries,
@@ -64,7 +64,7 @@ class MixedPrecisionModel:
 
         end = timer()
         logger.info(f"prepare finished. Takes {end-start} seconds")
-        output = self.base_model.generate(**batch)
+        output = self.base_model.generate(**batch, **kwargs)
         output = self.tokenizer.batch_decode(
             output,
             skip_special_tokens=True
