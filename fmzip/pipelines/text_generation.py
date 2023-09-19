@@ -5,7 +5,7 @@ from transformers import AutoTokenizer
 from timeit import default_timer as timer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
-
+from timeit import default_timer as timer
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
     target_name = key.split(".")[-1]
@@ -35,20 +35,29 @@ class MixedPrecisionModel():
         logger.info("based model loaded")
         parallelize_neox()
         self.model_pool = {}
+        self.key_list = []
 
     def generate(self, queries: List[Tuple]):
         batch = self.prepare_batch(
             queries, self.tokenizer, self.base_model, None
         )
         deltas = [x[1] for x in queries]
-        for delta in deltas:
-            for key, module in self.model_pool[delta].model.named_modules():
-                key_to_base = key
-                base_module = _get_submodules(self.base_model, key_to_base)
-                setattr(self.base_model, 'delta', module)
+        
+        start = timer()
+        for key in self.key_list:
+            _, target, _ = _get_submodules(self.base_model, key)
+            dmodules = []
+            for delta in deltas:
+                for dkey, dmodule in self.model_pool[delta].model.named_modules():
+                    if dkey == key:
+                        dmodules.append(dmodule)
+                        break
+            setattr(target, 'delta', [module.to(torch.device('cuda')) for module in dmodules])
+        end = timer()
+        logger.info(f"prepare finished. Takes {end-start} seconds")
         output = self.base_model.generate(**batch)
-        print(output)
         return output
+
     def load_delta(self, delta_model: str):
         logger.info("Loading target model")
         start = timer()
@@ -58,7 +67,9 @@ class MixedPrecisionModel():
         )
         end = timer()
         logger.info(f"Loading finished. Takes {end-start} seconds")
-        
+        for key, _ in self.model_pool[delta_model].model.named_modules():
+            self.key_list.append(key)
+
     def forward(self, **kwargs):
         pass
 

@@ -1,7 +1,7 @@
 import torch
+import transformers
 from typing import Optional, Tuple
 from transformers.models.gpt_neox.modeling_gpt_neox import apply_rotary_pos_emb
-
 from ._base import *
 
 def gpt_neox_attention_forward(
@@ -14,12 +14,15 @@ def gpt_neox_attention_forward(
     use_cache: Optional[bool] = False,
     output_attentions: Optional[bool] = False,
 ):
+    print("gpt_neox_attention_forward")
     has_layer_past = layer_past is not None
     # Compute QKV
     # Attention heads [batch, seq_len, hidden_size]
     #   --> [batch, seq_len, (np * 3 * head_size)]
     qkv = self.query_key_value(hidden_states)
     
+    delta_qkv = self.delta.query_key_value(hidden_states)
+
     # (todo: xiaozhe): here you will find a side-loaded quant linear
 
     # [batch, seq_len, (num_heads * 3 * head_size)]
@@ -81,6 +84,6 @@ class GPTNeoXFMZipForCausalLM(BaseFMZipModelForCausalLM):
     lm_head_name = "embed_out"
 
 def parallelize_neox():
-    pass
+    transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = gpt_neox_attention_forward
 
 __all__ = ["GPTNeoXFMZipForCausalLM"]
