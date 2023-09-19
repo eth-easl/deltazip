@@ -34,7 +34,6 @@ def gpt_neox_attention_forward(
     # Attention heads [batch, seq_len, hidden_size]
     #   --> [batch, seq_len, (np * 3 * head_size)]
     qkv = self.query_key_value(hidden_states)
-    
     delta_qkv = [self.delta[i].query_key_value(hidden_states[i]) for i in range(len(self.delta))]
     delta_qkv = torch.stack(delta_qkv, dim=0)
     qkv = qkv + delta_qkv
@@ -70,17 +69,20 @@ def gpt_neox_attention_forward(
         past_value = layer_past[1]
         key = torch.cat((past_key, key), dim=-2)
         value = torch.cat((past_value, value), dim=-2)
+    
     present = (key, value) if use_cache else None
 
     # Compute attention
     attn_output, attn_weights = self._attn(query, key, value, attention_mask, head_mask)
-
+    
     # Reshape outputs
     attn_output = self._merge_heads(attn_output, self.num_attention_heads, self.head_size)
-    attn_output = self.dense(attn_output)
+
+    main_attn_output = self.dense(attn_output)
     delta_attn_output = [self.delta[i].dense(attn_output[i]) for i in range(len(self.delta))]
     delta_attn_output = torch.stack(delta_attn_output, dim=0)
-    attn_output = attn_output + delta_attn_output
+
+    attn_output = main_attn_output + delta_attn_output
     outputs = (attn_output, present)
     if output_attentions:
         outputs += (attn_weights,)
