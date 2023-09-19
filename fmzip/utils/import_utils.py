@@ -9,7 +9,6 @@ def dynamically_import_QuantLinear(use_triton: bool, desc_act: bool, group_size:
             from ..nn_modules.qlinear_old import QuantLinear
         else:
             from ..nn_modules.qlinear_cuda import QuantLinear
-
     return QuantLinear
 
 

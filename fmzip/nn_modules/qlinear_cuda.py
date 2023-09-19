@@ -23,7 +23,6 @@ class QuantLinear(nn.Module):
     def __init__(
         self,
         bits,
-        group_size,
         infeatures,
         outfeatures,
         bias,

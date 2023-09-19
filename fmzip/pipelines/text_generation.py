@@ -39,7 +39,12 @@ class MixedPrecisionModel:
 
     def generate(self, queries: List[Tuple]):
         parallelize_neox()
-        batch = self.prepare_batch(queries, self.tokenizer, self.base_model, None)
+        batch = self.prepare_batch(
+            queries,
+            self.tokenizer,
+            self.base_model,
+            None
+        )
         deltas = [x[1] for x in queries]
 
         start = timer()
@@ -60,8 +65,10 @@ class MixedPrecisionModel:
         end = timer()
         logger.info(f"prepare finished. Takes {end-start} seconds")
         output = self.base_model.generate(**batch)
-        # decoder
-        output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
+        output = self.tokenizer.batch_decode(
+            output,
+            skip_special_tokens=True
+        )
         return output
 
     def load_delta(self, delta_model: str):
@@ -75,11 +82,7 @@ class MixedPrecisionModel:
         logger.info(f"Loading finished. Takes {end-start} seconds")
         if len(self.key_list) == 0:
             for key, _ in self.model_pool[delta_model].model.named_modules():
-                print(key)
                 self.key_list.append(key)
-
-    def forward(self, **kwargs):
-        pass
 
     def prepare_batch(self, inputs, tokenizer, model, lora_map):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""

@@ -42,7 +42,7 @@ def get_module_by_name(model, module_name: str):
 
 
 def make_quant(module, names, bits, name='', use_triton=False, use_cuda_fp16=True, desc_act=False):
-    from ..nn_modules.qlinear import QuantLinear
+    from ..nn_modules.qlinear_cuda import QuantLinear
     if isinstance(module, QuantLinear):
         return
     for attr in dir(module):
