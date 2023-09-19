@@ -26,18 +26,18 @@ class MixedPrecisionModel():
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
-
+        self.tokenizer.padding_side = "left"
         self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
             base_model,
             compress_config=compress_config
         )
         self.base_model = self.base_model.to(torch.device('cuda'))
         logger.info("based model loaded")
-        parallelize_neox()
         self.model_pool = {}
-        self.key_list = []
-
+        self.key_list = []  
+        
     def generate(self, queries: List[Tuple]):
+        parallelize_neox()
         batch = self.prepare_batch(
             queries, self.tokenizer, self.base_model, None
         )
@@ -53,6 +53,7 @@ class MixedPrecisionModel():
                         dmodules.append(dmodule)
                         break
             setattr(target, 'delta', [module.to(torch.device('cuda')) for module in dmodules])
+
         end = timer()
         logger.info(f"prepare finished. Takes {end-start} seconds")
         output = self.base_model.generate(**batch)
