@@ -14,16 +14,15 @@ def gpt_neox_attention_forward(
     use_cache: Optional[bool] = False,
     output_attentions: Optional[bool] = False,
 ):
-    print("gpt_neox_attention_forward")
     has_layer_past = layer_past is not None
     # Compute QKV
     # Attention heads [batch, seq_len, hidden_size]
     #   --> [batch, seq_len, (np * 3 * head_size)]
     qkv = self.query_key_value(hidden_states)
     
-    delta_qkv = self.delta.query_key_value(hidden_states)
-
-    # (todo: xiaozhe): here you will find a side-loaded quant linear
+    delta_qkv = [self.delta[i].query_key_value(hidden_states[i]) for i in range(len(self.delta))]
+    delta_qkv = torch.stack(delta_qkv, dim=0)
+    qkv = qkv + delta_qkv
 
     # [batch, seq_len, (num_heads * 3 * head_size)]
     #   --> [batch, seq_len, num_heads, 3 * head_size]
@@ -64,11 +63,12 @@ def gpt_neox_attention_forward(
     # Reshape outputs
     attn_output = self._merge_heads(attn_output, self.num_attention_heads, self.head_size)
     attn_output = self.dense(attn_output)
-
+    delta_attn_output = [self.delta[i].dense(attn_output[i]) for i in range(len(self.delta))]
+    delta_attn_output = torch.stack(delta_attn_output, dim=0)
+    attn_output = attn_output + delta_attn_output
     outputs = (attn_output, present)
     if output_attentions:
         outputs += (attn_weights,)
-
     return outputs
 
 class GPTNeoXFMZipForCausalLM(BaseFMZipModelForCausalLM):

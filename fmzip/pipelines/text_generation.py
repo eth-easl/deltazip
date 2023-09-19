@@ -1,11 +1,11 @@
 import torch
 from loguru import logger
-from typing import List, Dict, Tuple
+from typing import List, Tuple
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
-from timeit import default_timer as timer
+
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
     target_name = key.split(".")[-1]
@@ -23,7 +23,7 @@ class MixedPrecisionModel():
             lossless='gdeflate',
             damp_percent=0.02
         )
-        self.tokenizer =  AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
 
@@ -56,6 +56,8 @@ class MixedPrecisionModel():
         end = timer()
         logger.info(f"prepare finished. Takes {end-start} seconds")
         output = self.base_model.generate(**batch)
+        # decoder
+        output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
         return output
 
     def load_delta(self, delta_model: str):
