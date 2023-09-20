@@ -25,10 +25,7 @@ class LockableRoute(APIRoute):
 
         return custom_route_handler
 
-class InferenceRequest(BaseModel):
-    prompt: str
-    model: str
-    args: dict
+
 
 app = FastAPI()
 app.router.route_class = LockableRoute
