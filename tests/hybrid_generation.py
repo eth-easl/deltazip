@@ -42,6 +42,7 @@ def main():
     delta_model, tokenizer = load_delta_model()
     mpm = MixedPrecisionModel("EleutherAI/pythia-125m-deduped")
     mpm.load_delta(".cache/compressed_models/p125m_gsd_133")
+    
     test_data = [
         ("Computer Science is about ", ".cache/compressed_models/p125m_gsd_133"), 
         ("What is the weather today?", ".cache/compressed_models/p125m_gsd_133"),

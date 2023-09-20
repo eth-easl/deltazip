@@ -30,7 +30,6 @@ def generate(args):
     # process batch by batch
     for i in range(0, len(prompts), args.batch_size):
         batch = prompts[i:i+args.batch_size]
-        print(f"processing batch {i} to {i+args.batch_size}")
         input_batch = [(prompt[args.input_field], args.target_model) for prompt in batch]
         outputs = mpm.generate(
             input_batch,
