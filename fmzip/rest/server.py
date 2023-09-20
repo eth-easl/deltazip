@@ -17,7 +17,7 @@ timeout = 3
 task_queue = asyncio.Queue()
 
 inference_model = InferenceService(
-    provider='fmzip-mpm',
+    provider='hf',
     base_model='EleutherAI/pythia-2.8b-deduped'
 )
 
