@@ -9,5 +9,6 @@ class InferenceService():
         else:
             raise NotImplementedError
     
-    def generate(self, queries: List[dict]):
+    def generate(self, queries: List):
+        queries = [(query.prompt, query.model) for query in queries]
         return self.mpm.generate(queries)

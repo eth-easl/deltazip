@@ -15,6 +15,7 @@ app = FastAPI()
 batch_size = 8
 timeout = 3
 task_queue = asyncio.Queue()
+
 inference_model = InferenceService(
     provider='fmzip',
     base_model='EleutherAI/pythia-2.8b-deduped'
@@ -37,12 +38,11 @@ async def process_tasks():
 
         if len(batch) > 0:
             print(f"Processing batch: {batch}")
-            inference_model.generate(batch)
-            for task in batch:
+            output = inference_model.generate(batch)
+            for i, task in enumerate(batch):
                 print(f"Executing task: {task}")
-                results[task.id]['result'] = f"{task.id} completed"
+                results[task.id]['result'] = output[i]
                 results[task.id]['event'].set()
-                await asyncio.sleep(0.2)  # Simulate task execution
             print("Batch processing completed.\n")
 
 # Run the processing function as a background task
@@ -56,8 +56,6 @@ class InferenceTask(BaseModel):
     prompt: str
     model: str
     response: Optional[str] = ""
-
-
 
 @app.post("/inference", response_model=InferenceTask)
 async def handle_request(inference_task: InferenceTask):
