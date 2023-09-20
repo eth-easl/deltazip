@@ -13,3 +13,6 @@ numcodecs
 fastapi
 uvicorn
 triton
+gekko
+tokenizers
+parameterized
