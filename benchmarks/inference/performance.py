@@ -10,10 +10,10 @@ task = {
     'model': '.cache/compressed_models/p2.8b_gsd_133'
 }
 
-task = {
-    'prompt': "Once upon a time, ",
-    'model': '.cache/raw_models/gsd/step_133'
-}
+# task = {
+#     'prompt': "Once upon a time, ",
+#     'model': '.cache/raw_models/gsd/step_133'
+# }
 
 def test(i):
     print(f"issuing {i}th request")
