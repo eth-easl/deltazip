@@ -4,9 +4,14 @@ from multiprocessing import Pool
 endpoint = 'http://localhost:8000'
 
 response_time = []
+# task = {
+#     'prompt': "Once upon a time, ",
+#     'model': '.cache/compressed_models/p2.8b_gsd_133'
+# }
+
 task = {
     'prompt': "Once upon a time, ",
-    'model': '.cache/compressed_models/p2.8b_gsd_133'
+    'model': '.cache/raw_models/gsd/step_133'
 }
 
 def test(i):
