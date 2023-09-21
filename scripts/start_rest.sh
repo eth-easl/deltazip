@@ -1,0 +1,1 @@
+uvicorn fmzip.rest.server:app --reload

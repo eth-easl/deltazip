@@ -3,8 +3,9 @@ import json
 import torch
 import argparse
 from transformers import AutoTokenizer
-from fmzip import AutoFMZipModelForCausalLM, AutoCompressionConfig
 from fmzip.utils.delta_utils import subtract, xor
+from fmzip import AutoFMZipModelForCausalLM, AutoCompressionConfig
+
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(
@@ -36,7 +37,7 @@ def main(args):
             compress_config=compress_config
         )
         base_model.requires_grad_(False)
-    
+
         # now perform the delta op
         if args.delta == "subtract":
             target_model = subtract(base_model, target_model)

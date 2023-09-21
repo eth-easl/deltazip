@@ -56,11 +56,9 @@ if BUILD_CUDA_EXT:
         common_setup_kwargs['version'] += f"+cu{CUDA_VERSION}"
 
 include_dirs = ["fmzip/core/csrc"]
-requirements = [
-    'gekko',
-    'transformers',
-    'tokenizers'
-]
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 extras_require = {
     "triton": ["triton==2.0.0"],
     "test": ["parameterized"]
