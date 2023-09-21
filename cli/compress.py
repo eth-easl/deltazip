@@ -25,8 +25,7 @@ def main(args):
         args.target_model, compress_config=compress_config,torch_dtype=torch.float16
     )
     target_model.requires_grad_(False)
-    
-    if args.base_model != "":
+    if args.base_model != "" and args.delta != "":
         # import copy
         # target_model_copy = copy.deepcopy(target_model)
         print("[info] base model is defined, delta mode enabled")
