@@ -59,11 +59,12 @@ class InferenceTask(BaseModel):
 
 @app.post("/inference", response_model=InferenceTask)
 async def handle_request(inference_task: InferenceTask):
-    dhash.update(json.dumps(inference_task.model_dump(), sort_keys=True).encode())
+    dhash.update(json.dumps(inference_task.dict(), sort_keys=True).encode())
     inference_task.id = dhash.hexdigest()
     event = asyncio.Event()
     results[inference_task.id] = {'event': event, 'result': None}
     await task_queue.put(inference_task)
     await event.wait()
-    inference_task.response = results.pop(inference_task.id)['result']
+    response = results.pop(inference_task.id)['result']
+    inference_task.response = response
     return inference_task

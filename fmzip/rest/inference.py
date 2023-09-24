@@ -53,7 +53,7 @@ class InferenceService():
                 output,
                 skip_special_tokens=True
             )
-            outputs.append(output)
+            outputs.append(output[0])
         return outputs
     
     def _fmzip_generate(self, queries: List):
@@ -76,8 +76,9 @@ class InferenceService():
                 output,
                 skip_special_tokens=True
             )
-            outputs.append(output)
+            outputs.append(output[0])
         return outputs
+
     def generate(self, queries: List):
         queries = [(query.prompt, query.model) for query in queries]
         if self.provider == 'fmzip-mpm':

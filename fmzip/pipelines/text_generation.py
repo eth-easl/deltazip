@@ -52,7 +52,9 @@ class MixedPrecisionModel:
             logger.warning("in future this will be replaced with LRU cache")
             self.model_pool = {}
 
-        [self.load_delta(delta) for delta in deltas if delta not in self.model_pool]
+        # [self.load_delta(delta) for delta in deltas if delta not in self.model_pool]
+        [self.load_delta(delta) for delta in deltas]
+
         start = timer()
 
         for key in self.key_list:

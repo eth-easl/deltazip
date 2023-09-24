@@ -7,12 +7,12 @@ endpoint = 'http://localhost:8000'
 response_time = []
 task = {
     'prompt': "Once upon a time, ",
-    'model': '.cache/compressed_models/p2.8b_gsd_133'
+    'model': '/mnt/scratch/xiayao/cache/experiments/fmzip/compressed_models/3b0.5s/pythia-2.8b-deduped/task065_timetravel_consistent_sentence_classification/global_step48'
 }
 
 # task = {
 #     'prompt': "Once upon a time, ",
-#     'model': '.cache/raw_models/gsd/step_133'
+#     'model': '/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/pythia-2.8b-deduped/task065_timetravel_consistent_sentence_classification/global_step48'
 # }
 
 def test(i):

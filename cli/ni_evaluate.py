@@ -48,11 +48,11 @@ def generate(args):
         )
         delta_model = delta_model.half()
         delta_model = delta_model.to(torch.device('cuda'))
-        logger.info("reverse delta")
-        if args.delta == "subtract":
-            delta_model = subtract_inverse(base_model, delta_model)
-        elif args.delta == "xor":
-            delta_model = xor_inverse(base_model, delta_model)
+        if args.delta != "":
+            if args.delta == "subtract":
+                delta_model = subtract_inverse(base_model, delta_model)
+            elif args.delta == "xor":
+                delta_model = xor_inverse(base_model, delta_model)
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]
         # to leave more memory for higher-throughput generation, put the base model to cpu
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="gpt2")
     parser.add_argument("--target-model", type=str, default="gpt2")
-    parser.add_argument("--delta", type=str, default="subtract")
+    parser.add_argument("--delta", type=str, default="")
     parser.add_argument("--input-file", type=str, default="")
     parser.add_argument("--input-field", type=str, default="input")
     parser.add_argument("--output-file", type=str, default="")

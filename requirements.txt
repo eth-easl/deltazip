@@ -16,3 +16,4 @@ triton
 gekko
 tokenizers
 parameterized
+pydantic
