@@ -12,9 +12,19 @@ from transformers.models.llama.modeling_llama import LlamaAttention, LlamaMLP, a
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x)
+    delta_hidden_states = [self.delta[i].up_proj(x[i]) for i in range(len(self.delta))]
+    delta_hidden_states = torch.stack(delta_hidden_states, dim=0)
+    hidden_states = hidden_states + delta_hidden_states
     gate_hiddent_states = self.gate_proj(x)
+    delta_gate_hiddent_states = [self.delta[i].gate_proj(x[i]) for i in range(len(self.delta))]
+    delta_gate_hiddent_states = torch.stack(delta_gate_hiddent_states, dim=0)
+    gate_hiddent_states = gate_hiddent_states + delta_gate_hiddent_states
     hidden_states = self.act_fn(gate_hiddent_states * hidden_states)
-
+    hidden_states = self.down_proj(hidden_states)
+    delta_hidden_states = [self.delta[i].down_proj(hidden_states[i]) for i in range(len(self.delta))]
+    delta_hidden_states = torch.stack(delta_hidden_states, dim=0)
+    hidden_states = hidden_states + delta_hidden_states
+    return hidden_states
 
 def llama_attention_forward(
         self,
