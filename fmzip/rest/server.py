@@ -12,8 +12,8 @@ from fastapi import FastAPI, Request, Response
 from fmzip.rest.inference import InferenceService
 
 app = FastAPI()
-batch_size = 8
-timeout = 3
+batch_size = 4
+timeout = 1
 task_queue = asyncio.Queue()
 
 inference_model = InferenceService(
@@ -40,7 +40,6 @@ async def process_tasks():
             print(f"Processing batch: {batch}")
             output = inference_model.generate(batch)
             for i, task in enumerate(batch):
-                print(f"Executing task: {task}")
                 results[task.id]['result'] = output[i]
                 results[task.id]['event'].set()
             print("Batch processing completed.\n")
