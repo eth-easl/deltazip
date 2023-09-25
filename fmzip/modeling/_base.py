@@ -749,7 +749,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     logger.debug(
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
-
                     scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
                         self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
@@ -757,7 +756,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         percdamp=self.compress_config.damp_percent,
                         blocksize=self.compress_config.block_size,
                     )
-
                     self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
                         sparsegpt[name].quantizer.to(
                             CPU if force_layer_back_to_cpu else cur_layer_device
@@ -1080,8 +1078,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             torch.cuda.empty_cache()
         model = model.to(device)
         # now move to device
-        # todo (xiaozhe): for larger models, we will need to split model to multiple devices, for now, just to(device).
-        if unpack and isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
+        if unpack and (isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]):
             unpack_model(model)
         # set seqlen
         model_config = model.config.to_dict()

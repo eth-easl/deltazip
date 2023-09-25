@@ -3,22 +3,23 @@ import json
 import torch
 import cupy as cp
 import numpy as np
+from loguru import logger
 from safetensors import safe_open
-from torch.utils.dlpack import to_dlpack
+from argparse import ArgumentParser
+from timeit import default_timer as timer
 from torch.utils.dlpack import from_dlpack
 from transformers import AutoModelForCausalLM
 from fmzip.lossless.nvcomp import GdeflateManager as manager
-from timeit import default_timer as timer
-from argparse import ArgumentParser
-from loguru import logger
-from accelerate import init_empty_weights
-from transformers import AutoConfig
 
 bytes_per_params = 2
 
 def load_naive(args):
     timer_start = timer()
-    origin_model = AutoModelForCausalLM.from_pretrained(args.base_model, revision="float16",low_cpu_mem_usage=True)
+    origin_model = AutoModelForCausalLM.from_pretrained(
+        args.base_model,
+        revision="float16",
+        low_cpu_mem_usage=True
+    )
     origin_model.cuda()
     timer_end = timer()
     del origin_model
@@ -27,7 +28,11 @@ def load_naive(args):
 
 def load_compressed(args):
     # we always assume the base model is already in gpu
-    base_model = AutoModelForCausalLM.from_pretrained(args.base_model, torch_dtype=torch.float16, low_cpu_mem_usage=True)
+    base_model = AutoModelForCausalLM.from_pretrained(
+        args.base_model,
+        torch_dtype=torch.float16,
+        low_cpu_mem_usage=True
+    )
     origin_model = AutoModelForCausalLM.from_pretrained(args.target_model, torch_dtype=torch.float16, low_cpu_mem_usage=True)
     base_model.requires_grad_(False)
     origin_model.requires_grad_(False)

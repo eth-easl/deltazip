@@ -10,3 +10,10 @@ cchardet
 scikit-build
 pytest
 numcodecs
+fastapi
+uvicorn
+triton
+gekko
+tokenizers
+parameterized
+pydantic

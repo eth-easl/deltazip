@@ -9,7 +9,7 @@ from transformers import AutoConfig
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
 from ..utils.import_utils import dynamically_import_QuantLinear
 from ..utils.attr_utils import rsetattr
-from fmzip.nn_modules.qlinear import QuantLinear
+from fmzip.nn_modules.qlinear_cuda import QuantLinear
 
 
 def get_device(obj: Union[torch.Tensor, nn.Module]):
@@ -42,7 +42,7 @@ def get_module_by_name(model, module_name: str):
 
 
 def make_quant(module, names, bits, name='', use_triton=False, use_cuda_fp16=True, desc_act=False):
-    from ..nn_modules.qlinear import QuantLinear
+    from ..nn_modules.qlinear_cuda import QuantLinear
     if isinstance(module, QuantLinear):
         return
     for attr in dir(module):
