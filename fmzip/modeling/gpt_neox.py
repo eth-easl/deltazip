@@ -5,7 +5,7 @@ from transformers.models.gpt_neox.modeling_gpt_neox import apply_rotary_pos_emb
 from ._base import *
 
 def gpt_neox_mlp_forward(
-        self, hidden_states
+    self, hidden_states
 ):
     main_hidden_states = self.dense_h_to_4h(hidden_states)
     delta_hidden_states = [self.delta[i].dense_h_to_4h(hidden_states[i]) for i in range(len(self.delta))]

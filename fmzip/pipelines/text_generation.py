@@ -54,7 +54,6 @@ class MixedPrecisionModel:
 
         # [self.load_delta(delta) for delta in deltas if delta not in self.model_pool]
         [self.load_delta(delta) for delta in deltas]
-
         start = timer()
 
         for key in self.key_list:
