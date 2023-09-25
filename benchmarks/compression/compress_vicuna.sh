@@ -1,1 +1,0 @@
-python cli/compress.py --target-model lmsys/vicuna-7b-v1.5 --outdir .cache/compressed_models/vicuna-7b-v1.5 --dataset .cache/datasets/lmsys.jsonl --n-samples 256 --bits 3 --group-size 128 --sparsity 0.5 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf
