@@ -75,7 +75,7 @@ if __name__=="__main__":
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
     parser.add_argument("--lossless", type=str, default="gdeflate", choices=['gdeflate'])
-    parser.add_argument("--delta", type=str, choices=['subtract', 'xor'], default='subtract')
+    parser.add_argument("--delta", type=str, choices=['subtract', 'xor'], default='')
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     args = parser.parse_args()
