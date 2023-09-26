@@ -3,27 +3,30 @@ import torch
 from ._const import *
 from ._utils import *
 import torch.nn as nn
-
 from ._base import *
+import transformers
 from ..nn_modules.fused_llama_attn import FusedLlamaAttentionForQuantizedModel
 from ..nn_modules.fused_llama_mlp import FusedLlamaMLPForQuantizedModel
 from typing import Optional, Tuple
-from transformers.models.llama.modeling_llama import LlamaAttention, LlamaMLP, apply_rotary_pos_emb, repeat_kv
+from transformers.models.llama.modeling_llama import apply_rotary_pos_emb, repeat_kv
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x)
     delta_hidden_states = [self.delta[i].up_proj(x[i]) for i in range(len(self.delta))]
     delta_hidden_states = torch.stack(delta_hidden_states, dim=0)
     hidden_states = hidden_states + delta_hidden_states
+
     gate_hiddent_states = self.gate_proj(x)
     delta_gate_hiddent_states = [self.delta[i].gate_proj(x[i]) for i in range(len(self.delta))]
     delta_gate_hiddent_states = torch.stack(delta_gate_hiddent_states, dim=0)
     gate_hiddent_states = gate_hiddent_states + delta_gate_hiddent_states
-    hidden_states = self.act_fn(gate_hiddent_states * hidden_states)
-    hidden_states = self.down_proj(hidden_states)
+
+    hidden_states = self.act_fn(gate_hiddent_states)  * hidden_states
+    
+    base_hidden_states = self.down_proj(hidden_states)
     delta_hidden_states = [self.delta[i].down_proj(hidden_states[i]) for i in range(len(self.delta))]
     delta_hidden_states = torch.stack(delta_hidden_states, dim=0)
-    hidden_states = hidden_states + delta_hidden_states
+    hidden_states = base_hidden_states + delta_hidden_states
     return hidden_states
 
 def llama_attention_forward(
@@ -39,18 +42,20 @@ def llama_attention_forward(
     base_query_states = self.q_proj(hidden_states)
     base_key_states = self.k_proj(hidden_states)
     base_value_states = self.v_proj(hidden_states)
+    
     delta_query_states = [self.delta[i].q_proj(hidden_states[i]) for i in range(len(self.delta))]
     delta_key_states = [self.delta[i].k_proj(hidden_states[i]) for i in range(len(self.delta))]
     delta_value_states = [self.delta[i].v_proj(hidden_states[i]) for i in range(len(self.delta))]
+
     delta_query_states = torch.stack(delta_query_states, dim=0)
     delta_key_states = torch.stack(delta_key_states, dim=0)
     delta_value_states = torch.stack(delta_value_states, dim=0)
+
     query_states = base_query_states + delta_query_states
     key_states = base_key_states + delta_key_states
     value_states = base_value_states + delta_value_states
 
     query_states = query_states.view(bsz, q_len, self.num_heads, self.head_dim).transpose(1, 2)
-
     key_states = key_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
     value_states = value_states.view(bsz, q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)
 
@@ -98,6 +103,7 @@ def llama_attention_forward(
 
     attn_output = attn_output.transpose(1, 2).contiguous()
     attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
+    
     base_attn_output = self.o_proj(attn_output)
     delta_attn_output = [self.delta[i].o_proj(attn_output[i]) for i in range(len(self.delta))]
     delta_attn_output = torch.stack(delta_attn_output, dim=0)
@@ -122,5 +128,8 @@ class LlamaFMZipForCausalLM(BaseFMZipModelForCausalLM):
     fused_attn_module_type = FusedLlamaAttentionForQuantizedModel
     fused_mlp_module_type = FusedLlamaMLPForQuantizedModel
 
+def parallelize_llama():
+    transformers.models.llama.modeling_llama.LlamaMLP.forward = llama_mlp_forward
+    transformers.models.llama.modeling_llama.LlamaAttention.forward = llama_attention_forward
 
 __all__ = ["LlamaFMZipForCausalLM"]
