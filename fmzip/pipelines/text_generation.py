@@ -14,7 +14,7 @@ def _get_submodules(model, key):
     return parent, target, target_name
 
 class MixedPrecisionModel:
-    def __init__(self, base_model: str, max_num_deltas=10, use_bfloat16=False) -> None:
+    def __init__(self, base_model: str, max_num_deltas=2, use_bfloat16=False, batch_size=0) -> None:
         compress_config = BaseCompressionConfig(
             bits=4,
             group_size=128,
@@ -29,6 +29,7 @@ class MixedPrecisionModel:
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
+        self.batch_size = batch_size
         self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
             base_model,
             compress_config=compress_config
@@ -50,39 +51,51 @@ class MixedPrecisionModel:
             queries,
             self.tokenizer,
         )
-        deltas = [x[1] for x in queries]
-        # if delta is not in the model pool, load them
-        # but before that, check if the model pool is full
+        outputs = []
+        for batch_idx in range(0, len(queries), self.batch_size):
+            deltas = [x[1] for x in queries[batch_idx:batch_idx+self.batch_size]]
+            batch_inputs = {
+                key: batch[key][batch_idx:batch_idx+self.batch_size]
+                for key in batch
+            }
+            # if delta is not in the model pool, load them
+            # but before that, check if the model pool is full
 
-        if len(self.model_pool) >= self.max_num_deltas:
-            logger.info("model pool is full, removing the previous model")
-            logger.warning("in future this will be replaced with LRU cache")
-            self.model_pool = {}
+            if len(self.model_pool) >= self.max_num_deltas:
+                logger.info("model pool is full, removing the previous model")
+                logger.warning("in future this will be replaced with LRU cache")
+                self.model_pool = {}
 
-        [self.load_delta(delta) for delta in deltas if delta not in self.model_pool]
-        start = timer()
-
-        for key in self.key_list:
-            _, target, _ = _get_submodules(self.base_model, key)
-            dmodules = []
-            for delta in deltas:
-                for dkey, dmodule in self.model_pool[delta].model.named_modules():
-                    if dkey == key:
-                        dmodules.append(dmodule)
-                        break
-            setattr(
-                target,
-                "delta",
-                [module.to(torch.device("cuda")) for module in dmodules],
+            [self.load_delta(delta) for delta in deltas if delta not in self.model_pool]
+            start = timer()
+            for key in self.key_list:
+                _, target, _ = _get_submodules(self.base_model, key)
+                dmodules = []
+                for delta in deltas:
+                    for dkey, dmodule in self.model_pool[delta].model.named_modules():
+                        if dkey == key:
+                            dmodules.append(dmodule)
+                            break
+                setattr(
+                    target,
+                    "delta",
+                    [module.to(torch.device("cuda")) for module in dmodules],
+                )
+            end = timer()
+            logger.info(f"prepare finished. Takes {end-start:.2f} seconds")
+            output = self.base_model.generate(**batch_inputs, **kwargs)
+            # remove the delta modules
+            for key in self.key_list:
+                _, target, _ = _get_submodules(self.base_model, key)
+                delattr(target, "delta")
+            output = self.tokenizer.batch_decode(
+                output,
+                skip_special_tokens = True
             )
-        end = timer()
-        logger.info(f"prepare finished. Takes {end-start:.2f} seconds")
-        output = self.base_model.generate(**batch, **kwargs)
-        output = self.tokenizer.batch_decode(
-            output,
-            skip_special_tokens = True
-        )
-        return output
+            outputs.extend(output)
+        # reorganize the outputs to tuple, (delta_name, outputs)
+        outputs = [(queries[i][1], outputs[i]) for i in range(len(queries))]
+        return outputs
 
     def load_delta(self, delta_model: str):
         logger.info("Loading target model")
@@ -103,3 +116,10 @@ class MixedPrecisionModel:
         batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
         batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
         return batch
+
+    def expire_delta(self, delta_model: str, expire_level=0):
+        # if expire_level = 1
+        # move the model to cpu
+        # if expire_level = 2
+        # delete the model from memory
+        pass
