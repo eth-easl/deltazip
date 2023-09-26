@@ -1077,7 +1077,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del layers
             torch.cuda.empty_cache()
         model = model.to(device)
-        # now move to device
         if unpack and (isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]):
             unpack_model(model)
         # set seqlen

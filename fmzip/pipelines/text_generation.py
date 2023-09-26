@@ -6,6 +6,7 @@ from timeit import default_timer as timer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
 from fmzip.modeling.llama import parallelize_llama
+
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
     target_name = key.split(".")[-1]
@@ -13,7 +14,7 @@ def _get_submodules(model, key):
     return parent, target, target_name
 
 class MixedPrecisionModel:
-    def __init__(self, base_model: str, max_num_deltas=10) -> None:
+    def __init__(self, base_model: str, max_num_deltas=10, use_bfloat16=False) -> None:
         compress_config = BaseCompressionConfig(
             bits=4,
             group_size=128,
@@ -24,14 +25,18 @@ class MixedPrecisionModel:
             damp_percent=0.02,
         )
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
-        self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+        # https://github.com/facebookresearch/llama/issues/380
+        self.tokenizer.pad_token = self.tokenizer.bos_token
+        self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
         self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
             base_model,
             compress_config=compress_config
         )
-        self.base_model = self.base_model.half()
+        if use_bfloat16:
+            self.base_model = self.base_model.bfloat16()
+        else:
+            self.base_model = self.base_model.half()
         self.base_model = self.base_model.to(torch.device("cuda"))
         logger.info("based model loaded")
         self.model_pool = {}
@@ -71,7 +76,7 @@ class MixedPrecisionModel:
                 [module.to(torch.device("cuda")) for module in dmodules],
             )
         end = timer()
-        logger.info(f"prepare finished. Takes {end-start} seconds")
+        logger.info(f"prepare finished. Takes {end-start:.2f} seconds")
         output = self.base_model.generate(**batch, **kwargs)
         output = self.tokenizer.batch_decode(
             output,
@@ -87,7 +92,7 @@ class MixedPrecisionModel:
             unpack = False,
         )
         end = timer()
-        logger.info(f"Loading finished. Takes {end-start} seconds")
+        logger.info(f"Loading finished. Takes {end-start:.2f} seconds")
         if len(self.key_list) == 0:
             for key, _ in self.model_pool[delta_model].model.named_modules():
                 self.key_list.append(key)
