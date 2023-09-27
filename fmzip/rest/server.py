@@ -1,41 +1,36 @@
+import os
 import json
-import time
 import asyncio
 import hashlib
 from typing import Optional
-from typing import Callable
 from fastapi import FastAPI
 from pydantic import BaseModel
-from fastapi.routing import APIRoute
-from timeit import default_timer as timer
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI
 from fmzip.rest.inference import InferenceService
 
 app = FastAPI()
-batch_size = 4
-timeout = 1
 task_queue = asyncio.Queue()
+is_busy = False
+
+batch_size = int(os.environ.get('FMZIP_BATCH_SIZE', 2))
+backend = os.environ.get('FMZIP_BACKEND', 'hf')
+base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
 
 inference_model = InferenceService(
-    provider='fmzip-mpm',
-    base_model='EleutherAI/pythia-2.8b-deduped'
+    provider=backend,
+    base_model=base_model
 )
 
 async def process_tasks():
+    global is_busy
     while True:
         batch = []
-        try:
-            # Try to collect batch_size number of tasks within timeout seconds
+        # Try to collect batch_size number of tasks within timeout seconds
+        if not is_busy:
             for _ in range(batch_size):
-                task = await asyncio.wait_for(task_queue.get(), timeout=timeout)
+                task = await asyncio.wait_for(task_queue.get(), timeout=100)
                 batch.append(task)
-
-        except asyncio.TimeoutError:
-            # If timeout, get whatever tasks are available
-            while not task_queue.empty():
-                task = await task_queue.get()
-                batch.append(task)
-
+            is_busy = True
         if len(batch) > 0:
             print(f"Processing batch: {batch}")
             output = inference_model.generate(batch)
@@ -43,7 +38,7 @@ async def process_tasks():
                 results[task.id]['result'] = output[i]
                 results[task.id]['event'].set()
             print("Batch processing completed.\n")
-
+            is_busy = False
 # Run the processing function as a background task
 asyncio.create_task(process_tasks())
 

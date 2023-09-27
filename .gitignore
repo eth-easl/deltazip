@@ -6,3 +6,4 @@ outputs/
 build/
 *.log
 *.egg-info/
+artifact/data

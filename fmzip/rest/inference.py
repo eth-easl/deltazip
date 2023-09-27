@@ -43,7 +43,7 @@ class InferenceService():
     def _hf_generated(self, queries: List):
         outputs = []
         for query in queries:
-            model = transformers.AutoModelForCausalLM.from_pretrained(query[1])
+            model = transformers.AutoModelForCausalLM.from_pretrained(query[1], torch_dtype=torch.float16)
             model = model.to(torch.device("cuda"))
             batch = self.tokenizer(query[0], return_tensors="pt", padding=True)
             batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
