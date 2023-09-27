@@ -35,7 +35,7 @@ base_model = 'meta-llama/Llama-2-7b-hf'
 
 test_prompt = "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:"
 
-providers = ['fmzip-mpm']
+providers = ['hf', 'fmzip-mpm']
 
 for provider in providers:
     if 'fmzip' in provider:

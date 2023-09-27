@@ -27,13 +27,13 @@ from ._utils import (
     get_device,
     make_quant,
     unpack_model,
+    make_sure_no_tensor_in_meta_device,
 )
 from ..nn_modules._fused_base import FusedBaseAttentionModule, FusedBaseMLPModule
 from ..core.quant import Quantizer
 from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
-
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
     tolerance: float = field(default=1e-9)
@@ -1049,6 +1049,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 device_map = accelerate.infer_auto_device_map(
                     model, max_memory=max_memory, no_split_module_classes=[cls.layer_type]
                 )
+            if low_cpu_mem_usage:
+                # make_sure_no_tensor_in_meta_device(model, use_triton, compress_config.desc_act, compress_config.group_size, bits=compress_config.bits)
+                pass
         else:
             model = AutoModelForCausalLM.from_config(
                 config,
@@ -1074,8 +1077,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes
         )
-        model.load_state_dict(tensors, strict=False)
-        # print model keys
+        model.load_state_dict(tensors, strict=False, assign=True)
+        tensors_output = {}
+        for key in tensors.keys():
+            tensors_output[key] = {"dtype": tensors[key].dtype, "shape": tensors[key].shape}
         if isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
             del tensor_dtypes
             del tensor_shapes
