@@ -8,38 +8,48 @@ from pydantic import BaseModel
 from fastapi import FastAPI
 from fmzip.rest.inference import InferenceService
 from loguru import logger
+import threading
+from queue import Queue
+
 app = FastAPI()
-task_queue = asyncio.Queue()
+task_queue = Queue()
 is_busy = False
 
 batch_size = int(os.environ.get('FMZIP_BATCH_SIZE', 2))
 backend = os.environ.get('FMZIP_BACKEND', 'hf')
 base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
-
 inference_model = None
 
-async def process_tasks():
-    global is_busy
-    while True:
-        batch = []
-        # Try to collect batch_size number of tasks within timeout seconds
-        if not is_busy:
+class BackgroundTasks(threading.Thread):
+    
+    async def _checking(self):
+        while True:
+            batch = []
+            # Try to collect batch_size number of tasks within timeout seconds
             for _ in range(batch_size):
-                task = await task_queue.get()
-                batch.append(task)
-                
-        if len(batch) > 0:
-            print(f"Processing batch: {batch}")
-            is_busy = True
-            output = inference_model.generate(batch)
-            for i, task in enumerate(batch):
-                results[task.id]['result'] = output[i]
-                results[task.id]['event'].set()
-            print("Batch processing completed.\n")
-            is_busy = False
+                try:
+                    task = task_queue.get_nowait()
+                    print(f"task received: {task}")
+                    batch.append(task)
+                except:
+                    break
+            
+            if len(batch) > 0:
+                print(f"Processing batch: {batch}")
+                output = inference_model.generate(batch)
+                for i, task in enumerate(batch):
+                    results[task.id]['result'] = output[i]
+                    results[task.id]['event'].set()
+                print("Batch processing completed.\n")
 
+    def run(self,*args,**kwargs):
+        loop = asyncio.new_event_loop()
+        loop.run_until_complete(self._checking())
 
-asyncio.create_task(process_tasks())
+async def process_tasks():
+    while True:
+        print(f"taskqueue empty? {task_queue.empty()}")
+        
 
 dhash = hashlib.md5()
 results = {}
@@ -57,11 +67,13 @@ class RestartRequest(BaseModel):
 
 @app.post("/inference", response_model=InferenceTask)
 async def handle_request(inference_task: InferenceTask):
+    print("Received request")
     dhash.update(json.dumps(inference_task.dict(), sort_keys=True).encode())
     inference_task.id = dhash.hexdigest()
     event = asyncio.Event()
     results[inference_task.id] = {'event': event, 'result': None}
-    await task_queue.put(inference_task)
+    loop = asyncio.get_event_loop()
+    task_queue.put(inference_task)
     await event.wait()
     response = results.pop(inference_task.id)['result']
     inference_task.response = response
@@ -71,17 +83,14 @@ async def handle_request(inference_task: InferenceTask):
 async def handle_restart(restart_request: RestartRequest):
     logger.info(f"Server is reconfigured to use {restart_request.backend} backend with {restart_request.base_model} base model")
     global inference_model
+    global batch_size
     inference_model = InferenceService(
         provider = restart_request.backend,
         base_model = restart_request.base_model)
-    global batch_size
     batch_size = restart_request.batch_size
+    return {"status": "success"}
 
-# before start
 @app.on_event("startup")
 async def startup_event():
-    global inference_model
-    inference_model = InferenceService(
-        provider = backend,
-        base_model=base_model
-    )
+    t = BackgroundTasks()
+    t.start()

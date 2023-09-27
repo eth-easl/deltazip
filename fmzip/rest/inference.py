@@ -1,9 +1,10 @@
 import torch
 import transformers
 from typing import List
+from loguru import logger
 from fmzip.pipelines import MixedPrecisionModel
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import subtract_inverse
+from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
 class InferenceService():
     def __init__(self, provider: str, **kwargs) -> None:
@@ -43,17 +44,20 @@ class InferenceService():
     def _hf_generated(self, queries: List):
         outputs = []
         for query in queries:
-            model = transformers.AutoModelForCausalLM.from_pretrained(query[1], torch_dtype=torch.float16)
-            model = model.to(torch.device("cuda"))
-            batch = self.tokenizer(query[0], return_tensors="pt", padding=True)
-            batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
-            batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
-            output = model.generate(**batch)
-            output = self.tokenizer.batch_decode(
-                output,
-                skip_special_tokens=True
-            )
-            outputs.append(output[0])
+            with torch.device("cuda"):
+                model = transformers.AutoModelForCausalLM.from_pretrained(query[1], torch_dtype=torch.float16)
+                model = model.to(torch.device("cuda"))
+                print("generation starts")
+                batch = self.tokenizer(query[0], return_tensors="pt", padding=True)
+                batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
+                batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
+                output = model.generate(**batch)
+                output = self.tokenizer.batch_decode(
+                    output,
+                    skip_special_tokens=True
+                )
+                outputs.append(output[0])
+            print("generation ends")
         return outputs
     
     def _fmzip_generate(self, queries: List):
@@ -77,6 +81,7 @@ class InferenceService():
                 skip_special_tokens=True
             )
             outputs.append(output[0])
+            logger.info("generation ends")
         return outputs
 
     def generate(self, queries: List):
