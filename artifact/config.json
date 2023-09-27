@@ -7,7 +7,7 @@
         {
             "hf_name": "FlagAlpha/Llama2-Chinese-7b-Chat",
             "type": "finetuned",
-            "compressed": ".cache/compressed_models/bits-2/llama2-chinese-7b-chat"
+            "compressed": ".cache/compressed_models/bits-2/llama-2-chinese-7b-chat"
         },
         {
             "hf_name": "lmsys/vicuna-7b-v1.5",

@@ -94,7 +94,6 @@ class MixedPrecisionModel:
             )
             outputs.extend(output)
         # reorganize the outputs to tuple, (delta_name, outputs)
-        outputs = [(queries[i][1], outputs[i]) for i in range(len(queries))]
         return outputs
 
     def load_delta(self, delta_model: str):

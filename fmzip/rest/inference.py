@@ -47,11 +47,10 @@ class InferenceService():
             with torch.device("cuda"):
                 model = transformers.AutoModelForCausalLM.from_pretrained(query[1], torch_dtype=torch.float16, low_cpu_mem_usage=True)
                 model = model.to(torch.device("cuda"))
-                print("generation starts")
                 batch = self.tokenizer(query[0], return_tensors="pt", padding=True)
                 batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
                 batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
-                output = model.generate(**batch)
+                output = model.generate(**batch, max_new_tokens=1024)
                 output = self.tokenizer.batch_decode(
                     output,
                     skip_special_tokens=True
@@ -75,7 +74,7 @@ class InferenceService():
             batch = self.tokenizer(query[0], return_tensors="pt", padding=True)
             batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
             batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
-            output = delta_model.generate(**batch)
+            output = delta_model.generate(**batch, max_new_tokens=1024)
             output = self.tokenizer.batch_decode(
                 output,
                 skip_special_tokens=True

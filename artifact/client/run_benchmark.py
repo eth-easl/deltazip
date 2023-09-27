@@ -24,6 +24,7 @@ def configure_server(backend: str, base_model: str, batch_size: int = 2):
         'base_model': base_model,
         'batch_size': batch_size,
     })
+    print("configuration finished...")
     return res.json()
 
 with open('artifact/config.json', 'r') as fp:
@@ -33,7 +34,7 @@ supported_models = config['supported_models']
 base_model = 'meta-llama/Llama-2-7b-hf'
 
 test_prompt = "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:"
-providers = ['hf', 'fmzip-mpm']
+providers = ['fmzip-mpm']
 
 for provider in providers:
     if 'fmzip' in provider:
