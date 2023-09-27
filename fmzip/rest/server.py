@@ -35,12 +35,10 @@ class BackgroundTasks(threading.Thread):
                     break
             
             if len(batch) > 0:
-                print(f"Processing batch: {batch}")
                 output = inference_model.generate(batch)
                 for i, task in enumerate(batch):
                     results[task.id]['result'] = output[i]
                     results[task.id]['event'].set()
-                print("Batch processing completed.\n")
 
     def run(self,*args,**kwargs):
         loop = asyncio.new_event_loop()
@@ -86,7 +84,9 @@ async def handle_restart(restart_request: RestartRequest):
     global batch_size
     inference_model = InferenceService(
         provider = restart_request.backend,
-        base_model = restart_request.base_model)
+        base_model = restart_request.base_model,
+        batch_size = restart_request.batch_size,
+    )
     batch_size = restart_request.batch_size
     return {"status": "success"}
 

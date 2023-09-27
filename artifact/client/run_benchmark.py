@@ -33,8 +33,7 @@ supported_models = config['supported_models']
 base_model = 'meta-llama/Llama-2-7b-hf'
 
 test_prompt = "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:"
-# providers = ['hf', 'fmzip-mpm']
-providers = ['hf']
+providers = ['hf', 'fmzip-mpm']
 
 for provider in providers:
     if 'fmzip' in provider:
@@ -53,8 +52,6 @@ for provider in providers:
         ]
     # step 1: config the server to use the provider
     configure_server(backend=provider, base_model=base_model)
-    test_data = test_data[:1]
-    print(test_data)
     with Pool(2) as p:
         results = p.map(inference_request, test_data)
     print(results)

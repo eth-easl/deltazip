@@ -45,7 +45,7 @@ class InferenceService():
         outputs = []
         for query in queries:
             with torch.device("cuda"):
-                model = transformers.AutoModelForCausalLM.from_pretrained(query[1], torch_dtype=torch.float16)
+                model = transformers.AutoModelForCausalLM.from_pretrained(query[1], torch_dtype=torch.float16, low_cpu_mem_usage=True)
                 model = model.to(torch.device("cuda"))
                 print("generation starts")
                 batch = self.tokenizer(query[0], return_tensors="pt", padding=True)
