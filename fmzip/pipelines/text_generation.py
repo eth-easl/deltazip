@@ -24,16 +24,19 @@ class MixedPrecisionModel:
             lossless="gdeflate",
             damp_percent=0.02,
         )
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            base_model, use_fast=True)
         # https://github.com/facebookresearch/llama/issues/380
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
         self.batch_size = batch_size
-        self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
-            base_model,
-            compress_config=compress_config
-        )
+        with torch.device("cuda"):
+            self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
+                base_model,
+                compress_config=compress_config,
+                low_cpu_mem_usage=True
+            )
         if use_bfloat16:
             self.base_model = self.base_model.bfloat16()
         else:
@@ -60,8 +63,8 @@ class MixedPrecisionModel:
             }
             # if delta is not in the model pool, load them
             # but before that, check if the model pool is full
-
-            if len(self.model_pool) >= self.max_num_deltas:
+            print(len(self.model_pool))
+            if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
                 logger.info("model pool is full, removing the previous model")
                 logger.warning("in future this will be replaced with LRU cache")
                 self.model_pool = {}
@@ -84,10 +87,12 @@ class MixedPrecisionModel:
             end = timer()
             logger.info(f"prepare finished. Takes {end-start:.2f} seconds")
             output = self.base_model.generate(**batch_inputs, **kwargs)
+
             # remove the delta modules
             for key in self.key_list:
                 _, target, _ = _get_submodules(self.base_model, key)
                 delattr(target, "delta")
+            
             output = self.tokenizer.batch_decode(
                 output,
                 skip_special_tokens = True
@@ -101,6 +106,7 @@ class MixedPrecisionModel:
         start = timer()
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model,
+            device='cuda',
             unpack = False,
         )
         end = timer()

@@ -32,8 +32,8 @@ class InferenceService():
             self.mpm = MixedPrecisionModel(**kwargs)
         elif provider=='hf':
             self.tokenizer = transformers.AutoTokenizer.from_pretrained(kwargs['base_model'])
-            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
-            self.tokenizer.pad_token = self.tokenizer.eos_token
+            self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
+            self.tokenizer.pad_token = self.tokenizer.bos_token
             self.tokenizer.padding_side = "left"
         else:
             raise NotImplementedError
@@ -44,8 +44,13 @@ class InferenceService():
     def _hf_generated(self, queries: List, **kwargs):
         outputs = []
         for query in queries:
+            print(f"generating {query[0]} for model {query[1]}")
             with torch.device("cuda"):
-                model = transformers.AutoModelForCausalLM.from_pretrained(query[1], torch_dtype=torch.float16, low_cpu_mem_usage=True)
+                model = transformers.AutoModelForCausalLM.from_pretrained(
+                    query[1],
+                    torch_dtype=torch.float16,
+                    low_cpu_mem_usage=True
+                )
                 model = model.to(torch.device("cuda"))
                 batch = self.tokenizer(query[0], return_tensors="pt", padding=True)
                 batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
@@ -56,7 +61,6 @@ class InferenceService():
                     skip_special_tokens=True
                 )
                 outputs.append(output[0])
-            print("generation ends")
         return outputs
     
     def _fmzip_generate(self, queries: List, **kwargs):
@@ -86,10 +90,10 @@ class InferenceService():
     def generate(self, queries: List):
         queries = [(query.prompt, query.model) for query in queries]
         if self.provider == 'fmzip-mpm':
-            return self.mpm.generate(queries, max_new_tokens=1024)
+            return self.mpm.generate(queries, max_new_tokens=128)
         elif self.provider == 'hf':
-            return self._hf_generated(queries, max_new_tokens=1024)
+            return self._hf_generated(queries, max_new_tokens=128)
         elif self.provider == 'fmzip':
-            return self._fmzip_generate(queries, max_new_tokens=1024)
+            return self._fmzip_generate(queries, max_new_tokens=128)
         else:
             raise NotImplementedError

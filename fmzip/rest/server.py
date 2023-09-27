@@ -1,5 +1,6 @@
 import os
 import json
+import torch
 import asyncio
 import hashlib
 from typing import Optional
@@ -18,10 +19,10 @@ is_busy = False
 batch_size = int(os.environ.get('FMZIP_BATCH_SIZE', 2))
 backend = os.environ.get('FMZIP_BACKEND', 'hf')
 base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
+
 inference_model = None
 
 class BackgroundTasks(threading.Thread):
-    
     async def _checking(self):
         while True:
             batch = []
@@ -29,25 +30,27 @@ class BackgroundTasks(threading.Thread):
             for _ in range(batch_size):
                 try:
                     task = task_queue.get_nowait()
-                    print(f"task received: {task}")
                     batch.append(task)
                 except:
                     break
             
             if len(batch) > 0:
-                output = inference_model.generate(batch)
-                for i, task in enumerate(batch):
-                    results[task.id]['result'] = output[i]
-                    results[task.id]['event'].set()
+                if inference_model.provider=='hf':
+                    for query in batch:
+                        output = inference_model.generate([query])
+                        for i, task in enumerate([query]):
+                            results[task.id]['result'] = output[i]
+                            results[task.id]['event'].set()
+                else:
+                    output = inference_model.generate(batch)
+                    for i, task in enumerate(batch):
+                        results[task.id]['result'] = output[i]
+                        results[task.id]['event'].set()
 
     def run(self,*args,**kwargs):
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self._checking())
 
-async def process_tasks():
-    while True:
-        print(f"taskqueue empty? {task_queue.empty()}")
-        
 
 dhash = hashlib.md5()
 results = {}
@@ -66,11 +69,10 @@ class RestartRequest(BaseModel):
 @app.post("/inference", response_model=InferenceTask)
 async def handle_request(inference_task: InferenceTask):
     print("Received request")
-    dhash.update(json.dumps(inference_task.dict(), sort_keys=True).encode())
+    dhash.update(json.dumps(inference_task.model_dump(), sort_keys=True).encode())
     inference_task.id = dhash.hexdigest()
     event = asyncio.Event()
     results[inference_task.id] = {'event': event, 'result': None}
-    loop = asyncio.get_event_loop()
     task_queue.put(inference_task)
     await event.wait()
     response = results.pop(inference_task.id)['result']
@@ -82,12 +84,15 @@ async def handle_restart(restart_request: RestartRequest):
     logger.info(f"Server is reconfigured to use {restart_request.backend} backend with {restart_request.base_model} base model")
     global inference_model
     global batch_size
+    del inference_model
+    torch.cuda.empty_cache()
     inference_model = InferenceService(
         provider = restart_request.backend,
         base_model = restart_request.base_model,
         batch_size = restart_request.batch_size,
     )
     batch_size = restart_request.batch_size
+    
     return {"status": "success"}
 
 @app.on_event("startup")

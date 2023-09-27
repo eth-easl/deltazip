@@ -933,7 +933,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del model
         else:
             model_init_kwargs["device_map"] = None
-            model_init_kwargs["low_cpu_mem_usage"] = False
+            # model_init_kwargs["low_cpu_mem_usage"] = True
 
         torch.cuda.empty_cache()
         model = AutoModelForCausalLM.from_pretrained(
@@ -973,7 +973,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         trust_remote_code: bool = False,
         warmup_triton: bool = True,
         unpack: bool = False,
-        low_cpu_mem_usage: bool = False,
+        low_cpu_mem_usage: bool = True,
         **kwargs,
     ):
         """load compressed model from local disk"""
@@ -990,6 +990,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             else:
                 compress_config = BaseCompressionConfig.from_pretrained(save_dir)
         print(compress_config)
+
         if model_basename is None:
             model_basename = "fmzip-compressed"
 
@@ -1049,13 +1050,17 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     model, max_memory=max_memory, no_split_module_classes=[cls.layer_type]
                 )
         else:
-            model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16)
+            model = AutoModelForCausalLM.from_config(
+                config,
+                trust_remote_code=trust_remote_code,
+                torch_dtype=torch.float16
+            )
         # now load compressed data
         losslesscompressor = LosslessCompressor(compress_config.lossless)
-        
+
         metadata = None
         tensors = {}
-        
+
         with safe_open(model_save_name, framework='numpy') as f:
             metadata = f.metadata()
             keys = f.keys()
@@ -1070,6 +1075,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             tensors, tensor_shapes, tensor_dtypes
         )
         model.load_state_dict(tensors, strict=False)
+        # print model keys
         if isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
             del tensor_dtypes
             del tensor_shapes

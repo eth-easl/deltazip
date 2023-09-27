@@ -1,12 +1,10 @@
-import os
 import json
+import random
 import requests
-import subprocess
-import signal
+from loguru import logger
 from multiprocessing import Pool
 from timeit import default_timer as timer
-import time
-from loguru import logger
+
 endpoint = 'http://localhost:8000'
 
 def inference_request(req):
@@ -30,10 +28,13 @@ def configure_server(backend: str, base_model: str, batch_size: int = 2):
 with open('artifact/config.json', 'r') as fp:
     config = json.load(fp)
 
+benchmark_results = []
+
 supported_models = config['supported_models']
 base_model = 'meta-llama/Llama-2-7b-hf'
 
 test_prompt = "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:"
+
 providers = ['fmzip-mpm']
 
 for provider in providers:
@@ -51,8 +52,27 @@ for provider in providers:
                 'model': x['hf_name'],
             } for x in supported_models if x['type']=='finetuned'
         ]
+    # randomly shuffle the test data
+    random.shuffle(test_data)
     # step 1: config the server to use the provider
     configure_server(backend=provider, base_model=base_model)
-    with Pool(2) as p:
+    start = timer()
+    with Pool(16) as p:
         results = p.map(inference_request, test_data)
-    print(results)
+    end = timer()
+    benchmark_results.append({
+        "provider": provider,
+        "results": [
+            {
+                "id": x[0]['id'],
+                "model": x[0]['model'],
+                "prompt": x[0]['prompt'],
+                "response": x[0]['response'],
+                "time_elapsed": x[1],
+            } for x in results
+        ],
+        "total_elapsed": end-start,
+    })
+
+with open('artifact/benchmark_results.json', 'w') as fp:
+    json.dump(benchmark_results, fp, indent=2)
