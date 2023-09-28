@@ -41,21 +41,21 @@ for provider in providers:
     if 'fmzip' in provider:
         test_data = [
             {
+                'id': str(idx),
                 'prompt': test_prompt,
                 'model': x['compressed'],
-            } for x in supported_models if x['type']=='finetuned'
+            } for idx, x in enumerate(supported_models) if x['type']=='finetuned'
         ]
     else:
         test_data = [
-            {
+            {   
+                'id': str(idx),
                 'prompt': test_prompt,
                 'model': x['hf_name'],
-            } for x in supported_models if x['type']=='finetuned'
+            } for idx, x in enumerate(supported_models) if x['type']=='finetuned'
         ]
-    # randomly shuffle the test data
-    random.shuffle(test_data)
     # step 1: config the server to use the provider
-    configure_server(backend=provider, base_model=base_model)
+    configure_server(backend=provider, base_model=base_model, batch_size=1)
     start = timer()
     with Pool(16) as p:
         results = p.map(inference_request, test_data)

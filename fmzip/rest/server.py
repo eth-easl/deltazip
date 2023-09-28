@@ -70,7 +70,7 @@ class RestartRequest(BaseModel):
 async def handle_request(inference_task: InferenceTask):
     print("Received request")
     dhash.update(json.dumps(inference_task.model_dump(), sort_keys=True).encode())
-    inference_task.id = dhash.hexdigest()
+    # inference_task.id = dhash.hexdigest()
     event = asyncio.Event()
     results[inference_task.id] = {'event': event, 'result': None}
     task_queue.put(inference_task)
