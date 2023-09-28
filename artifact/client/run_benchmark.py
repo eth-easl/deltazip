@@ -1,5 +1,4 @@
 import json
-import random
 import requests
 from loguru import logger
 from multiprocessing import Pool
