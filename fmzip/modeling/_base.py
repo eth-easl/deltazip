@@ -1049,9 +1049,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 device_map = accelerate.infer_auto_device_map(
                     model, max_memory=max_memory, no_split_module_classes=[cls.layer_type]
                 )
-            if low_cpu_mem_usage:
-                # make_sure_no_tensor_in_meta_device(model, use_triton, compress_config.desc_act, compress_config.group_size, bits=compress_config.bits)
-                pass
         else:
             model = AutoModelForCausalLM.from_config(
                 config,
@@ -1077,7 +1074,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes
         )
-        model.load_state_dict(tensors, strict=False, assign=True)
+        model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
         tensors_output = {}
         for key in tensors.keys():
             tensors_output[key] = {"dtype": tensors[key].dtype, "shape": tensors[key].shape}

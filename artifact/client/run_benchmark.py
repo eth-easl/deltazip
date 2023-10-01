@@ -15,7 +15,7 @@ def inference_request(req):
     logger.info("response received")
     return (res.json(), end - start)
 
-def configure_server(backend: str, base_model: str, batch_size: int = 2):
+def configure_server(backend: str, base_model: str, batch_size: int = 1):
     res = requests.post(endpoint+ "/restart", json={
         'backend': backend,
         'base_model': base_model,
@@ -54,7 +54,7 @@ for provider in providers:
             } for idx, x in enumerate(supported_models) if x['type']=='finetuned'
         ]
     # step 1: config the server to use the provider
-    configure_server(backend=provider, base_model=base_model, batch_size=1)
+    configure_server(backend=provider, base_model=base_model, batch_size=2)
     start = timer()
     with Pool(16) as p:
         results = p.map(inference_request, test_data)

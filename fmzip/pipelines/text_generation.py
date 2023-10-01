@@ -108,6 +108,7 @@ class MixedPrecisionModel:
             delta_model,
             device='cuda',
             unpack = False,
+            low_cpu_mem_usage=True
         )
         end = timer()
         logger.info(f"Loading finished. Takes {end-start:.2f} seconds")
