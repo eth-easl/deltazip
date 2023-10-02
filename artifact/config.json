@@ -1,0 +1,33 @@
+{
+    "supported_models": [
+        {
+            "hf_name": "meta-llama/Llama-2-7b-hf",
+            "type": "base"
+        },
+        {
+            "hf_name": "FlagAlpha/Llama2-Chinese-7b-Chat",
+            "type": "finetuned",
+            "compressed": ".cache/compressed_models/bits-2/llama-2-chinese-7b-chat"
+        },
+        {
+            "hf_name": "lmsys/vicuna-7b-v1.5",
+            "type":"finetuned",
+            "compressed": ".cache/compressed_models/bits-2/vicuna-7b-v1.5"
+        },
+        {
+            "hf_name": "Xwin-LM/Xwin-LM-7B-V0.1",
+            "type":"finetuned",
+            "compressed": ".cache/compressed_models/bits-2/xwin-lm-7b-v0.1"
+        },
+        {
+            "hf_name":"migtissera/Synthia-7B-v1.2",
+            "type":"finetuned",
+            "compressed": ".cache/compressed_models/bits-2/synthia-7b-v1.2"
+        },
+        {
+            "hf_name":"meta-llama/Llama-2-7b-chat-hf",
+            "type":"finetuned",
+            "compressed": ".cache/compressed_models/bits-2/llama-2-7b-chat"
+        }
+    ]
+}

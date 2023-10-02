@@ -7,7 +7,6 @@ from loguru import logger
 from transformers import AutoConfig
 
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
-from ..utils.import_utils import dynamically_import_QuantLinear
 from ..utils.attr_utils import rsetattr
 from fmzip.nn_modules.qlinear_cuda import QuantLinear
 
@@ -114,6 +113,10 @@ def check_and_get_model_type(model_dir):
     model_type = config.model_type
     return model_type
 
+def make_sure_no_tensor_in_meta_device(model, use_triton, desc_act, group_size, bits: int):
+    for n, m in model.named_modules():
+        if isinstance(m, QuantLinear) and m.bias.device == torch.device("meta"):
+            m.register_buffer('bias', torch.zeros((m.outfeatures), dtype=torch.float16, device="cpu"))
 
 __all__ = [
     "get_device",
@@ -122,5 +125,6 @@ __all__ = [
     "get_module_by_name",
     "make_quant",
     "pack_model",
-    "check_and_get_model_type"
+    "check_and_get_model_type",
+    "make_sure_no_tensor_in_meta_device"
 ]

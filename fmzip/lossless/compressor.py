@@ -85,5 +85,9 @@ class LosslessCompressor():
         ):
         tensors = {}
         for key in compressed_state_dict.keys():
-            tensors[key] = self.decompress_tensor(compressed_state_dict[key], tensor_shapes[key], tensor_dtypes[key])
+            tensors[key] = self.decompress_tensor(
+                compressed_state_dict[key],
+                tensor_shapes[key],
+                tensor_dtypes[key]
+            )
         return tensors

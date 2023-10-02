@@ -1,0 +1,84 @@
+[
+  {
+    "provider": "hf",
+    "results": [
+      {
+        "id": "1",
+        "model": "FlagAlpha/Llama2-Chinese-7b-Chat",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course, I'd be happy to help you write an essay about Alan Turing! Here's a possible outline:\n\u0409 Alan Turing was a British mathematician, computer scientist, and codebreaker who made significant contributions to the development of computer science and artificial intelligence.\n\n2. Early Life and Education\n\nAlan Turing was born on June 23, 1912, in London, England. He was educated at Sherborne School and then went on to study mathematics at Cambridge University.\n\n3. Codebreaking and Computing\n\nDuring World",
+        "time_elapsed": 10.259418786999959
+      },
+      {
+        "id": "2",
+        "model": "lmsys/vicuna-7b-v1.5",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and logician who is widely regarded as one of the most influential figures in the development of computer science and artificial intelligence. Turing's contributions to the field of mathematics and computer science were groundbreaking and paved the way for many of the technological advancements we enjoy today.\n\nOne of Turing's most significant contributions was his work on the theory of computation, which laid the foundation for the field of computer science. He developed the Turing machine, a theoretical model of a computing machine that can perform any computation that is computable",
+        "time_elapsed": 52.96022049400017
+      },
+      {
+        "id": "3",
+        "model": "Xwin-LM/Xwin-LM-7B-V0.1",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing: A Pioneer of Modern Computing\nTuring, Alan Mathison (1912-1954) was a British mathematician, computer scientist, and cryptographer who is widely regarded as the father of modern computing. His groundbreaking work in the fields of mathematics, logic, and computing has had a profound impact on the development of computer science and artificial intelligence.\nTuring was born in London, England, on June 23, 1912. He showed an early aptitude for mathematics and was educated at Sherborne School and King'",
+        "time_elapsed": 30.00318618900019
+      },
+      {
+        "id": "4",
+        "model": "migtissera/Synthia-7B-v1.2",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and cryptanalyst who played a crucial role in the development of modern computer science and artificial intelligence.\nBorn in 1912, Turing was a child prodigy who excelled in mathematics and logic. He attended Cambridge University, where he studied mathematics and became interested in the concept of computability. Turing's most significant contribution was his development of the concept of a universal machine, which laid the foundation for modern computers.\nIn 1939, Turing joined the Government Code and Cypher School (GC&CS",
+        "time_elapsed": 41.54340558700096
+      },
+      {
+        "id": "5",
+        "model": "meta-llama/Llama-2-7b-chat-hf",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course, I'd be happy to help! Alan Turing is a fascinating figure in the history of computer science and artificial intelligence. Here is a possible outline for a short essay about him:\nI. Introduction\n* Briefly introduce Alan Turing and his significance in the field of computer science and artificial intelligence.\n* Provide a thesis statement that outlines the main points you will cover in the essay.\nII. Early Life and Education\n* Describe Turing's early life and education, including his childhood and his time at Cambridge University.\n* Discuss how his",
+        "time_elapsed": 68.32047990700084
+      }
+    ],
+    "total_elapsed": 68.3575499339986
+  },
+  {
+    "provider": "fmzip-mpm",
+    "results": [
+      {
+        "id": "1",
+        "model": ".cache/compressed_models/bits-2/llama-2-chinese-7b-chat",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and codebreaker who played a crucial role in cracking German ciphers during World War II.\u040a He is widely regarded as the \u201cfather of computer science\u201d and artificial intelligence.\u040a Turing\u2019s contributions to computer science include the development of the theoretical foundations of computation and the design of the Automatic Computing Engine (ACE), a pioneering electronic computer.\u040a He was also a gay man who suffered from chemically induced castration as a punishment for his homosexuality, and he died by suicide in 19",
+        "time_elapsed": 25.11369677699986
+      },
+      {
+        "id": "2",
+        "model": ".cache/compressed_models/bits-2/vicuna-7b-v1.5",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and logician who is widely regarded as one of the most influential figures in the development of computer science and artificial intelligence.\n\nTuring was born in 1912 and educated at Cambridge University, where he studied mathematics and logic. During World War II, he worked at the Government Code and Cypher School, where he made significant contributions to the cryptanalysis of German communications. He also developed the Turing machine, which is a mathematical model of computation that is still widely used today.\n\nAfter the war, Turing became interested in artificial",
+        "time_elapsed": 48.99971238800026
+      },
+      {
+        "id": "3",
+        "model": ".cache/compressed_models/bits-2/xwin-lm-7b-v0.1",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and cryptanalyst who is widely regarded as the father of computer science and artificial intelligence. Alan Turing was born in London, England, on June 23, 1912. He showed an early aptitude for mathematics and logic, and was educated at the prestigious Sherborne School and King's College, Cambridge.\n\nDuring World War II, Turing played a crucial role in the Allied efforts to crack the German Enigma code, which was used by the German military to transmit secret messages. Turing'",
+        "time_elapsed": 25.113480549000087
+      },
+      {
+        "id": "4",
+        "model": ".cache/compressed_models/bits-2/synthia-7b-v1.2",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: I can help you write a short essay about Alan Turing.\nHow to write an essay about Alan Turing?\nThe Turing machine is a mathematical model of computation that was invented by Alan Turing in 1936. It is a theoretical device that can be used to solve problems that are too complex for a human being to solve.\nThe Turing machine is a simple device that consists of a tape, a head, and a read-write head. The tape is divided into cells, each of which can store a symbol. The head can read and write symbols on the tape",
+        "time_elapsed": 48.999783794000905
+      },
+      {
+        "id": "5",
+        "model": ".cache/compressed_models/bits-2/llama-2-7b-chat",
+        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and codebreaker who made significant contributions to the development of computer science and artificial intelligence. He is best known for his work on the theoretical foundations of computation, including the development of the Turing machine, a mathematical model for computation that is still used today. Turing was also a key figure in the cracking of German naval codes during World War II, and his work on artificial intelligence has had a lasting impact on the field. Here is a short essay about Alan Turing: Alan Turing was born in London in 19",
+        "time_elapsed": 63.06759498700012
+      }
+    ],
+    "total_elapsed": 63.097099499998876
+  }
+]
