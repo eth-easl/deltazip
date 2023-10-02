@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fmzip.rest.inference import InferenceService
-from fmzip.rest.profile import profile_disk_io
+from fmzip.rest.profile import profile_disk_io, get_gpu_name
 app = FastAPI()
 task_queue = Queue()
 is_busy = False
@@ -83,12 +83,14 @@ async def handle_restart(restart_request: RestartRequest):
         batch_size = restart_request.batch_size,
     )
     batch_size = restart_request.batch_size
-    
     return {"status": "success"}
 
 @app.get("/status")
 async def handle_status():
-    return {"disk_bandwidth": profile_disk_io()}
+    return {
+        "disk_bandwidth": profile_disk_io(),
+        "gpu_name": get_gpu_name()
+    }
 
 @app.on_event("startup")
 async def startup_event():

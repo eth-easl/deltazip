@@ -5,7 +5,9 @@ from multiprocessing import Pool
 from timeit import default_timer as timer
 
 endpoint = 'http://localhost:8000'
-batch_size = 1
+batch_size = 3
+# base_model = 'meta-llama/Llama-2-7b-hf'
+base_model = "openlm-research/open_llama_3b_v2"
 
 def inference_request(req):
     start = timer()
@@ -25,13 +27,13 @@ def configure_server(backend: str, base_model: str, batch_size: int = 1):
     print("configuration finished...")
     return res.json()
 
-with open('artifact/config.json', 'r') as fp:
+with open('artifact/config_3b.json', 'r') as fp:
     config = json.load(fp)
 
 benchmark_results = []
 
 supported_models = config['supported_models']
-base_model = 'meta-llama/Llama-2-7b-hf'
+
 
 test_prompt = "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:"
 
