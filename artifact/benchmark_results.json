@@ -7,38 +7,68 @@
         "model": "FlagAlpha/Llama2-Chinese-7b-Chat",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course, I'd be happy to help you write an essay about Alan Turing! Here's a possible outline:\n\u0409 Alan Turing was a British mathematician, computer scientist, and codebreaker who made significant contributions to the development of computer science and artificial intelligence.\n\n2. Early Life and Education\n\nAlan Turing was born on June 23, 1912, in London, England. He was educated at Sherborne School and then went on to study mathematics at Cambridge University.\n\n3. Codebreaking and Computing\n\nDuring World",
-        "time_elapsed": 10.259418786999959
+        "measure": {
+          "tokenize_time": 0.0003524649946484715,
+          "loading_time": 5.951655333003146,
+          "prepare_time": 0,
+          "inference_time": 3.2368808460014407
+        },
+        "time_elapsed": 34.003366231991095
       },
       {
         "id": "2",
         "model": "lmsys/vicuna-7b-v1.5",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and logician who is widely regarded as one of the most influential figures in the development of computer science and artificial intelligence. Turing's contributions to the field of mathematics and computer science were groundbreaking and paved the way for many of the technological advancements we enjoy today.\n\nOne of Turing's most significant contributions was his work on the theory of computation, which laid the foundation for the field of computer science. He developed the Turing machine, a theoretical model of a computing machine that can perform any computation that is computable",
-        "time_elapsed": 52.96022049400017
+        "measure": {
+          "tokenize_time": 0.0003453110111877322,
+          "loading_time": 5.8554120600019814,
+          "prepare_time": 0,
+          "inference_time": 3.109992785990471
+        },
+        "time_elapsed": 24.84171735899872
       },
       {
         "id": "3",
         "model": "Xwin-LM/Xwin-LM-7B-V0.1",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing: A Pioneer of Modern Computing\nTuring, Alan Mathison (1912-1954) was a British mathematician, computer scientist, and cryptographer who is widely regarded as the father of modern computing. His groundbreaking work in the fields of mathematics, logic, and computing has had a profound impact on the development of computer science and artificial intelligence.\nTuring was born in London, England, on June 23, 1912. He showed an early aptitude for mathematics and was educated at Sherborne School and King'",
-        "time_elapsed": 30.00318618900019
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing: The Enigma of a Genius\n\nAlan Turing is widely regarded as one of the most influential and enigmatic figures in the history of computer science and artificial intelligence. Born on June 23, 1912, in London, England, Turing's life and work have had a profound impact on the world we live in today. He was a mathematician, logician, cryptanalyst, and computer scientist, whose contributions to the fields of mathematics, computing, and artificial intelligence have been nothing short of revolutionary.\n\nTuring's",
+        "measure": {
+          "tokenize_time": 0.0014467979926848784,
+          "loading_time": 12.136062523990404,
+          "prepare_time": 0,
+          "inference_time": 3.6379899230087176
+        },
+        "time_elapsed": 15.874163872998906
       },
       {
         "id": "4",
         "model": "migtissera/Synthia-7B-v1.2",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and cryptanalyst who played a crucial role in the development of modern computer science and artificial intelligence.\nBorn in 1912, Turing was a child prodigy who excelled in mathematics and logic. He attended Cambridge University, where he studied mathematics and became interested in the concept of computability. Turing's most significant contribution was his development of the concept of a universal machine, which laid the foundation for modern computers.\nIn 1939, Turing joined the Government Code and Cypher School (GC&CS",
-        "time_elapsed": 41.54340558700096
+        "measure": {
+          "tokenize_time": 0.00034847699862439185,
+          "loading_time": 5.82264954400307,
+          "prepare_time": 0,
+          "inference_time": 3.1353280350012938
+        },
+        "time_elapsed": 42.96461529999215
       },
       {
         "id": "5",
         "model": "meta-llama/Llama-2-7b-chat-hf",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course, I'd be happy to help! Alan Turing is a fascinating figure in the history of computer science and artificial intelligence. Here is a possible outline for a short essay about him:\nI. Introduction\n* Briefly introduce Alan Turing and his significance in the field of computer science and artificial intelligence.\n* Provide a thesis statement that outlines the main points you will cover in the essay.\nII. Early Life and Education\n* Describe Turing's early life and education, including his childhood and his time at Cambridge University.\n* Discuss how his",
-        "time_elapsed": 68.32047990700084
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and codebreaker who played a significant role in World War II. Here is a brief essay on his life and contributions: Alan Turing was born in 1912 in London, England. He was a child prodigy in mathematics and was accepted into Cambridge University at the age of 17. During his time at Cambridge, Turing began to explore the field of computer science, which was still in its infancy at the time. In 1936, Turing wrote a paper titled \"On Computable Num",
+        "measure": {
+          "tokenize_time": 0.0003505409986246377,
+          "loading_time": 8.61709631800477,
+          "prepare_time": 0,
+          "inference_time": 3.4060455440048827
+        },
+        "time_elapsed": 55.04278863700165
       }
     ],
-    "total_elapsed": 68.3575499339986
+    "total_elapsed": 55.06079458798922
   },
   {
     "provider": "fmzip-mpm",
@@ -47,38 +77,68 @@
         "id": "1",
         "model": ".cache/compressed_models/bits-2/llama-2-chinese-7b-chat",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and codebreaker who played a crucial role in cracking German ciphers during World War II.\u040a He is widely regarded as the \u201cfather of computer science\u201d and artificial intelligence.\u040a Turing\u2019s contributions to computer science include the development of the theoretical foundations of computation and the design of the Automatic Computing Engine (ACE), a pioneering electronic computer.\u040a He was also a gay man who suffered from chemically induced castration as a punishment for his homosexuality, and he died by suicide in 19",
-        "time_elapsed": 25.11369677699986
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Sure, I'd be happy to help you write an essay about Alan Turing! Alan Turing (1912-1954) was a British mathematician, computer scientist, and codebreaker who made significant contributions to the fields of mathematics, computer science, and artificial intelligence.Academically, Alan Turing graduated from Cambridge University with a degree in mathematics and then went on to study at Princeton University. During World War II, he worked at Bletchley Park, a British intelligence centre, where he helped decode German naval communications. His work was instrumental in short",
+        "measure": {
+          "tokenize_time": 0.00046849298814777285,
+          "loading_time": 1.624033069005236,
+          "prepare_time": 0.0711614890024066,
+          "inference_time": 12.404960296989884
+        },
+        "time_elapsed": 14.265254682002706
       },
       {
         "id": "2",
         "model": ".cache/compressed_models/bits-2/vicuna-7b-v1.5",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and logician who is widely regarded as one of the most influential figures in the development of computer science and artificial intelligence.\n\nTuring was born in 1912 and educated at Cambridge University, where he studied mathematics and logic. During World War II, he worked at the Government Code and Cypher School, where he made significant contributions to the cryptanalysis of German communications. He also developed the Turing machine, which is a mathematical model of computation that is still widely used today.\n\nAfter the war, Turing became interested in artificial",
-        "time_elapsed": 48.99971238800026
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and logician who is widely regarded as the father of modern computer science and artificial intelligence. Turing's contributions to the field of computing include the development of the Turing machine, a theoretical model of computation that is now used as a basis for the design of all modern computers. He also made important contributions to the fields of logic and mathematics, and was a key figure in the development of the atomic bomb during World War II. Turing's work has had a profound impact on the development of computing and artificial intelligence, and he is widely regarded as one",
+        "measure": {
+          "tokenize_time": 0.00020648998906835914,
+          "loading_time": 1.2461664540023776,
+          "prepare_time": 0.06901216600090265,
+          "inference_time": 12.411472824998782
+        },
+        "time_elapsed": 27.968401781996363
       },
       {
         "id": "3",
         "model": ".cache/compressed_models/bits-2/xwin-lm-7b-v0.1",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and cryptanalyst who is widely regarded as the father of computer science and artificial intelligence. Alan Turing was born in London, England, on June 23, 1912. He showed an early aptitude for mathematics and logic, and was educated at the prestigious Sherborne School and King's College, Cambridge.\n\nDuring World War II, Turing played a crucial role in the Allied efforts to crack the German Enigma code, which was used by the German military to transmit secret messages. Turing'",
-        "time_elapsed": 25.113480549000087
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Alan Turing was a British mathematician, computer scientist, and cryptanalyst who is widely regarded as the father of modern computing. Alan Turing's contributions to mathematics and computer science have had a profound impact on the world we live in today.\n\nBorn in 1912, Alan Turing was a child prodigy who showed a keen interest in mathematics and logic from an early age. He attended school in England and later went on to study mathematics at the University of Cambridge. During his time at Cambridge, Turing made significant contributions to the field of mathematics, including the development of the",
+        "measure": {
+          "tokenize_time": 0.00021342199761420488,
+          "loading_time": 1.1942219939955976,
+          "prepare_time": 0.06910916599736083,
+          "inference_time": 12.41377022099914
+        },
+        "time_elapsed": 41.685972744991886
       },
       {
         "id": "4",
         "model": ".cache/compressed_models/bits-2/synthia-7b-v1.2",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: I can help you write a short essay about Alan Turing.\nHow to write an essay about Alan Turing?\nThe Turing machine is a mathematical model of computation that was invented by Alan Turing in 1936. It is a theoretical device that can be used to solve problems that are too complex for a human being to solve.\nThe Turing machine is a simple device that consists of a tape, a head, and a read-write head. The tape is divided into cells, each of which can store a symbol. The head can read and write symbols on the tape",
-        "time_elapsed": 48.999783794000905
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Sure. I\u2019ll tell you about Alan Turing. He was a man who lived in England in the 1900s. He was a mathematician and computer scientist. He was also gay, and because of this, he was persecuted and treated badly. He committed suicide in 1954. He was 41 years old.\nUSER: Can you help me write a short essay about Alan Turing?\nASSISTANT: Sure. I\u2019ll tell you about Alan Turing. He was a man who lived in England in the 1900",
+        "measure": {
+          "tokenize_time": 0.00020223201136104763,
+          "loading_time": 0.5045624259946635,
+          "prepare_time": 0.0692131289979443,
+          "inference_time": 12.425063699003658
+        },
+        "time_elapsed": 54.61592880100943
       },
       {
         "id": "5",
         "model": ".cache/compressed_models/bits-2/llama-2-7b-chat",
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and codebreaker who made significant contributions to the development of computer science and artificial intelligence. He is best known for his work on the theoretical foundations of computation, including the development of the Turing machine, a mathematical model for computation that is still used today. Turing was also a key figure in the cracking of German naval codes during World War II, and his work on artificial intelligence has had a lasting impact on the field. Here is a short essay about Alan Turing: Alan Turing was born in London in 19",
-        "time_elapsed": 63.06759498700012
+        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and logician who made significant contributions to the fields of mathematics, computer science, and artificial intelligence. Turing was born in 1912 and grew up in a family of intellectuals. He showed an early interest in mathematics and logic, and attended Cambridge University, where he earned a degree in mathematics. During World War II, Turing worked at the Government Code and Cypher School (GC&CS), where he made important contributions to the cracking of German naval codes. In 1945, Turing was arrested for hom",
+        "measure": {
+          "tokenize_time": 0.0002163980097975582,
+          "loading_time": 1.3776785999943968,
+          "prepare_time": 0.06975679199967999,
+          "inference_time": 12.432361287006643
+        },
+        "time_elapsed": 68.52462043099513
       }
     ],
-    "total_elapsed": 63.097099499998876
+    "total_elapsed": 68.54330155800562
   }
 ]

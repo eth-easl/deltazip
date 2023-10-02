@@ -101,18 +101,20 @@ class MixedPrecisionModel:
             for key in self.key_list:
                 _, target, _ = _get_submodules(self.base_model, key)
                 delattr(target, "delta")
-            output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
-            outputs.extend(
-                {
-                    "data": output,
+            output = self.tokenizer.batch_decode(
+                output,
+                skip_special_tokens=True
+            )
+            output = [{
+                    "data": o,
                     "measure": {
                         "tokenize_time": tokenize_time,
                         "loading_time": loading_time,
                         "prepare_time": prepare_time,
                         "inference_time": inference_time,
-                    },
-                }
-            )
+                    }
+                } for o in output]
+            outputs.extend(output)
         return outputs
 
     def load_delta(self, delta_model: str):

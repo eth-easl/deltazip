@@ -97,7 +97,10 @@ class InferenceService:
             batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
             batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
             output = delta_model.generate(**batch, **kwargs)
-            output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
+            output = self.tokenizer.batch_decode(
+                output,
+                skip_special_tokens=True
+            )
             outputs.append(output[0])
             logger.info("generation ends")
         return outputs

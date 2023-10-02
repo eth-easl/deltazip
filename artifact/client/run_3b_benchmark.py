@@ -5,6 +5,7 @@ from multiprocessing import Pool
 from timeit import default_timer as timer
 
 endpoint = 'http://localhost:8000'
+batch_size = 1
 
 def inference_request(req):
     start = timer()
@@ -54,8 +55,9 @@ for provider in providers:
             } for idx, x in enumerate(supported_models) if x['type']=='finetuned'
         ]
     # step 1: config the server to use the provider
-    configure_server(backend=provider, base_model=base_model, batch_size=2)
+    configure_server(backend=provider, base_model=base_model, batch_size=batch_size)
     start = timer()
+    
     with Pool(16) as p:
         results = p.map(inference_request, test_data)
     end = timer()
