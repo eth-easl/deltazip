@@ -66,7 +66,8 @@ for provider in providers:
                 "id": x[0]['id'],
                 "model": x[0]['model'],
                 "prompt": x[0]['prompt'],
-                "response": x[0]['response'],
+                "response": x[0]['response']['data'],
+                "measure": x[0]['response']['measure'],
                 "time_elapsed": x[1],
             } for x in results
         ],
