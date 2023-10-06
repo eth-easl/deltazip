@@ -5,6 +5,9 @@ from multiprocessing import Pool
 from timeit import default_timer as timer
 
 endpoint = 'http://localhost:8000'
+batch_size = 3
+# base_model = 'meta-llama/Llama-2-7b-hf'
+base_model = "openlm-research/open_llama_3b_v2"
 
 def inference_request(req):
     start = timer()
@@ -24,13 +27,13 @@ def configure_server(backend: str, base_model: str, batch_size: int = 1):
     print("configuration finished...")
     return res.json()
 
-with open('artifact/config.json', 'r') as fp:
+with open('artifact/config_3b.json', 'r') as fp:
     config = json.load(fp)
 
 benchmark_results = []
 
 supported_models = config['supported_models']
-base_model = 'meta-llama/Llama-2-7b-hf'
+
 
 test_prompt = "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:"
 
@@ -54,8 +57,9 @@ for provider in providers:
             } for idx, x in enumerate(supported_models) if x['type']=='finetuned'
         ]
     # step 1: config the server to use the provider
-    configure_server(backend=provider, base_model=base_model, batch_size=2)
+    configure_server(backend=provider, base_model=base_model, batch_size=batch_size)
     start = timer()
+    
     with Pool(16) as p:
         results = p.map(inference_request, test_data)
     end = timer()
@@ -66,7 +70,8 @@ for provider in providers:
                 "id": x[0]['id'],
                 "model": x[0]['model'],
                 "prompt": x[0]['prompt'],
-                "response": x[0]['response'],
+                "response": x[0]['response']['data'],
+                "measure": x[0]['response']['measure'],
                 "time_elapsed": x[1],
             } for x in results
         ],
