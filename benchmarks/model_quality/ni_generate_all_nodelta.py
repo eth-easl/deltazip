@@ -1,7 +1,7 @@
 import os
 
 CACHE_PATH = os.environ.get("YAO_CACHE", "")
-folder_name = "3b0.5s_nodelta"
+folder_name = "2b0.75s_nodelta"
 
 compressed_models = os.path.join(CACHE_PATH, f"experiments/fmzip/compressed_models/{folder_name}/pythia-2.8b-deduped")
 

@@ -17,7 +17,12 @@ def _get_submodules(model, key):
 
 class MixedPrecisionModel:
     def __init__(
-        self, base_model: str, max_num_deltas=2, use_bfloat16=False, batch_size=0
+        self,
+        base_model: str,
+        max_num_deltas=2,
+        use_bfloat16=False,
+        batch_size=0,
+        model_parallel_strategy="none",
     ) -> None:
         compress_config = BaseCompressionConfig(
             bits=4,
@@ -28,12 +33,14 @@ class MixedPrecisionModel:
             lossless="gdeflate",
             damp_percent=0.02,
         )
+        self.model_parallel_strategy = model_parallel_strategy
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         # https://github.com/facebookresearch/llama/issues/380
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
         self.batch_size = batch_size
+        self.model_parallel_strategy = model_parallel_strategy
         with torch.device("cuda"):
             self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
                 base_model, compress_config=compress_config, low_cpu_mem_usage=True
@@ -49,6 +56,35 @@ class MixedPrecisionModel:
         self.max_num_deltas = max_num_deltas
         parallelize_neox()
         parallelize_llama()
+
+    def separate_generate(self, queries: List[Tuple], **kwargs):
+        tokenize_start = timer()
+        batch = self.prepare_batch(
+            queries,
+            self.tokenizer,
+        )
+        tokenize_end = timer()
+        tokenize_time = tokenize_end - tokenize_start
+        outputs = []
+        for batch_idx in range(0, len(queries), self.batch_size):
+            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
+            batch_inputs = {
+                key: batch[key][batch_idx : batch_idx + self.batch_size]
+                for key in batch
+            }
+            # load delta in a round-robin fashion, map to different available GPUs, except for gpu 0
+            # if delta is not in the model pool, load them
+            # (todo: revise the eviction policy)
+            if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
+                logger.info("model pool is full, removing the previous model")
+                logger.warning("in future this will be replaced with LRU cache")
+                self.model_pool = {}
+
+            loading_start = timer()
+            for delta in deltas:
+                if delta not in self.model_pool:
+                    logger.info("Loading target model")
+                    
 
     def generate(self, queries: List[Tuple], **kwargs):
         tokenize_start = timer()
@@ -117,10 +153,10 @@ class MixedPrecisionModel:
             outputs.extend(output)
         return outputs
 
-    def load_delta(self, delta_model: str):
+    def load_delta(self, delta_model: str, device: str='cuda'):
         logger.info("Loading target model")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
-            delta_model, device="cuda", unpack=False, low_cpu_mem_usage=True
+            delta_model, device=device, unpack=False, low_cpu_mem_usage=True
         )
         if len(self.key_list) == 0:
             for key, _ in self.model_pool[delta_model].model.named_modules():

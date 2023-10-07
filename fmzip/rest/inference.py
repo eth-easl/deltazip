@@ -7,6 +7,9 @@ from fmzip.pipelines import MixedPrecisionModel
 from fmzip.utils.delta_utils import subtract_inverse
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
+AVAILBLE_MODEL_PARALLEL_STRATEGY = [
+    "none", "separate", "sharded", "fully-sharded"
+]
 
 class InferenceService:
     def __init__(self, provider: str, **kwargs) -> None:

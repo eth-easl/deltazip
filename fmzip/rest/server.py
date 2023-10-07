@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fmzip.rest.inference import InferenceService
 from fmzip.rest.profile import profile_disk_io, get_gpu_name
+
 app = FastAPI()
 task_queue = Queue()
 is_busy = False
@@ -17,6 +18,7 @@ is_busy = False
 batch_size = int(os.environ.get('FMZIP_BATCH_SIZE', 2))
 backend = os.environ.get('FMZIP_BACKEND', 'hf')
 base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
+cuda_visible_devices=os.environ.get("CUDA_VISIBLE_DEVICES", "0")
 
 inference_model = None
 
@@ -59,6 +61,7 @@ class RestartRequest(BaseModel):
     backend: str
     base_model: str
     batch_size: int = 2
+    model_parallel_strategy: str = "separate"
 
 @app.post("/inference", response_model=InferenceTask)
 async def handle_request(inference_task: InferenceTask):
@@ -81,6 +84,7 @@ async def handle_restart(restart_request: RestartRequest):
         provider = restart_request.backend,
         base_model = restart_request.base_model,
         batch_size = restart_request.batch_size,
+        model_parallel_strategy = restart_request.model_parallel_strategy
     )
     batch_size = restart_request.batch_size
     return {"status": "success"}

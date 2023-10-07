@@ -1,7 +1,8 @@
 import os
 import nvml
 import subprocess
-from pynvml import *
+from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetName
+
 nvmlInit()
 
 def profile_disk_io(test_file=".cache/compressed_models/bits-3/llama-2-7b-chat/fmzip-compressed.safetensors"):
@@ -16,7 +17,7 @@ def profile_disk_io(test_file=".cache/compressed_models/bits-3/llama-2-7b-chat/f
         return output
     else:
         raise Exception("Output is not in GB/s")
-    
+
 def get_gpu_name():
     handle = nvmlDeviceGetHandleByIndex(0)
     name = nvmlDeviceGetName(handle)
