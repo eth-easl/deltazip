@@ -51,7 +51,6 @@ class MixedPrecisionModel:
             self.base_model = self.base_model.bfloat16()
         else:
             self.base_model = self.base_model.half()
-        self.base_model = self.base_model.to(torch.device("cuda", 0))
         logger.info("based model loaded")
         self.model_pool = {}
         self.key_list = []
@@ -96,7 +95,7 @@ class MixedPrecisionModel:
                 setattr(
                     target,
                     "delta",
-                    [module for module in dmodules],
+                    dmodules,
                 )
             prepare_end = timer()
             prepare_time = prepare_end - prepare_start
@@ -123,12 +122,16 @@ class MixedPrecisionModel:
             outputs.extend(output)
         return outputs
 
-    def load_delta(self, delta_model: str, device: str = "cuda"):
+    def _load_delta(self, delta_model: str, device: str = "cuda"):
         logger.info("Loading target model")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model, device=device, unpack=False, low_cpu_mem_usage=True
         )
         if len(self.key_list) == 0:
+            # flatten insdier modules
+            insider_modules = []
+            [insider_modules.extend(x) for x in self.base_model.inside_layer_modules]
+            # we need to figure out what to merge at this stage
             for key, _ in self.model_pool[delta_model].model.named_modules():
                 self.key_list.append(key)
 
@@ -136,7 +139,7 @@ class MixedPrecisionModel:
         for i, delta in enumerate(deltas):
             target_device = i % (self.device_count - 1) + 1
             if delta not in self.model_pool:
-                self.load_delta(delta, device=f"cuda:{target_device}")
+                self._load_delta(delta, device=f"cuda:{target_device}")
 
     def prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
@@ -144,10 +147,3 @@ class MixedPrecisionModel:
         batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
         batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
         return batch
-
-    def expire_delta(self, delta_model: str, expire_level=0):
-        # if expire_level = 1
-        # move the model to cpu
-        # if expire_level = 2
-        # delete the model from memory
-        pass

@@ -41,11 +41,13 @@ def llama_attention_forward(
     use_cache: bool = False,
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
     bsz, q_len, _ = hidden_states.size()
-
+    # broadcast hiddenstates [i] to delta[i]'s device
+    for i in range(len(self.delta)):
+        print(f"delta device: {self.delta[i].q_proj.device}")
+        print(f"hidden_states[{i}].device: {hidden_states[i].device}")
     query_states = self.q_proj(hidden_states) + torch.stack(
         [self.delta[i].q_proj(hidden_states[i]) for i in range(len(self.delta))], dim=0
     )
-
     key_states = self.k_proj(hidden_states) + torch.stack(
         [self.delta[i].k_proj(hidden_states[i]) for i in range(len(self.delta))], dim=0
     )

@@ -14,4 +14,5 @@ def initialize():
 
 
 def get_gpu_count():
+    initialize()
     return nvmlDeviceGetCount()
