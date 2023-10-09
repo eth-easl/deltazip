@@ -1,9 +1,8 @@
-import os
-import nvml
 import subprocess
 from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetName
+from fmzip.pipelines.utils import initialize
 
-nvmlInit()
+initialize()
 
 def profile_disk_io(test_file=".cache/compressed_models/bits-3/llama-2-7b-chat/fmzip-compressed.safetensors"):
     # run the command and get output

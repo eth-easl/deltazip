@@ -37,7 +37,7 @@ supported_models = config['supported_models']
 
 test_prompt = "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:"
 
-providers = ['hf', 'fmzip-mpm']
+providers = ['fmzip-mpm']
 
 for provider in providers:
     if 'fmzip' in provider:
