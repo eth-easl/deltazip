@@ -51,6 +51,7 @@ class MixedPrecisionModel:
             self.base_model = self.base_model.bfloat16()
         else:
             self.base_model = self.base_model.half()
+        self.base_model = self.base_model.to(torch.device("cuda", 0))
         logger.info("based model loaded")
         self.model_pool = {}
         self.key_list = []
@@ -139,6 +140,7 @@ class MixedPrecisionModel:
         for i, delta in enumerate(deltas):
             target_device = i % (self.device_count - 1) + 1
             if delta not in self.model_pool:
+                logger.info(f"loading delta to cuda:{target_device}")
                 self._load_delta(delta, device=f"cuda:{target_device}")
 
     def prepare_batch(self, inputs, tokenizer):

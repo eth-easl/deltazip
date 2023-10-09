@@ -25,17 +25,18 @@ cp_dtype_maps = {
 
 
 class LosslessCompressor:
-    def __init__(self, algorithm: str = "gdeflate") -> None:
+    def __init__(self, algorithm: str = "gdeflate", device_id: int = 0) -> None:
+        print(f"lossless compressor device id: {device_id}")
         if algorithm == "gdeflate":
-            self.comp_manager = GdeflateManager()
+            self.comp_manager = GdeflateManager(device_id=device_id)
         elif algorithm == "lz4":
-            self.comp_manager = LZ4Manager()
+            self.comp_manager = LZ4Manager(device_id=device_id)
         elif algorithm == "snappy":
-            self.comp_manager = SnappyManager()
+            self.comp_manager = SnappyManager(device_id=device_id)
         elif algorithm == "bitcomp":
-            self.comp_manager = BitcompManager()
+            self.comp_manager = BitcompManager(device_id=device_id)
         elif algorithm == "cascaded":
-            self.comp_manager = CascadedManager()
+            self.comp_manager = CascadedManager(device_id=device_id)
         else:
             raise ValueError(
                 f"Unsupported algorithm: {algorithm},  supported algorithms: ['gdeflate', 'lz4', 'snappy', 'bitcomp', 'cascaded']"
@@ -43,8 +44,6 @@ class LosslessCompressor:
 
     def compress_tensor(self, tensor: torch.Tensor):
         tensor.requires_grad_(False)
-        if not tensor.is_cuda:
-            tensor = tensor.cuda()
         tensor_shape = tensor.shape
         to_compress_tensor = cp.from_dlpack(to_dlpack(tensor))
         # logger.debug(f"compressiong dtype {tensor.dtype}")
@@ -69,6 +68,7 @@ class LosslessCompressor:
         self, compressed_tensor: cp.array, tensor_shape: tuple, dtype="fp16"
     ):
         self.comp_manager.input_type = cp_dtype_maps[dtype]
+        print(f"comp_manager device {self.comp_manager.device_id}")
         decompressed_tensor = self.comp_manager.decompress(compressed_tensor)
         torch_tensor = torch.reshape(
             from_dlpack(decompressed_tensor.toDlpack()), tensor_shape

@@ -483,7 +483,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 for name in subset:
                     sparsegpt[name] = SparseGPT(subset[name])
                     sparsegpt[name].quantizer = Quantizer()
-                    print(self.compress_config.final_bit)
                     sparsegpt[name].quantizer.configure(
                         self.compress_config.final_bit[
                             f"{self.layers_block_name}.{i}.{name}"
@@ -1015,6 +1014,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         low_cpu_mem_usage: bool = True,
         **kwargs,
     ):
+        device_ordinal = (
+            int(device.split(":")[1]) if device.startswith("cuda") else "cpu"
+        )
         """load compressed model from local disk"""
         config = AutoConfig.from_pretrained(
             save_dir, trust_remote_code=trust_remote_code
@@ -1023,12 +1025,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             raise TypeError(f"{config.model_type} isn't supported yet.")
         if compress_config is None:
             # check if "auto_compression_config.json" exists
-            print(join(save_dir, "auto_compress_config.json"))
             if isfile(join(save_dir, "auto_compress_config.json")):
                 compress_config = AutoCompressionConfig.from_pretrained(save_dir)
             else:
                 compress_config = BaseCompressionConfig.from_pretrained(save_dir)
-        print(compress_config)
+        logger.info(f"compress config: {compress_config}")
 
         if model_basename is None:
             model_basename = "fmzip-compressed"
@@ -1108,7 +1109,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16
             )
         # now load compressed data
-        losslesscompressor = LosslessCompressor(compress_config.lossless)
+        losslesscompressor = LosslessCompressor(
+            compress_config.lossless, device_id=device_ordinal
+        )
 
         metadata = None
         tensors = {}
@@ -1120,19 +1123,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensors[key] = f.get_tensor(key)
         tensor_dtypes = json.loads(metadata["dtype"])
         tensor_shapes = json.loads(metadata["shape"])
-
-        for key in tensors.keys():
-            tensors[key] = cp.array(tensors[key], copy=False)
+        with cp.cuda.Device(device_ordinal):
+            for key in tensors.keys():
+                tensors[key] = cp.array(tensors[key], copy=False)
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes
         )
         model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
-        tensors_output = {}
-        for key in tensors.keys():
-            tensors_output[key] = {
-                "dtype": tensors[key].dtype,
-                "shape": tensors[key].shape,
-            }
         if isinstance(
             compress_config, AutoCompressionConfig
         ) or compress_config.bits in [2, 3, 4, 8]:
@@ -1141,9 +1138,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del tensors
             del layers
             torch.cuda.empty_cache()
-        model = model.to(device)
-        model.eval()
-        print(model.model.layers[0])
         if unpack and (
             isinstance(compress_config, AutoCompressionConfig)
             or compress_config.bits in [2, 3, 4, 8]

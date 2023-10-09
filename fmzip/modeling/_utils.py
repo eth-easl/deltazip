@@ -145,6 +145,7 @@ def check_and_get_model_type(model_dir):
     model_type = config.model_type
     return model_type
 
+
 __all__ = [
     "get_device",
     "move_to_device",
