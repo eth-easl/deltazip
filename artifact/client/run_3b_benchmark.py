@@ -6,7 +6,6 @@ from timeit import default_timer as timer
 
 endpoint = 'http://localhost:8000'
 batch_size = 3
-# base_model = 'meta-llama/Llama-2-7b-hf'
 base_model = "openlm-research/open_llama_3b_v2"
 
 def inference_request(req):

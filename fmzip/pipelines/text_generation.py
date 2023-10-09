@@ -200,12 +200,13 @@ class MixedPrecisionModel:
         return outputs
 
     def generate(self, queries: List[Tuple], **kwargs):
-        if kwargs['model_parallel_strategy'] == "none":
+        kwargs.pop("model_parall_strategy")
+        if self.model_parallel_strategy == "none":
             return self.generate_no_parallel(queries, **kwargs)
-        elif kwargs['model_parallel_strategy'] == "separate":
+        elif self.model_parallel_strategy == "separate":
             return self.separate_generate(queries, **kwargs)
         else:
-            raise ValueError(f"Unknown model parallel strategy: {kwargs['model_parallel_strategy']}")
+            raise ValueError(f"Unknown model parallel strategy: {self.model_parallel_strategy}")
 
     def load_delta(self, delta_model: str, device: str='cuda'):
         logger.info("Loading target model")

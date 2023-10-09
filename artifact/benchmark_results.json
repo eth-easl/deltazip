@@ -1,63 +1,5 @@
 [
   {
-    "provider": "hf",
-    "results": [
-      {
-        "id": "1",
-        "model": "xzyao/openllama-3b-chat",
-        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and logician who made significant contributions to the field of theoretical computer science and artificial intelligence. He is best known for his work on the concept of a universal Turing machine, which is a theoretical computing machine that can solve any problem that can be solved by a Turing machine. Turing also made contributions to the development of the theory of the halting problem, which is a problem that determines whether a program will halt on its own or run forever. Turing's work had a major impact on the development of modern computing and artificial intelligence. He",
-        "measure": {
-          "tokenize_time": 0.0004181279946351424,
-          "loading_time": 5.2729301630024565,
-          "prepare_time": 0,
-          "inference_time": 2.5870806489983806
-        },
-        "time_elapsed": 23.931636852998054
-      },
-      {
-        "id": "2",
-        "model": "xzyao/openllama-3b-chat",
-        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and logician who made significant contributions to the field of theoretical computer science and artificial intelligence. He is best known for his work on the concept of a universal Turing machine, which is a theoretical computing machine that can solve any problem that can be solved by a Turing machine. Turing also made contributions to the development of the theory of the halting problem, which is a problem that determines whether a program will halt on its own or run forever. Turing's work had a major impact on the development of modern computing and artificial intelligence. He",
-        "measure": {
-          "tokenize_time": 0.00042078300612047315,
-          "loading_time": 5.074669106994406,
-          "prepare_time": 0,
-          "inference_time": 2.510527609003475
-        },
-        "time_elapsed": 16.108830375000252
-      },
-      {
-        "id": "3",
-        "model": "xzyao/openllama-3b-chat",
-        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and logician who made significant contributions to the field of theoretical computer science and artificial intelligence. He is best known for his work on the concept of a universal Turing machine, which is a theoretical computing machine that can solve any problem that can be solved by a Turing machine. Turing also made contributions to the development of the theory of the halting problem, which is a problem that determines whether a program will halt on its own or run forever. Turing's work had a major impact on the development of modern computing and artificial intelligence. He",
-        "measure": {
-          "tokenize_time": 0.0017225740011781454,
-          "loading_time": 5.497790396999335,
-          "prepare_time": 0,
-          "inference_time": 2.868174820992863
-        },
-        "time_elapsed": 8.457478462994914
-      },
-      {
-        "id": "4",
-        "model": "xzyao/openllama-3b-chat",
-        "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a British mathematician, computer scientist, and logician who made significant contributions to the field of theoretical computer science and artificial intelligence. He is best known for his work on the concept of a universal Turing machine, which is a theoretical computing machine that can solve any problem that can be solved by a Turing machine. Turing also made contributions to the development of the theory of the halting problem, which is a problem that determines whether a program will halt on its own or run forever. Turing's work had a major impact on the development of modern computing and artificial intelligence. He",
-        "measure": {
-          "tokenize_time": 0.0004216539964545518,
-          "loading_time": 4.878226259010262,
-          "prepare_time": 0,
-          "inference_time": 2.6103094479913125
-        },
-        "time_elapsed": 31.467132942998433
-      }
-    ],
-    "total_elapsed": 31.485957402008353
-  },
-  {
     "provider": "fmzip-mpm",
     "results": [
       {
@@ -66,12 +8,12 @@
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a pioneer whose work helped establish computers as a viable alternative to humans typing on a keyboard. His groundbreaking work, called the Turing Test Protocol (\u201cTP\u201d), consisted of several components (\u201cTP-protocol\u201d), namely the Turing Test (\u201cTD\u201d), the Turing Test for a computer (\u201cTC\u201d), Pingback: Alan Turing: Birth, Life, and Legacy (\u201cAL\u201d) \u2026. Continue (\u201cAL\u201d).\nHis contributions were revolutionary (\u201cRR\u201d), and his legacy continues (\u201cLR\u201d). Today (\u201cDT\u201d) we celebrate his life (\u201cLD\u201d).\u201d:\nAlan Turing\u2019s Birth (\u201cAB",
         "measure": {
-          "tokenize_time": 0.0009516830032225698,
-          "loading_time": 2.926748937999946,
-          "prepare_time": 0.13121974500245415,
-          "inference_time": 5.942331356010982
+          "tokenize_time": 0.00321750399962184,
+          "loading_time": 15.097694469000999,
+          "prepare_time": 0.5748721780000778,
+          "inference_time": 11.617421418000959
         },
-        "time_elapsed": 9.069238872005371
+        "time_elapsed": 27.469256545000462
       },
       {
         "id": "2",
@@ -79,12 +21,12 @@
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a pioneer whose work helped establish computers as a viable alternative to humans typing on a keyboard. His groundbreaking work, called the Turing Test Protocol (\u201cTP\u201d), consisted of several components (\u201cTP-protocol\u201d), namely the Turing Test (\u201cTD\u201d), the Turing Test for a computer (\u201cTC\u201d), Pingback: Alan Turing: Birth, Life, and Legacy (\u201cAL\u201d) \u2026. Continue (\u201cAL\u201d).\nHis contributions were revolutionary (\u201cRR\u201d), and his legacy continues (\u201cLR\u201d). Today (\u201cDT\u201d) we celebrate his life (\u201cLD\u201d).\u201d:\nAlan Turing\u2019s Birth (\u201cAB",
         "measure": {
-          "tokenize_time": 0.0009516830032225698,
-          "loading_time": 2.926748937999946,
-          "prepare_time": 0.13121974500245415,
-          "inference_time": 5.942331356010982
+          "tokenize_time": 0.00033480899946880527,
+          "loading_time": 1.3881362920001266,
+          "prepare_time": 0.09409738700014714,
+          "inference_time": 5.11415896499966
         },
-        "time_elapsed": 9.068854329001624
+        "time_elapsed": 34.05957951900018
       },
       {
         "id": "3",
@@ -92,12 +34,12 @@
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a pioneer whose work helped establish computers as a viable alternative to humans typing on a keyboard. His groundbreaking work, called the Turing Test Protocol (\u201cTP\u201d), consisted of several components (\u201cTP-protocol\u201d), namely the Turing Test (\u201cTD\u201d), the Turing Test for a computer (\u201cTC\u201d), Pingback: Alan Turing: Birth, Life, and Legacy (\u201cAL\u201d) \u2026. Continue (\u201cAL\u201d).\nHis contributions were revolutionary (\u201cRR\u201d), and his legacy continues (\u201cLR\u201d). Today (\u201cDT\u201d) we celebrate his life (\u201cLD\u201d).\u201d:\nAlan Turing\u2019s Birth (\u201cAB",
         "measure": {
-          "tokenize_time": 0.0009516830032225698,
-          "loading_time": 2.926748937999946,
-          "prepare_time": 0.13121974500245415,
-          "inference_time": 5.942331356010982
+          "tokenize_time": 0.00321750399962184,
+          "loading_time": 15.097694469000999,
+          "prepare_time": 0.5748721780000778,
+          "inference_time": 11.617421418000959
         },
-        "time_elapsed": 9.068543381989002
+        "time_elapsed": 27.46689574999982
       },
       {
         "id": "4",
@@ -105,14 +47,14 @@
         "prompt": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         "response": "USER: Can you help me write a short essay about Alan Turing? ASSISTANT: Of course! Alan Turing was a pioneer whose work helped establish computers as a viable alternative to humans typing on a keyboard. His groundbreaking work, called the Turing Test Protocol (\u201cTP\u201d), consisted of several components (\u201cTP-protocol\u201d), namely the Turing Test (\u201cTD\u201d), the Turing Test for a computer (\u201cTC\u201d), Pingback: Alan Turing: Birth, Life, and Legacy (\u201cAL\u201d) \u2026. Continue (\u201cAL\u201d).\nHis contributions were revolutionary (\u201cRR\u201d), and his legacy continues (\u201cLR\u201d). Today (\u201cDT\u201d) we celebrate his life (\u201cLD\u201d).\u201d:\nAlan Turing\u2019s Birth (\u201cAB",
         "measure": {
-          "tokenize_time": 0.00020534699433483183,
-          "loading_time": 0.9484891980100656,
-          "prepare_time": 0.0476985940040322,
-          "inference_time": 3.8803292980010156
+          "tokenize_time": 0.00321750399962184,
+          "loading_time": 15.097694469000999,
+          "prepare_time": 0.5748721780000778,
+          "inference_time": 11.617421418000959
         },
-        "time_elapsed": 14.017952532012714
+        "time_elapsed": 27.46968150400062
       }
     ],
-    "total_elapsed": 14.039569721004227
+    "total_elapsed": 34.086723307000284
   }
 ]
