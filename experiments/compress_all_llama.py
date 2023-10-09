@@ -2,8 +2,17 @@ import os
 
 cache_folder = os.environ.get("YAO_CACHE")
 
-in_folder = os.path.join(cache_folder, "experiments", "fmzip", "finetuned_raw", "llama-3b")
-out_dir = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models","2b0.75s" ,"open_llama_3b_v2")
+in_folder = os.path.join(
+    cache_folder, "experiments", "fmzip", "finetuned_raw", "llama-3b"
+)
+out_dir = os.path.join(
+    cache_folder,
+    "experiments",
+    "fmzip",
+    "compressed_models",
+    "2b0.75s",
+    "open_llama_3b_v2",
+)
 ar_dataset = os.path.join(cache_folder, "datasets", "qi", "ar")
 tasks = os.listdir(in_folder)
 

@@ -9,7 +9,7 @@ class MOSSFMZipForCausalLM(BaseFMZipModelForCausalLM):
         ["attn.qkv_proj"],
         ["attn.out_proj"],
         ["mlp.fc_in"],
-        ["mlp.fc_out"]
+        ["mlp.fc_out"],
     ]
 
 

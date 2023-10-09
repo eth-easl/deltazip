@@ -9,6 +9,7 @@ from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 from fmzip.pipelines import MixedPrecisionModel
 
+
 def postprocess(text):
     # logic:
     # if starts with \n, take the remaining
@@ -17,6 +18,7 @@ def postprocess(text):
     # if there's \n left, take the first part
     text = text.split("\n")[0]
     return text
+
 
 def generate(args):
     print(args)
@@ -29,22 +31,25 @@ def generate(args):
         prompts.append(datum)
     # process batch by batch
     for i in range(0, len(prompts), args.batch_size):
-        batch = prompts[i:i+args.batch_size]
-        input_batch = [(prompt[args.input_field], args.target_model) for prompt in batch]
+        batch = prompts[i : i + args.batch_size]
+        input_batch = [
+            (prompt[args.input_field], args.target_model) for prompt in batch
+        ]
         outputs = mpm.generate(
             input_batch,
             max_new_tokens=args.max_length,
             temperature=args.temperature,
-            top_k=args.top_k, 
-            top_p=args.top_p
+            top_k=args.top_k,
+            top_p=args.top_p,
         )
         for j in range(len(outputs)):
             outputs[j] = outputs[j].replace(batch[j][args.input_field], "")
-            batch[j]['prediction'] = [postprocess(outputs[j])]
-        data[i:i+args.batch_size] = batch
+            batch[j]["prediction"] = [postprocess(outputs[j])]
+        data[i : i + args.batch_size] = batch
     with open(args.output_file, "w") as f:
         for datum in data:
             f.write(json.dumps(datum) + "\n")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

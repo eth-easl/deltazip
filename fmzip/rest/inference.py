@@ -7,17 +7,17 @@ from fmzip.pipelines import MixedPrecisionModel
 from fmzip.utils.delta_utils import subtract_inverse
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
-AVAILBLE_MODEL_PARALLEL_STRATEGY = [
-    "none", "separate", "sharded", "fully-sharded"
-]
+AVAILBLE_MODEL_PARALLEL_STRATEGY = ["none", "separate", "sharded", "fully-sharded"]
+
 
 class InferenceService:
-    def __init__(self,
-                 provider: str,
-                 model_parallel_strategy:str='none',
-                 eviction_strategy: str='none',
-                 **kwargs
-                ) -> None:
+    def __init__(
+        self,
+        provider: str,
+        model_parallel_strategy: str = "none",
+        eviction_strategy: str = "none",
+        **kwargs,
+    ) -> None:
         self.provider = provider
         compress_config = BaseCompressionConfig(
             bits=4,
@@ -39,12 +39,11 @@ class InferenceService:
             base_model = AutoFMZipModelForCausalLM.from_pretrained(
                 kwargs["base_model"], compress_config=compress_config
             )
-            
+
             self.base_model = base_model.to(torch.device("cuda"))
         elif provider == "fmzip-mpm":
             self.mpm = MixedPrecisionModel(
-                model_parallel_strategy=self.model_parallel_strategy,
-                **kwargs
+                model_parallel_strategy=self.model_parallel_strategy, **kwargs
             )
         elif provider == "hf":
             self.tokenizer = transformers.AutoTokenizer.from_pretrained(
@@ -110,10 +109,7 @@ class InferenceService:
             batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
             batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
             output = delta_model.generate(**batch, **kwargs)
-            output = self.tokenizer.batch_decode(
-                output,
-                skip_special_tokens=True
-            )
+            output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
             outputs.append(output[0])
             logger.info("generation ends")
         return outputs

@@ -7,6 +7,7 @@ from fmzip import AutoFMZipModelForCausalLM, BaseQuantizeConfig
 pretrained_model_dir = "facebook/opt-125m"
 quantized_model_dir = "outputs/opt-125m-2bit-1024g"
 
+
 def main():
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model_dir, use_fast=True)
     examples = [
@@ -19,14 +20,18 @@ def main():
         bits=2,
         group_size=1024,
     )
-    model = AutoFMZipModelForCausalLM.from_pretrained(pretrained_model_dir, quantize_config)
+    model = AutoFMZipModelForCausalLM.from_pretrained(
+        pretrained_model_dir, quantize_config
+    )
 
     model.quantize(examples)
     post_quantized_model = deepcopy(model)
 
     model.save_quantized(quantized_model_dir, use_safetensors=True)
 
-    unpacked_model = AutoFMZipModelForCausalLM.from_quantized(quantized_model_dir, unpack=True, device="cuda:0")
+    unpacked_model = AutoFMZipModelForCausalLM.from_quantized(
+        quantized_model_dir, unpack=True, device="cuda:0"
+    )
 
     # compare the post-quantized model and the unpacked model
     post_quantized_model.to("cuda:0")
@@ -41,12 +46,15 @@ def main():
             print("param2")
             print(param2)
             break
-        
+
+
 if __name__ == "__main__":
     import logging
 
     logging.basicConfig(
-        format="%(asctime)s %(levelname)s [%(name)s] %(message)s", level=logging.INFO, datefmt="%Y-%m-%d %H:%M:%S"
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+        level=logging.INFO,
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
 
     main()

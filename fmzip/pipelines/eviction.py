@@ -1,2 +1,2 @@
-class DeltaManager():
+class DeltaManager:
     pass

@@ -12,13 +12,14 @@ from transformers import AutoModelForCausalLM
 
 from fmzip.lossless.nvcomp import GdeflateManager as manager
 
+
 def benchmark(args):
     comp_manager = manager()
     comp_manager.input_type = cp.float32
     tensors = {}
     tensor_shapes = {}
     timer_start = timer()
-    with safe_open(args.file, framework='pt', device="cpu") as f:
+    with safe_open(args.file, framework="pt", device="cpu") as f:
         for key in f.keys():
             shape = f.get_tensor(key).shape
             tensor_shapes[key] = list(shape)
@@ -38,10 +39,12 @@ def benchmark(args):
     tensors = {}
     timer_start = timer()
 
-    with safe_open(args.compressed_output, framework='np', device="cpu") as f:
+    with safe_open(args.compressed_output, framework="np", device="cpu") as f:
         for key in f.keys():
             decompressed_tensor = comp_manager.decompress(cp.array(f.get_tensor(key)))
-            tensors[key] = torch.reshape(from_dlpack(decompressed_tensor.toDlpack()), tensor_shapes[key])
+            tensors[key] = torch.reshape(
+                from_dlpack(decompressed_tensor.toDlpack()), tensor_shapes[key]
+            )
 
     timer_end = timer()
     logger.info("Decompressing time: {}s".format(timer_end - timer_start))
@@ -51,18 +54,18 @@ def benchmark(args):
     # with init_empty_weights():
     #     model = AutoModelForCausalLM.from_config(config)
     #     model.load_state_dict(tensors)
-    
+
     model = AutoModelForCausalLM.from_pretrained(args.model_type, state_dict=tensors)
     timer_end = timer()
     logger.info("Restoring model time: {}s".format(timer_end - timer_start))
     del model
     del tensor_shapes
     del tensors
-    
-    # compare with default loading
-    
 
-if __name__=="__main__":
+    # compare with default loading
+
+
+if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--file", type=str, required=True)
     parser.add_argument("--model-type", type=str, required=True)

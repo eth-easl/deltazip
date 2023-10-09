@@ -8,11 +8,13 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
 
+
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
     target_name = key.split(".")[-1]
     target = model.get_submodule(key)
     return parent, target, target_name
+
 
 class MixedPrecisionModel:
     def __init__(
@@ -105,23 +107,23 @@ class MixedPrecisionModel:
             for key in self.key_list:
                 _, target, _ = _get_submodules(self.base_model, key)
                 delattr(target, "delta")
-            output = self.tokenizer.batch_decode(
-                output,
-                skip_special_tokens=True
-            )
-            output = [{
+            output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
+            output = [
+                {
                     "data": o,
                     "measure": {
                         "tokenize_time": tokenize_time,
                         "loading_time": loading_time,
                         "prepare_time": prepare_time,
                         "inference_time": inference_time,
-                    }
-                } for o in output]
+                    },
+                }
+                for o in output
+            ]
             outputs.extend(output)
         return outputs
 
-    def load_delta(self, delta_model: str, device: str='cuda'):
+    def load_delta(self, delta_model: str, device: str = "cuda"):
         logger.info("Loading target model")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model, device=device, unpack=False, low_cpu_mem_usage=True
@@ -132,7 +134,7 @@ class MixedPrecisionModel:
 
     def load_deltas(self, deltas: List[str]):
         for i, delta in enumerate(deltas):
-            target_device = i % (self.device_count-1) + 1
+            target_device = i % (self.device_count - 1) + 1
             if delta not in self.model_pool:
                 self.load_delta(delta, device=f"cuda:{target_device}")
 

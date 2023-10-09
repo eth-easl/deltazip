@@ -18,7 +18,7 @@ FMZIP_CAUSAL_LM_MODEL_MAP = {
     "gpt2": GPT2FMZipForCausalLM,
     "llama": LlamaFMZipForCausalLM,
     "opt": OPTFMZipForCausalLM,
-    "moss": MOSSFMZipForCausalLM
+    "moss": MOSSFMZipForCausalLM,
 }
 
 
@@ -68,7 +68,11 @@ class AutoFMZipModelForCausalLM:
     ) -> BaseFMZipModelForCausalLM:
         model_type = check_and_get_model_type(save_dir)
         decompress_func = FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
-        keywords = {key: kwargs[key] for key in signature(decompress_func).parameters if key in kwargs}
+        keywords = {
+            key: kwargs[key]
+            for key in signature(decompress_func).parameters
+            if key in kwargs
+        }
         return decompress_func(
             save_dir=save_dir,
             device_map=device_map,

@@ -10,7 +10,7 @@ class GPTJFMZipForCausalLM(BaseFMZipModelForCausalLM):
         ["attn.k_proj", "attn.v_proj", "attn.q_proj"],
         ["attn.out_proj"],
         ["mlp.fc_in"],
-        ["mlp.fc_out"]
+        ["mlp.fc_out"],
     ]
 
     fused_attn_module_type = FusedGPTJAttentionForQuantizedModel

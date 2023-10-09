@@ -1,7 +1,9 @@
 from packaging.version import parse as parse_version
 
 
-def dynamically_import_QuantLinear(use_triton: bool, desc_act: bool, group_size: int, use_cuda: bool = False):
+def dynamically_import_QuantLinear(
+    use_triton: bool, desc_act: bool, group_size: int, use_cuda: bool = False
+):
     if use_triton:
         from ..nn_modules.qlinear_triton import QuantLinear
     else:
@@ -12,10 +14,7 @@ def dynamically_import_QuantLinear(use_triton: bool, desc_act: bool, group_size:
     return QuantLinear
 
 
-def compare_transformers_version(
-    version: str = "v4.28.0",
-    op: str = "eq"
-):
+def compare_transformers_version(version: str = "v4.28.0", op: str = "eq"):
     assert op in ["eq", "lt", "le", "gt", "ge"]
 
     from transformers import __version__
@@ -23,10 +22,7 @@ def compare_transformers_version(
     return getattr(parse_version(__version__), f"__{op}__")(parse_version(version))
 
 
-def compare_pytorch_version(
-    version: str = "v2.0.0",
-    op: str = "eq"
-):
+def compare_pytorch_version(version: str = "v2.0.0", op: str = "eq"):
     assert op in ["eq", "lt", "le", "gt", "ge"]
 
     from torch import __version__
