@@ -3,10 +3,10 @@ from loguru import logger
 from typing import List, Tuple
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
+from fmzip.pipelines.utils import get_gpu_count
+from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
-from fmzip.modeling.llama import parallelize_llama
-from fmzip.pipelines.utils import get_gpu_count
 
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
@@ -57,156 +57,69 @@ class MixedPrecisionModel:
         parallelize_neox()
         parallelize_llama()
 
-    def separate_generate(self, queries: List[Tuple], **kwargs):
-        tokenize_start = timer()
-        batch = self.prepare_batch(
-            queries,
-            self.tokenizer,
-        )
-        tokenize_end = timer()
-        tokenize_time = tokenize_end - tokenize_start
-        outputs = []
-        for batch_idx in range(0, len(queries), self.batch_size):
-            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
-            batch_inputs = {
-                key: batch[key][batch_idx : batch_idx + self.batch_size]
-                for key in batch
-            }
-            # (todo:xiaozhe): revise the eviction policy
-            if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
-                logger.info("model pool is full, removing the previous model")
-                logger.warning("in future this will be replaced with LRU cache")
-                self.model_pool = {}
-            if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
-                logger.info("model pool is full, removing the previous model")
-                logger.warning("in future this will be replaced with LRU cache")
-                self.model_pool = {}
-            # load delta in a round-robin fashion, map to different available GPUs, except for gpu 0
-            # if delta is not in the model pool, load them
-            # start with gpu 1, and avoid gpu 0
-            loading_start = timer()
-            for i, delta in enumerate(deltas):
-                target_device = i % (self.device_count - 1) + 1
-                if delta not in self.model_pool:
-                    self.load_delta(delta, device=f"cuda:{target_device}")
-            loading_end = timer()
-            loading_time = loading_end - loading_start
-
-            prepare_start = timer()
-            for key in self.key_list:
-                _, target, _ = _get_submodules(self.base_model, key)
-                dmodules = []
-                for delta in deltas:
-                    for dkey, dmodule in self.model_pool[delta].model.named_modules():
-                        if dkey == key:
-                            dmodules.append(dmodule)
-                            break
-                setattr(
-                    target,
-                    "delta",
-                    [module.to(torch.device("cuda")) for module in dmodules],
-                )
-            prepare_end = timer()
-            prepare_time = prepare_end - prepare_start
-            inference_start = timer()
-            output = self.base_model.generate(**batch_inputs, **kwargs)
-            inference_end = timer()
-            inference_time = inference_end - inference_start
-            # remove the delta modules
-            for key in self.key_list:
-                _, target, _ = _get_submodules(self.base_model, key)
-                delattr(target, "delta")
-            output = self.tokenizer.batch_decode(
-                output,
-                skip_special_tokens=True
-            )
-            output = [{
-                    "data": o,
-                    "measure": {
-                        "tokenize_time": tokenize_time,
-                        "loading_time": loading_time,
-                        "prepare_time": prepare_time,
-                        "inference_time": inference_time,
-                    }
-                } for o in output]
-            outputs.extend(output)
-        return outputs
-    
-    def generate_no_parallel(self, queries: List[Tuple], **kwargs):
-        tokenize_start = timer()
-        batch = self.prepare_batch(
-            queries,
-            self.tokenizer,
-        )
-        tokenize_end = timer()
-        tokenize_time = tokenize_end - tokenize_start
-        outputs = []
-        for batch_idx in range(0, len(queries), self.batch_size):
-            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
-            batch_inputs = {
-                key: batch[key][batch_idx : batch_idx + self.batch_size]
-                for key in batch
-            }
-            # if delta is not in the model pool, load them
-            # but before that, check if the model pool is full
-
-            if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
-                logger.info("model pool is full, removing the previous model")
-                logger.warning("in future this will be replaced with LRU cache")
-                self.model_pool = {}
-            loading_start = timer()
-            [self.load_delta(delta) for delta in deltas if delta not in self.model_pool]
-            loading_end = timer()
-            loading_time = loading_end - loading_start
-
-            prepare_start = timer()
-            for key in self.key_list:
-                _, target, _ = _get_submodules(self.base_model, key)
-                dmodules = []
-                for delta in deltas:
-                    for dkey, dmodule in self.model_pool[delta].model.named_modules():
-                        if dkey == key:
-                            dmodules.append(dmodule)
-                            break
-                setattr(
-                    target,
-                    "delta",
-                    [module.to(torch.device("cuda")) for module in dmodules],
-                )
-            prepare_end = timer()
-            prepare_time = prepare_end - prepare_start
-            inference_start = timer()
-            output = self.base_model.generate(**batch_inputs, **kwargs)
-            inference_end = timer()
-            inference_time = inference_end - inference_start
-            # remove the delta modules
-            for key in self.key_list:
-                _, target, _ = _get_submodules(self.base_model, key)
-                delattr(target, "delta")
-            output = self.tokenizer.batch_decode(
-                output,
-                skip_special_tokens=True
-            )
-            output = [{
-                    "data": o,
-                    "measure": {
-                        "tokenize_time": tokenize_time,
-                        "loading_time": loading_time,
-                        "prepare_time": prepare_time,
-                        "inference_time": inference_time,
-                    }
-                } for o in output]
-            outputs.extend(output)
-        return outputs
-
     def generate(self, queries: List[Tuple], **kwargs):
-        kwargs.pop("model_parall_strategy")
-        if self.model_parallel_strategy == "none":
-            return self.generate_no_parallel(queries, **kwargs)
-        elif self.model_parallel_strategy == "separate":
-            return self.separate_generate(queries, **kwargs)
-        else:
-            raise ValueError(f"Unknown model parallel strategy: {self.model_parallel_strategy}")
+        tokenize_start = timer()
+        batch = self.prepare_batch(
+            queries,
+            self.tokenizer,
+        )
+        tokenize_end = timer()
+        tokenize_time = tokenize_end - tokenize_start
+        outputs = []
+        for batch_idx in range(0, len(queries), self.batch_size):
+            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
+            batch_inputs = {
+                key: batch[key][batch_idx : batch_idx + self.batch_size]
+                for key in batch
+            }
+            # eviction
+            if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
+                logger.info("model pool is full, removing the previous model")
+                logger.warning("in future this will be replaced with LRU cache")
+                self.model_pool = {}
+            loading_start = timer()
+            self.load_deltas(deltas)
+            loading_end = timer()
+
+            loading_time = loading_end - loading_start
+            prepare_start = timer()
+            for key in self.key_list:
+                _, target, _ = _get_submodules(self.base_model, key)
+                dmodules = []
+                for delta in deltas:
+                    for dkey, dmodule in self.model_pool[delta].model.named_modules():
+                        if dkey == key:
+                            dmodules.append(dmodule)
+                            break
+                setattr(
+                    target,
+                    "delta",
+                    [module for module in dmodules],
+                )
+            prepare_end = timer()
+            prepare_time = prepare_end - prepare_start
+            inference_start = timer()
+            output = self.base_model.generate(**batch_inputs, **kwargs)
+            inference_end = timer()
+            inference_time = inference_end - inference_start
+            for key in self.key_list:
+                _, target, _ = _get_submodules(self.base_model, key)
+                delattr(target, "delta")
+            output = self.tokenizer.batch_decode(
+                output,
+                skip_special_tokens=True
+            )
+            output = [{
+                    "data": o,
+                    "measure": {
+                        "tokenize_time": tokenize_time,
+                        "loading_time": loading_time,
+                        "prepare_time": prepare_time,
+                        "inference_time": inference_time,
+                    }
+                } for o in output]
+            outputs.extend(output)
+        return outputs
 
     def load_delta(self, delta_model: str, device: str='cuda'):
         logger.info("Loading target model")
@@ -216,6 +129,12 @@ class MixedPrecisionModel:
         if len(self.key_list) == 0:
             for key, _ in self.model_pool[delta_model].model.named_modules():
                 self.key_list.append(key)
+
+    def load_deltas(self, deltas: List[str]):
+        for i, delta in enumerate(deltas):
+            target_device = i % (self.device_count-1) + 1
+            if delta not in self.model_pool:
+                self.load_delta(delta, device=f"cuda:{target_device}")
 
     def prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""

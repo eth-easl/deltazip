@@ -12,7 +12,12 @@ AVAILBLE_MODEL_PARALLEL_STRATEGY = [
 ]
 
 class InferenceService:
-    def __init__(self, provider: str, **kwargs) -> None:
+    def __init__(self,
+                 provider: str,
+                 model_parallel_strategy:str='none',
+                 eviction_strategy: str='none',
+                 **kwargs
+                ) -> None:
         self.provider = provider
         compress_config = BaseCompressionConfig(
             bits=4,
@@ -23,7 +28,7 @@ class InferenceService:
             lossless="gdeflate",
             damp_percent=0.02,
         )
-        self.model_parallel_strategy = kwargs["model_parallel_strategy"]
+        self.model_parallel_strategy = model_parallel_strategy
         if provider == "fmzip":
             self.tokenizer = transformers.AutoTokenizer.from_pretrained(
                 kwargs["base_model"]
@@ -37,7 +42,10 @@ class InferenceService:
             
             self.base_model = base_model.to(torch.device("cuda"))
         elif provider == "fmzip-mpm":
-            self.mpm = MixedPrecisionModel(**kwargs)
+            self.mpm = MixedPrecisionModel(
+                model_parallel_strategy=self.model_parallel_strategy,
+                **kwargs
+            )
         elif provider == "hf":
             self.tokenizer = transformers.AutoTokenizer.from_pretrained(
                 kwargs["base_model"]
@@ -113,7 +121,7 @@ class InferenceService:
     def generate(self, queries: List):
         queries = [(query.prompt, query.model) for query in queries]
         if self.provider == "fmzip-mpm":
-            return self.mpm.generate(queries, max_new_tokens=128, model_parall_strategy = self.model_parallel_strategy)
+            return self.mpm.generate(queries, max_new_tokens=128)
         elif self.provider == "hf":
             return self._hf_generated(queries, max_new_tokens=128)
         elif self.provider == "fmzip":

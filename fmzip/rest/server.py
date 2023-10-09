@@ -12,8 +12,8 @@ from fmzip.rest.inference import InferenceService
 from fmzip.rest.profile import profile_disk_io, get_gpu_name
 
 app = FastAPI()
-task_queue = Queue()
 is_busy = False
+task_queue = Queue()
 
 batch_size = int(os.environ.get('FMZIP_BATCH_SIZE', 2))
 backend = os.environ.get('FMZIP_BACKEND', 'hf')
@@ -84,7 +84,7 @@ async def handle_restart(restart_request: RestartRequest):
         provider = restart_request.backend,
         base_model = restart_request.base_model,
         batch_size = restart_request.batch_size,
-        model_parallel_strategy = restart_request.model_parallel_strategy
+        model_parallel_strategy = restart_request.model_parallel_strategy,
     )
     batch_size = restart_request.batch_size
     return {"status": "success"}
