@@ -1,10 +1,10 @@
 import torch
 from timeit import default_timer as timer
 
-tensor_x = torch.rand(4096, 4096).to(torch.device("cuda", 0))
+tensor_x = torch.rand(16384, 16384).to(torch.device("cuda", 0))
 
-tensor_w_0 = torch.rand(4096, 4096).to(torch.device("cuda", 0))
-tensor_w_1 = torch.rand(4096, 4096).to(torch.device("cuda", 0))
+tensor_w_0 = torch.rand(16384, 16384).to(torch.device("cuda", 0))
+tensor_w_1 = torch.rand(16384, 16384).to(torch.device("cuda", 0))
 
 # sequentially execute on 1 GPU
 start = timer()

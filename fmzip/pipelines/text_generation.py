@@ -7,6 +7,12 @@ from fmzip.pipelines.utils import get_gpu_count
 from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
+inside_layer_modules = [
+    ["self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"],
+    ["self_attn.o_proj"],
+    ["mlp.up_proj", "mlp.gate_proj"],
+    ["mlp.down_proj"],
+]
 
 
 def _get_submodules(model, key):
@@ -36,14 +42,15 @@ class MixedPrecisionModel:
         )
         self.device_count = get_gpu_count()
         self.model_parallel_strategy = model_parallel_strategy
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            base_model, use_fast=True)
         # https://github.com/facebookresearch/llama/issues/380
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
         self.batch_size = batch_size
         self.model_parallel_strategy = model_parallel_strategy
-        with torch.device("cuda", 0):
+        with torch.device("cuda", 1):
             self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
                 base_model, compress_config=compress_config, low_cpu_mem_usage=True
             )
@@ -51,7 +58,7 @@ class MixedPrecisionModel:
             self.base_model = self.base_model.bfloat16()
         else:
             self.base_model = self.base_model.half()
-        self.base_model = self.base_model.to(torch.device("cuda", 0))
+        self.base_model = self.base_model.to(torch.device("cuda", 1))
         logger.info("based model loaded")
         self.model_pool = {}
         self.key_list = []
@@ -69,15 +76,17 @@ class MixedPrecisionModel:
         tokenize_time = tokenize_end - tokenize_start
         outputs = []
         for batch_idx in range(0, len(queries), self.batch_size):
-            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
+            deltas = [x[1]
+                      for x in queries[batch_idx: batch_idx + self.batch_size]]
             batch_inputs = {
-                key: batch[key][batch_idx : batch_idx + self.batch_size]
+                key: batch[key][batch_idx: batch_idx + self.batch_size]
                 for key in batch
             }
             # eviction
             if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
                 logger.info("model pool is full, removing the previous model")
-                logger.warning("in future this will be replaced with LRU cache")
+                logger.warning(
+                    "in future this will be replaced with LRU cache")
                 self.model_pool = {}
             loading_start = timer()
             self.load_deltas(deltas)
@@ -107,7 +116,8 @@ class MixedPrecisionModel:
             for key in self.key_list:
                 _, target, _ = _get_submodules(self.base_model, key)
                 delattr(target, "delta")
-            output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
+            output = self.tokenizer.batch_decode(
+                output, skip_special_tokens=True)
             output = [
                 {
                     "data": o,
@@ -126,12 +136,13 @@ class MixedPrecisionModel:
     def _load_delta(self, delta_model: str, device: str = "cuda"):
         logger.info("Loading target model")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
-            delta_model, device=device, unpack=False, low_cpu_mem_usage=True
+            delta_model, device=device, unpack=False, low_cpu_mem_usage=False
         )
         if len(self.key_list) == 0:
             # flatten insdier modules
             insider_modules = []
-            [insider_modules.extend(x) for x in self.base_model.inside_layer_modules]
+            [insider_modules.extend(x)
+             for x in inside_layer_modules]
             # we need to figure out what to merge at this stage
             for key, _ in self.model_pool[delta_model].model.named_modules():
                 self.key_list.append(key)
@@ -145,7 +156,9 @@ class MixedPrecisionModel:
 
     def prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
-        batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
+        batch = tokenizer([inp[0] for inp in inputs],
+                          return_tensors="pt", padding=True)
         batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
-        batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
+        batch["attention_mask"] = batch["attention_mask"].to(
+            torch.device("cuda"))
         return batch

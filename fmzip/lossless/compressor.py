@@ -68,7 +68,6 @@ class LosslessCompressor:
         self, compressed_tensor: cp.array, tensor_shape: tuple, dtype="fp16"
     ):
         self.comp_manager.input_type = cp_dtype_maps[dtype]
-        print(f"comp_manager device {self.comp_manager.device_id}")
         decompressed_tensor = self.comp_manager.decompress(compressed_tensor)
         torch_tensor = torch.reshape(
             from_dlpack(decompressed_tensor.toDlpack()), tensor_shape

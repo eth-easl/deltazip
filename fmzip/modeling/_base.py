@@ -1014,9 +1014,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         low_cpu_mem_usage: bool = True,
         **kwargs,
     ):
-        device_ordinal = (
-            int(device.split(":")[1]) if device.startswith("cuda") else "cpu"
-        )
         """load compressed model from local disk"""
         config = AutoConfig.from_pretrained(
             save_dir, trust_remote_code=trust_remote_code
@@ -1110,7 +1107,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             )
         # now load compressed data
         losslesscompressor = LosslessCompressor(
-            compress_config.lossless, device_id=device_ordinal
+            compress_config.lossless
         )
 
         metadata = None
@@ -1123,7 +1120,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensors[key] = f.get_tensor(key)
         tensor_dtypes = json.loads(metadata["dtype"])
         tensor_shapes = json.loads(metadata["shape"])
-        with cp.cuda.Device(device_ordinal):
+        # (todo:xiaozhe) now we force decompression on 0
+        with cp.cuda.Device(0):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
         tensors = losslesscompressor.decompress_state_dict(
@@ -1143,6 +1141,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             or compress_config.bits in [2, 3, 4, 8]
         ):
             unpack_model(model)
+        model = model.to(device)
         # set seqlen
         model_config = model.config.to_dict()
         seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]
