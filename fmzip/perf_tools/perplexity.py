@@ -6,6 +6,7 @@ import numpy as np
 from torch.nn import CrossEntropyLoss
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+
 class Perplexity(evaluate.Metric):
     def _info(self):
         return evaluate.MetricInfo(
@@ -19,11 +20,20 @@ class Perplexity(evaluate.Metric):
         )
 
     def _compute(
-        self, predictions, model_id, batch_size: int = 16, add_start_token: bool = True, device=None, max_length=None
+        self,
+        predictions,
+        model_id,
+        batch_size: int = 16,
+        add_start_token: bool = True,
+        device=None,
+        max_length=None,
     ):
-
         if device is not None:
-            assert device in ["gpu", "cpu", "cuda"], "device should be either gpu or cpu."
+            assert device in [
+                "gpu",
+                "cpu",
+                "cuda",
+            ], "device should be either gpu or cpu."
             if device == "gpu":
                 device = "cuda"
         else:
@@ -38,7 +48,9 @@ class Perplexity(evaluate.Metric):
         # if there is not an already assigned pad_token, assign an existing
         # special token to also be the padding token
         if tokenizer.pad_token is None and batch_size > 1:
-            existing_special_tokens = list(tokenizer.special_tokens_map_extended.values())
+            existing_special_tokens = list(
+                tokenizer.special_tokens_map_extended.values()
+            )
             # check that the model already has at least one special token defined
             assert (
                 len(existing_special_tokens) > 0
@@ -70,7 +82,9 @@ class Perplexity(evaluate.Metric):
 
         # check that each input is long enough:
         if add_start_token:
-            assert torch.all(torch.ge(attn_masks.sum(1), 1)), "Each input text must be at least one token long."
+            assert torch.all(
+                torch.ge(attn_masks.sum(1), 1)
+            ), "Each input text must be at least one token long."
         else:
             assert torch.all(
                 torch.ge(attn_masks.sum(1), 2)
@@ -85,10 +99,18 @@ class Perplexity(evaluate.Metric):
             attn_mask = attn_masks[start_index:end_index]
 
             if add_start_token:
-                bos_tokens_tensor = torch.tensor([[tokenizer.bos_token_id]] * encoded_batch.size(dim=0)).to(device)
+                bos_tokens_tensor = torch.tensor(
+                    [[tokenizer.bos_token_id]] * encoded_batch.size(dim=0)
+                ).to(device)
                 encoded_batch = torch.cat([bos_tokens_tensor, encoded_batch], dim=1)
                 attn_mask = torch.cat(
-                    [torch.ones(bos_tokens_tensor.size(), dtype=torch.int64).to(device), attn_mask], dim=1
+                    [
+                        torch.ones(bos_tokens_tensor.size(), dtype=torch.int64).to(
+                            device
+                        ),
+                        attn_mask,
+                    ],
+                    dim=1,
                 )
 
             labels = encoded_batch
@@ -101,7 +123,10 @@ class Perplexity(evaluate.Metric):
             shift_attention_mask_batch = attn_mask[..., 1:].contiguous()
 
             perplexity_batch = torch.exp(
-                (loss_fct(shift_logits.transpose(1, 2), shift_labels) * shift_attention_mask_batch).sum(1)
+                (
+                    loss_fct(shift_logits.transpose(1, 2), shift_labels)
+                    * shift_attention_mask_batch
+                ).sum(1)
                 / shift_attention_mask_batch.sum(1)
             )
 

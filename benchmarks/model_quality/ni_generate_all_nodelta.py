@@ -1,21 +1,25 @@
 import os
 
 CACHE_PATH = os.environ.get("YAO_CACHE", "")
-folder_name = "3b0.5s_nodelta"
+folder_name = "2b0.75s_nodelta"
 
-compressed_models = os.path.join(CACHE_PATH, f"experiments/fmzip/compressed_models/{folder_name}/pythia-2.8b-deduped")
+compressed_models = os.path.join(
+    CACHE_PATH, f"experiments/fmzip/compressed_models/{folder_name}/pythia-2.8b-deduped"
+)
 
 data_dir = os.path.join(CACHE_PATH, "datasets/qi/test")
 
 tasks = os.listdir(compressed_models)
-output_dir = os.path.join(CACHE_PATH, f"experiments/fmzip/generation_results_{folder_name}")
+output_dir = os.path.join(
+    CACHE_PATH, f"experiments/fmzip/generation_results_{folder_name}"
+)
 jobs = []
 for task in tasks:
     steps = os.listdir(os.path.join(compressed_models, task))
     for step in steps:
         output_file = os.path.join(output_dir, task)
         os.makedirs(output_file, exist_ok=True)
-        test_datafile = os.path.join(data_dir, task+".test.jsonl")
+        test_datafile = os.path.join(data_dir, task + ".test.jsonl")
         if "config.json" in os.listdir(os.path.join(compressed_models, task, step)):
             output_file = f"{os.path.join(output_dir, task, step)}.jsonl"
             if not os.path.exists(output_file):

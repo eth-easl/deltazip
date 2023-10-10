@@ -4,20 +4,25 @@ from typing import Optional, Tuple
 from transformers.models.gpt_neox.modeling_gpt_neox import apply_rotary_pos_emb
 from ._base import *
 
-def gpt_neox_mlp_forward(
-    self, hidden_states
-):
+
+def gpt_neox_mlp_forward(self, hidden_states):
     main_hidden_states = self.dense_h_to_4h(hidden_states)
-    delta_hidden_states = [self.delta[i].dense_h_to_4h(hidden_states[i]) for i in range(len(self.delta))]
+    delta_hidden_states = [
+        self.delta[i].dense_h_to_4h(hidden_states[i]) for i in range(len(self.delta))
+    ]
     delta_hidden_states = torch.stack(delta_hidden_states, dim=0)
     main_hidden_states = main_hidden_states + delta_hidden_states
     main_hidden_states = self.act(main_hidden_states)
 
     hidden_states = self.dense_4h_to_h(main_hidden_states)
-    delta_hidden_states = [self.delta[i].dense_4h_to_h(main_hidden_states[i]) for i in range(len(self.delta))]
+    delta_hidden_states = [
+        self.delta[i].dense_4h_to_h(main_hidden_states[i])
+        for i in range(len(self.delta))
+    ]
     delta_hidden_states = torch.stack(delta_hidden_states, dim=0)
     hidden_states = hidden_states + delta_hidden_states
     return hidden_states
+
 
 def gpt_neox_attention_forward(
     self,
@@ -34,7 +39,9 @@ def gpt_neox_attention_forward(
     # Attention heads [batch, seq_len, hidden_size]
     #   --> [batch, seq_len, (np * 3 * head_size)]
     qkv = self.query_key_value(hidden_states)
-    delta_qkv = [self.delta[i].query_key_value(hidden_states[i]) for i in range(len(self.delta))]
+    delta_qkv = [
+        self.delta[i].query_key_value(hidden_states[i]) for i in range(len(self.delta))
+    ]
     delta_qkv = torch.stack(delta_qkv, dim=0)
     qkv = qkv + delta_qkv
 
@@ -69,17 +76,21 @@ def gpt_neox_attention_forward(
         past_value = layer_past[1]
         key = torch.cat((past_key, key), dim=-2)
         value = torch.cat((past_value, value), dim=-2)
-    
+
     present = (key, value) if use_cache else None
 
     # Compute attention
     attn_output, attn_weights = self._attn(query, key, value, attention_mask, head_mask)
-    
+
     # Reshape outputs
-    attn_output = self._merge_heads(attn_output, self.num_attention_heads, self.head_size)
+    attn_output = self._merge_heads(
+        attn_output, self.num_attention_heads, self.head_size
+    )
 
     main_attn_output = self.dense(attn_output)
-    delta_attn_output = [self.delta[i].dense(attn_output[i]) for i in range(len(self.delta))]
+    delta_attn_output = [
+        self.delta[i].dense(attn_output[i]) for i in range(len(self.delta))
+    ]
     delta_attn_output = torch.stack(delta_attn_output, dim=0)
 
     attn_output = main_attn_output + delta_attn_output
@@ -87,6 +98,7 @@ def gpt_neox_attention_forward(
     if output_attentions:
         outputs += (attn_weights,)
     return outputs
+
 
 class GPTNeoXFMZipForCausalLM(BaseFMZipModelForCausalLM):
     layer_type = "GPTNeoXLayer"
@@ -96,12 +108,18 @@ class GPTNeoXFMZipForCausalLM(BaseFMZipModelForCausalLM):
         ["attention.query_key_value"],
         ["attention.dense"],
         ["mlp.dense_h_to_4h"],
-        ["mlp.dense_4h_to_h"]
+        ["mlp.dense_4h_to_h"],
     ]
     lm_head_name = "embed_out"
 
+
 def parallelize_neox():
-    transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = gpt_neox_attention_forward
-    transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXMLP.forward = gpt_neox_mlp_forward
+    transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = (
+        gpt_neox_attention_forward
+    )
+    transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXMLP.forward = (
+        gpt_neox_mlp_forward
+    )
+
 
 __all__ = ["GPTNeoXFMZipForCausalLM"]

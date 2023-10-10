@@ -7,6 +7,7 @@ from loguru import logger
 
 try:
     import quant_cuda
+
     _quant_cuda_available = True
 except ImportError:
     _quant_cuda_available = False
@@ -35,30 +36,35 @@ class QuantLinear(nn.Module):
         self.infeatures = infeatures
         self.outfeatures = outfeatures
         self.bits = bits
-        self.maxq = 2 ** self.bits - 1
+        self.maxq = 2**self.bits - 1
 
         self.register_buffer(
-            'qweight',
-            torch.zeros((infeatures // 32 * self.bits, outfeatures), dtype=torch.int32)
+            "qweight",
+            torch.zeros((infeatures // 32 * self.bits, outfeatures), dtype=torch.int32),
         )
         self.register_buffer(
-            'qzeros',
-            torch.zeros((1, outfeatures // 32 * self.bits), dtype=torch.int32))
-        self.register_buffer(
-            'scales',
-            torch.zeros((1, outfeatures), dtype=torch.float16)
+            "qzeros", torch.zeros((1, outfeatures // 32 * self.bits), dtype=torch.int32)
         )
         self.register_buffer(
-            'g_idx',
-            torch.tensor([i // infeatures for i in range(infeatures)], dtype=torch.int32)
+            "scales", torch.zeros((1, outfeatures), dtype=torch.float16)
+        )
+        self.register_buffer(
+            "g_idx",
+            torch.tensor(
+                [i // infeatures for i in range(infeatures)], dtype=torch.int32
+            ),
         )
         if bias:
-            self.register_buffer('bias', torch.zeros((outfeatures), dtype=torch.float16))
+            self.register_buffer(
+                "bias", torch.zeros((outfeatures), dtype=torch.float16)
+            )
         else:
             self.bias = None
         # is performed by unpacking the weights and using torch.matmul
         if self.bits in [2, 4, 8]:
-            self.wf = torch.tensor(list(range(0, 32, self.bits)), dtype=torch.int32).unsqueeze(0)
+            self.wf = torch.tensor(
+                list(range(0, 32, self.bits)), dtype=torch.int32
+            ).unsqueeze(0)
         elif self.bits == 3:
             self.wf = torch.tensor(
                 [
@@ -66,7 +72,7 @@ class QuantLinear(nn.Module):
                     [0, 1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31],
                     [0, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 0],
                 ],
-                dtype=torch.int32
+                dtype=torch.int32,
             ).reshape(1, 3, 12)
 
         self.kernel_switch_threshold = kernel_switch_threshold
@@ -94,8 +100,8 @@ class QuantLinear(nn.Module):
         for idx in range(self.infeatures):
             intweight.append(
                 torch.round(
-                    (
-                        W[:, idx] + scale_zeros[self.g_idx[idx]]) / self.scales[self.g_idx[idx]]
+                    (W[:, idx] + scale_zeros[self.g_idx[idx]])
+                    / self.scales[self.g_idx[idx]]
                 ).to(torch.int)[:, None]
             )
         intweight = torch.cat(intweight, dim=1)
@@ -140,7 +146,9 @@ class QuantLinear(nn.Module):
 
         zeros -= 1
         zeros = zeros.numpy().astype(np.uint32)
-        qzeros = np.zeros((zeros.shape[0], zeros.shape[1] // 32 * self.bits), dtype=np.uint32)
+        qzeros = np.zeros(
+            (zeros.shape[0], zeros.shape[1] // 32 * self.bits), dtype=np.uint32
+        )
         i = 0
         col = 0
         while col < qzeros.shape[1]:
@@ -180,27 +188,33 @@ class QuantLinear(nn.Module):
         if self.bits in [2, 4, 8]:
             zeros = torch.bitwise_right_shift(
                 torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
-                self.wf.unsqueeze(0)
+                self.wf.unsqueeze(0),
             ).to(torch.int16 if self.bits == 8 else torch.int8)
-            torch.bitwise_and(zeros, (2 ** self.bits) - 1, out=zeros)
+            torch.bitwise_and(zeros, (2**self.bits) - 1, out=zeros)
 
             zeros = zeros + 1
             zeros = zeros.reshape(self.scales.shape)
 
             weight = torch.bitwise_right_shift(
                 torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
-                self.wf.unsqueeze(-1)
+                self.wf.unsqueeze(-1),
             ).to(torch.int16 if self.bits == 8 else torch.int8)
-            torch.bitwise_and(weight, (2 ** self.bits) - 1, out=weight)
+            torch.bitwise_and(weight, (2**self.bits) - 1, out=weight)
         elif self.bits == 3:
             zeros = self.qzeros.reshape(
                 self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1
             ).expand(-1, -1, -1, 12)
-            zeros = (zeros >> self.wf.unsqueeze(0))
-            zeros[:, :, 0, 10] = (zeros[:, :, 0, 10] & 0x3) | ((zeros[:, :, 1, 0] << 2) & 0x4)
-            zeros[:, :, 1, 11] = (zeros[:, :, 1, 11] & 0x1) | ((zeros[:, :, 2, 0] << 1) & 0x6)
+            zeros = zeros >> self.wf.unsqueeze(0)
+            zeros[:, :, 0, 10] = (zeros[:, :, 0, 10] & 0x3) | (
+                (zeros[:, :, 1, 0] << 2) & 0x4
+            )
+            zeros[:, :, 1, 11] = (zeros[:, :, 1, 11] & 0x1) | (
+                (zeros[:, :, 2, 0] << 1) & 0x6
+            )
             zeros = zeros & 0x7
-            zeros = torch.cat([zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]], dim=2)
+            zeros = torch.cat(
+                [zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]], dim=2
+            )
 
             zeros = zeros + 1
             zeros = zeros.reshape(self.scales.shape)
@@ -212,31 +226,39 @@ class QuantLinear(nn.Module):
             weight[:, 0, 10] = (weight[:, 0, 10] & 0x3) | ((weight[:, 1, 0] << 2) & 0x4)
             weight[:, 1, 11] = (weight[:, 1, 11] & 0x1) | ((weight[:, 2, 0] << 1) & 0x6)
             weight = weight & 0x7
-            weight = torch.cat([weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1)
+            weight = torch.cat(
+                [weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1
+            )
         else:
             raise NotImplementedError("Only 2,3,4,8 bits are supported.")
 
         weight = weight.reshape(weight.shape[0] * weight.shape[1], weight.shape[2])
-        
+
         num_itr = 1
         if num_itr == 1:
-            weights = (self.scales[self.g_idx.long()] * (weight - zeros[self.g_idx.long()]))
+            weights = self.scales[self.g_idx.long()] * (
+                weight - zeros[self.g_idx.long()]
+            )
         else:
-            num_dim = self.g_idx.shape[0]//num_itr
+            num_dim = self.g_idx.shape[0] // num_itr
             weights = []
             for i in range(num_itr):
-                scale_i = self.scales[:,i*num_dim:(i+1)*num_dim]
-                weight_i = weight[:,i*num_dim:(i+1)*num_dim]
-                zeros_i = zeros[:,i*num_dim:(i+1)*num_dim]
-                g_idx_i = self.g_idx[i*num_dim:(i+1)*num_dim]
-                weights.append(scale_i[g_idx_i.long()] * (weight_i - zeros_i[g_idx_i.long()]))
-            weights = torch.cat(weights,dim=1)
-        
-        linear = torch.nn.Linear(self.infeatures, self.outfeatures, bias=self.bias is not None)
-        
+                scale_i = self.scales[:, i * num_dim : (i + 1) * num_dim]
+                weight_i = weight[:, i * num_dim : (i + 1) * num_dim]
+                zeros_i = zeros[:, i * num_dim : (i + 1) * num_dim]
+                g_idx_i = self.g_idx[i * num_dim : (i + 1) * num_dim]
+                weights.append(
+                    scale_i[g_idx_i.long()] * (weight_i - zeros_i[g_idx_i.long()])
+                )
+            weights = torch.cat(weights, dim=1)
+
+        linear = torch.nn.Linear(
+            self.infeatures, self.outfeatures, bias=self.bias is not None
+        )
+
         linear.weight = nn.Parameter(weights.t().float())
         # print sparsity of the weight
-        
+
         if self.bias is not None:
             linear.bias = nn.Parameter(self.bias)
         return linear
@@ -251,27 +273,33 @@ class QuantLinear(nn.Module):
         if self.bits in [2, 4, 8]:
             zeros = torch.bitwise_right_shift(
                 torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
-                self.wf.unsqueeze(0)
+                self.wf.unsqueeze(0),
             ).to(torch.int16 if self.bits == 8 else torch.int8)
-            torch.bitwise_and(zeros, (2 ** self.bits) - 1, out=zeros)
+            torch.bitwise_and(zeros, (2**self.bits) - 1, out=zeros)
 
             zeros = zeros + 1
             zeros = zeros.reshape(self.scales.shape)
 
             weight = torch.bitwise_right_shift(
                 torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
-                self.wf.unsqueeze(-1)
+                self.wf.unsqueeze(-1),
             ).to(torch.int16 if self.bits == 8 else torch.int8)
-            torch.bitwise_and(weight, (2 ** self.bits) - 1, out=weight)
+            torch.bitwise_and(weight, (2**self.bits) - 1, out=weight)
         elif self.bits == 3:
             zeros = self.qzeros.reshape(
                 self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1
             ).expand(-1, -1, -1, 12)
-            zeros = (zeros >> self.wf.unsqueeze(0))
-            zeros[:, :, 0, 10] = (zeros[:, :, 0, 10] & 0x3) | ((zeros[:, :, 1, 0] << 2) & 0x4)
-            zeros[:, :, 1, 11] = (zeros[:, :, 1, 11] & 0x1) | ((zeros[:, :, 2, 0] << 1) & 0x6)
+            zeros = zeros >> self.wf.unsqueeze(0)
+            zeros[:, :, 0, 10] = (zeros[:, :, 0, 10] & 0x3) | (
+                (zeros[:, :, 1, 0] << 2) & 0x4
+            )
+            zeros[:, :, 1, 11] = (zeros[:, :, 1, 11] & 0x1) | (
+                (zeros[:, :, 2, 0] << 1) & 0x6
+            )
             zeros = zeros & 0x7
-            zeros = torch.cat([zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]], dim=2)
+            zeros = torch.cat(
+                [zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]], dim=2
+            )
 
             zeros = zeros + 1
             zeros = zeros.reshape(self.scales.shape)
@@ -283,24 +311,30 @@ class QuantLinear(nn.Module):
             weight[:, 0, 10] = (weight[:, 0, 10] & 0x3) | ((weight[:, 1, 0] << 2) & 0x4)
             weight[:, 1, 11] = (weight[:, 1, 11] & 0x1) | ((weight[:, 2, 0] << 1) & 0x6)
             weight = weight & 0x7
-            weight = torch.cat([weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1)
+            weight = torch.cat(
+                [weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1
+            )
         else:
             raise NotImplementedError("Only 2,3,4,8 bits are supported.")
 
         weight = weight.reshape(weight.shape[0] * weight.shape[1], weight.shape[2])
-        num_itr = self.g_idx.shape[0]//x.shape[-1]
+        num_itr = self.g_idx.shape[0] // x.shape[-1]
         if num_itr == 1:
-            weights = (self.scales[self.g_idx.long()] * (weight - zeros[self.g_idx.long()]))
+            weights = self.scales[self.g_idx.long()] * (
+                weight - zeros[self.g_idx.long()]
+            )
         else:
-            num_dim = self.g_idx.shape[0]//num_itr
+            num_dim = self.g_idx.shape[0] // num_itr
             weights = []
             for i in range(num_itr):
-                scale_i = self.scales[:,i*num_dim:(i+1)*num_dim]
-                weight_i = weight[:,i*num_dim:(i+1)*num_dim]
-                zeros_i = zeros[:,i*num_dim:(i+1)*num_dim]
-                g_idx_i = self.g_idx[i*num_dim:(i+1)*num_dim]
-                weights.append(scale_i[g_idx_i.long()] * (weight_i - zeros_i[g_idx_i.long()]))
-            weights = torch.cat(weights,dim=1)
+                scale_i = self.scales[:, i * num_dim : (i + 1) * num_dim]
+                weight_i = weight[:, i * num_dim : (i + 1) * num_dim]
+                zeros_i = zeros[:, i * num_dim : (i + 1) * num_dim]
+                g_idx_i = self.g_idx[i * num_dim : (i + 1) * num_dim]
+                weights.append(
+                    scale_i[g_idx_i.long()] * (weight_i - zeros_i[g_idx_i.long()])
+                )
+            weights = torch.cat(weights, dim=1)
         out = torch.matmul(x.half(), weights)
         out = out.reshape(out_shape)
         out = out + self.bias if self.bias is not None else out

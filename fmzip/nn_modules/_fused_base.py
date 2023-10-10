@@ -8,7 +8,7 @@ logger = getLogger(__name__)
 try:
     from .triton_utils import TritonModuleMixin
 except ImportError:
-    logger.error('triton not installed.')
+    logger.error("triton not installed.")
     raise
 
 
@@ -22,7 +22,15 @@ class FusedBaseModule(nn.Module, TritonModuleMixin):
 class FusedBaseAttentionModule(FusedBaseModule):
     @classmethod
     @abstractmethod
-    def inject_to_model(cls, model, use_triton=False, group_size=-1, use_cuda_fp16=True, desc_act=False, **kwargs):
+    def inject_to_model(
+        cls,
+        model,
+        use_triton=False,
+        group_size=-1,
+        use_cuda_fp16=True,
+        desc_act=False,
+        **kwargs
+    ):
         raise NotImplementedError()
 
     @classmethod

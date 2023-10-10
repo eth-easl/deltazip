@@ -8,10 +8,10 @@ TENSOR_SIZE_X = 32768
 TENSOR_SIZE_Y = 16384
 
 # make a random tensor
-x = torch.rand(TENSOR_SIZE_X, TENSOR_SIZE_Y, device='cuda', dtype=torch.float16)
+x = torch.rand(TENSOR_SIZE_X, TENSOR_SIZE_Y, device="cuda", dtype=torch.float16)
 x_cpu_copy = x.cpu()
 
-compressor = LosslessCompressor('gdeflate')
+compressor = LosslessCompressor("gdeflate")
 
 # compress
 start = timer()
@@ -34,5 +34,9 @@ end = timer()
 decompressed_tensor = decompressed_tensor.cpu()
 assert torch.allclose(x_cpu_copy, decompressed_tensor, atol=1e-7)
 
-print(f"Decompressing {TENSOR_SIZE_X}x{TENSOR_SIZE_Y} tensor takes {end - start} seconds")
-print(f"Decompress throughput: {TENSOR_SIZE_X * TENSOR_SIZE_Y * 2 / (end - start) / 1024 / 1024 / 1024} GB/s")
+print(
+    f"Decompressing {TENSOR_SIZE_X}x{TENSOR_SIZE_Y} tensor takes {end - start} seconds"
+)
+print(
+    f"Decompress throughput: {TENSOR_SIZE_X * TENSOR_SIZE_Y * 2 / (end - start) / 1024 / 1024 / 1024} GB/s"
+)

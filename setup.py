@@ -24,25 +24,29 @@ common_setup_kwargs = {
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: C++",
-    ]
+    ],
 }
 
-PYPI_RELEASE=0
-BUILD_CUDA_EXT = int(os.environ.get('BUILD_CUDA_EXT', '1')) == 1
+PYPI_RELEASE = 0
+BUILD_CUDA_EXT = int(os.environ.get("BUILD_CUDA_EXT", "1")) == 1
 
 if BUILD_CUDA_EXT:
     try:
         import torch
     except:
-        print("Building cuda extension requires PyTorch(>=1.13.0) been installed, please install PyTorch first!")
+        print(
+            "Building cuda extension requires PyTorch(>=1.13.0) been installed, please install PyTorch first!"
+        )
         sys.exit(-1)
 
     CUDA_VERSION = None
-    ROCM_VERSION = os.environ.get('ROCM_VERSION', None)
+    ROCM_VERSION = os.environ.get("ROCM_VERSION", None)
 
     if not ROCM_VERSION:
         default_cuda_version = torch.version.cuda
-        CUDA_VERSION = "".join(os.environ.get("CUDA_VERSION", default_cuda_version).split("."))
+        CUDA_VERSION = "".join(
+            os.environ.get("CUDA_VERSION", default_cuda_version).split(".")
+        )
 
     if not CUDA_VERSION:
         print(
@@ -53,57 +57,85 @@ if BUILD_CUDA_EXT:
 
     # For the PyPI release, the version is simply x.x.x to comply with PEP 440.
     if not PYPI_RELEASE:
-        common_setup_kwargs['version'] += f"+cu{CUDA_VERSION}"
+        common_setup_kwargs["version"] += f"+cu{CUDA_VERSION}"
 
 include_dirs = ["fmzip/core/csrc"]
-with open('requirements.txt') as f:
+with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
-extras_require = {
-    "triton": ["triton==2.0.0"],
-    "test": ["parameterized"]
-}
+extras_require = {"triton": ["triton==2.0.0"], "test": ["parameterized"]}
 
 
 if BUILD_CUDA_EXT:
     from torch.utils import cpp_extension
-       
-    p = int(subprocess.run("cat /proc/cpuinfo | grep cores | head -1", shell=True, check=True, text=True, stdout=subprocess.PIPE).stdout.split(" ")[2])
-    subprocess.call(["python", "./fmzip/utils/qigen/generate.py", "--module", "--search", "--p", str(p)])
-        
+
+    p = int(
+        subprocess.run(
+            "cat /proc/cpuinfo | grep cores | head -1",
+            shell=True,
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+        ).stdout.split(" ")[2]
+    )
+    subprocess.call(
+        [
+            "python",
+            "./fmzip/utils/qigen/generate.py",
+            "--module",
+            "--search",
+            "--p",
+            str(p),
+        ]
+    )
+
     from distutils.sysconfig import get_python_lib
-    conda_cuda_include_dir = os.path.join(get_python_lib(), "nvidia/cuda_runtime/include")
+
+    conda_cuda_include_dir = os.path.join(
+        get_python_lib(), "nvidia/cuda_runtime/include"
+    )
 
     print("conda_cuda_include_dir", conda_cuda_include_dir)
     if os.path.isdir(conda_cuda_include_dir):
         include_dirs.append(conda_cuda_include_dir)
         print(f"appending conda cuda include dir {conda_cuda_include_dir}")
-    
+
     extensions = [
         cpp_extension.CUDAExtension(
             "autogptq_cuda_64",
             [
                 "fmzip/core/csrc/gptq/cuda_64/autogptq_cuda_64.cpp",
-                "fmzip/core/csrc/gptq/cuda_64/autogptq_cuda_kernel_64.cu"
-            ]
+                "fmzip/core/csrc/gptq/cuda_64/autogptq_cuda_kernel_64.cu",
+            ],
         ),
         cpp_extension.CUDAExtension(
             "autogptq_cuda_256",
             [
                 "fmzip/core/csrc/gptq/cuda_256/autogptq_cuda_256.cpp",
-                "fmzip/core/csrc/gptq/cuda_256/autogptq_cuda_kernel_256.cu"
-            ]
-        )
+                "fmzip/core/csrc/gptq/cuda_256/autogptq_cuda_kernel_256.cu",
+            ],
+        ),
     ]
-    
-    if platform.system() != 'Windows':
+
+    if platform.system() != "Windows":
         extensions.append(
             cpp_extension.CppExtension(
                 "cQIGen",
-                [
-                    'fmzip/core/csrc/qigen/backend.cpp'
+                ["fmzip/core/csrc/qigen/backend.cpp"],
+                extra_compile_args=[
+                    "-O3",
+                    "-mavx",
+                    "-mavx2",
+                    "-mfma",
+                    "-march=native",
+                    "-ffast-math",
+                    "-ftree-vectorize",
+                    "-faligned-new",
+                    "-std=c++17",
+                    "-fopenmp",
+                    "-fno-signaling-nans",
+                    "-fno-trapping-math",
                 ],
-                extra_compile_args = ["-O3", "-mavx", "-mavx2", "-mfma", "-march=native", "-ffast-math", "-ftree-vectorize", "-faligned-new", "-std=c++17", "-fopenmp", "-fno-signaling-nans", "-fno-trapping-math"]
             )
         )
 
@@ -115,15 +147,15 @@ if BUILD_CUDA_EXT:
                 "fmzip/core/csrc/exllama/cuda_buffers.cu",
                 "fmzip/core/csrc/exllama/cuda_func/column_remap.cu",
                 "fmzip/core/csrc/exllama/cuda_func/q4_matmul.cu",
-                "fmzip/core/csrc/exllama/cuda_func/q4_matrix.cu"
+                "fmzip/core/csrc/exllama/cuda_func/q4_matrix.cu",
             ],
-            extra_link_args=[]
+            extra_link_args=[],
         )
     )
 
     additional_setup_kwargs = {
         "ext_modules": extensions,
-        "cmdclass": {'build_ext': cpp_extension.BuildExtension}
+        "cmdclass": {"build_ext": cpp_extension.BuildExtension},
     }
 common_setup_kwargs.update(additional_setup_kwargs)
 
@@ -133,5 +165,5 @@ setup(
     extras_require=extras_require,
     include_dirs=include_dirs,
     python_requires=">=3.8.0",
-    **common_setup_kwargs
+    **common_setup_kwargs,
 )

@@ -51,10 +51,10 @@ class AutoCompressionConfig(PushToHubMixin):
     dtype: str = field(default="fp16")
     final_bit: Dict[str, int] = field(default_factory=lambda: {})
     final_sparsity: Dict[str, float] = field(default_factory=lambda: {})
-    
+
     def __post_init__(self):
         for bit in self.bits:
-            if bit not in [2,3,4,8]:
+            if bit not in [2, 3, 4, 8]:
                 raise ValueError(f"bit must be one of [2,3,4,8]. Got {bit}")
         for sparsity in self.sparsity:
             if not (0 <= sparsity <= 1):
@@ -63,12 +63,16 @@ class AutoCompressionConfig(PushToHubMixin):
             raise ValueError("damp_percent must between 0 and 1.")
 
     def save_pretrained(self, save_dir: str, **kwargs):
-        with open(join(save_dir, "auto_compress_config.json"), "w", encoding="utf-8") as f:
+        with open(
+            join(save_dir, "auto_compress_config.json"), "w", encoding="utf-8"
+        ) as f:
             json.dump(self.to_dict(), f, indent=2)
 
     @classmethod
     def from_pretrained(cls, save_dir: str):
-        with open(join(save_dir, "auto_compress_config.json"), "r", encoding="utf-8") as f:
+        with open(
+            join(save_dir, "auto_compress_config.json"), "r", encoding="utf-8"
+        ) as f:
             return cls(**json.load(f))
 
     def to_dict(self):
@@ -84,6 +88,7 @@ class AutoCompressionConfig(PushToHubMixin):
             "true_sequential": self.true_sequential,
             "lossless": self.lossless,
         }
+
 
 @dataclass
 class BaseCompressionConfig(PushToHubMixin):
@@ -209,7 +214,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     "labels": labels,
                 }
             )
-        
+
         pad_token_id = self.config.pad_token_id
         if not pad_token_id:
             pad_token_id = self.config.eos_token_id
@@ -262,7 +267,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         layer_outputs = []
 
         examples = self._prepare_examples_for_compression(examples, batch_size)
-        
+
         class LayerHijacker(nn.Module):
             """
             hijack layer's forward pass to cache data
@@ -295,7 +300,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             one_kwargs[k] = v
                 layer_input_kwargs.append(one_kwargs)
                 raise ValueError
-        
+
         forward_pass_use_cache = self.model.config.use_cache
         self.model.config.use_cache = False
 
@@ -371,12 +376,16 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     search_space = []
                     for bit in self.compress_config.bits:
                         for sparsity in self.compress_config.sparsity:
-                            search_space.append({
-                                "bit": bit,
-                                "sparsity": sparsity,
-                                "loss": -1,
-                            })
-                    search_space = sorted(search_space, key=lambda x: x["bit"] * (1-x["sparsity"]))
+                            search_space.append(
+                                {
+                                    "bit": bit,
+                                    "sparsity": sparsity,
+                                    "loss": -1,
+                                }
+                            )
+                    search_space = sorted(
+                        search_space, key=lambda x: x["bit"] * (1 - x["sparsity"])
+                    )
                 # step 2: start grid search
                 for config in search_space:
                     early_stop = False
@@ -386,27 +395,33 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         sparsegpt[name] = SparseGPT(subset_copy)
                         sparsegpt[name].quantizer = Quantizer()
                         sparsegpt[name].quantizer.configure(
-                            config['bit'],
+                            config["bit"],
                             perchannel=True,
                             sym=self.compress_config.sym,
                             mse=False,
                         )
+
                     def add_batch(name):
                         def tmp(_, inp, out):
                             sparsegpt[name].add_batch(inp[0].data, out.data)
+
                         return tmp
 
                     handles = []
                     for name in subset:
                         # we still need to register forward hook to subset[name]
-                        handles.append(subset[name].register_forward_hook(add_batch(name)))
+                        handles.append(
+                            subset[name].register_forward_hook(add_batch(name))
+                        )
 
                     for j in range(num_batches):
                         layer_input = move_to_device(layer_inputs[j], cur_layer_device)
                         layer_attention_mask = move_to_device(
                             attention_masks[j], cur_layer_device
                         )
-                        additional_layer_inputs = {"attention_mask": layer_attention_mask}
+                        additional_layer_inputs = {
+                            "attention_mask": layer_attention_mask
+                        }
                         if (
                             layer_position_ids := None
                             if not position_ids
@@ -421,7 +436,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             else:
                                 additional_layer_inputs[k] = v
                         layer(layer_input, **additional_layer_inputs)
-                    
+
                     for h in handles:
                         h.remove()
                     # starting compression
@@ -430,7 +445,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             f"Search Compression {name} in layer {i+1}/{len(layers)} - sparsity: {config['sparsity']}, bits: {config['bit']}"
                         )
                         scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
-                            config['sparsity'],
+                            config["sparsity"],
                             prunen=self.compress_config.prunen,
                             prunem=self.compress_config.prunem,
                             percdamp=self.compress_config.damp_percent,
@@ -445,32 +460,43 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     if early_stop:
                         break
                 # step 3: now find the best config (the first one that meets the tolerance)
-                best_config = search_space[-1] # by default take the last one (with minimal compression ratio, even if it does not meet the tolerance)
+                best_config = search_space[
+                    -1
+                ]  # by default take the last one (with minimal compression ratio, even if it does not meet the tolerance)
                 for config in search_space:
                     if config["loss"] < self.compress_config.tolerance:
                         best_config = config
                         break
-                logger.info(f"[GRID SEARCH RESULT]: {search_space}, [BEST CONFIG]: {best_config}")
-                self.compress_config.final_bit[f'{self.layers_block_name}.{i}.{name}'] = best_config['bit']
-                self.compress_config.final_sparsity[f'{self.layers_block_name}.{i}.{name}'] = best_config['sparsity']
+                logger.info(
+                    f"[GRID SEARCH RESULT]: {search_space}, [BEST CONFIG]: {best_config}"
+                )
+                self.compress_config.final_bit[
+                    f"{self.layers_block_name}.{i}.{name}"
+                ] = best_config["bit"]
+                self.compress_config.final_sparsity[
+                    f"{self.layers_block_name}.{i}.{name}"
+                ] = best_config["sparsity"]
                 # step 4: now actually compress the component here
                 del sparsegpt[name]
                 torch.cuda.empty_cache()
                 for name in subset:
                     sparsegpt[name] = SparseGPT(subset[name])
                     sparsegpt[name].quantizer = Quantizer()
-                    print(self.compress_config.final_bit)
                     sparsegpt[name].quantizer.configure(
-                        self.compress_config.final_bit[f'{self.layers_block_name}.{i}.{name}'],
+                        self.compress_config.final_bit[
+                            f"{self.layers_block_name}.{i}.{name}"
+                        ],
                         perchannel=True,
                         sym=self.compress_config.sym,
                         mse=False,
                     )
-                
+
                 def add_batch(name):
                     def tmp(_, inp, out):
                         sparsegpt[name].add_batch(inp[0].data, out.data)
+
                     return tmp
+
                 handles = []
                 for name in subset:
                     handles.append(subset[name].register_forward_hook(add_batch(name)))
@@ -494,17 +520,19 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         else:
                             additional_layer_inputs[k] = v
                     layer(layer_input, **additional_layer_inputs)
-                
+
                 for h in handles:
                     h.remove()
-                
+
                 for name in subset:
                     logger.debug(
                         f"Real Compression {name} in layer {i+1}/{len(layers)} - sparsity: {best_config['sparsity']}, bits: {best_config['bit']}"
                     )
 
                     scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
-                        self.compress_config.final_sparsity[f'{self.layers_block_name}.{i}.{name}'],
+                        self.compress_config.final_sparsity[
+                            f"{self.layers_block_name}.{i}.{name}"
+                        ],
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
@@ -559,7 +587,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del layer_inputs
             layer_inputs, layer_outputs = layer_outputs, []
             torch.cuda.empty_cache()
-        
+
         self.use_triton = use_triton
         self.use_cuda_fp16 = use_cuda_fp16
         self.autotune_warmup_after_quantized = autotune_warmup_after_quantized
@@ -819,7 +847,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self._compressed = True
 
         torch.cuda.empty_cache()
-    
+
     @property
     def device(self):
         return self.model.device
@@ -843,11 +871,15 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     def save_compressed(self, save_dir: str):
         if not self.compressed:
             raise EnvironmentError("Model is not compressed.")
-        if isinstance(self.compress_config, AutoCompressionConfig) or self.compress_config.bits in [2,3,4,8]:
+        if isinstance(
+            self.compress_config, AutoCompressionConfig
+        ) or self.compress_config.bits in [2, 3, 4, 8]:
             pack_model(
                 model=self.model,
                 quantizers=self.compressors,
-                bits=self.compress_config.bits if isinstance(self.compress_config.bits, int) else self.compress_config.final_bit,
+                bits=self.compress_config.bits
+                if isinstance(self.compress_config.bits, int)
+                else self.compress_config.final_bit,
                 use_triton=self.use_triton,
                 use_cuda_fp16=self.use_cuda_fp16,
                 desc_act=self.compress_config.desc_act,
@@ -871,7 +903,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         safe_save(
             tensor_dict=state_dict,
             filename=join(save_dir, model_save_name),
-            metadata={"dtype": json.dumps(tensors_dtype), "shape": json.dumps(tensor_shapes)},
+            metadata={
+                "dtype": json.dumps(tensors_dtype),
+                "shape": json.dumps(tensor_shapes),
+            },
         )
         self.model.config.save_pretrained(save_dir)
         self.compress_config.save_pretrained(save_dir)
@@ -967,7 +1002,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         inject_fused_attention: bool = False,
         inject_fused_mlp: bool = False,
         use_cuda_fp16: bool = True,
-        compress_config: Optional[Union[BaseCompressionConfig, AutoCompressionConfig]] = None,
+        compress_config: Optional[
+            Union[BaseCompressionConfig, AutoCompressionConfig]
+        ] = None,
         model_basename: Optional[str] = None,
         use_safetensors: bool = True,
         trust_remote_code: bool = False,
@@ -984,12 +1021,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             raise TypeError(f"{config.model_type} isn't supported yet.")
         if compress_config is None:
             # check if "auto_compression_config.json" exists
-            print(join(save_dir, "auto_compress_config.json"))
             if isfile(join(save_dir, "auto_compress_config.json")):
                 compress_config = AutoCompressionConfig.from_pretrained(save_dir)
             else:
                 compress_config = BaseCompressionConfig.from_pretrained(save_dir)
-        print(compress_config)
+        logger.info(f"compress config: {compress_config}")
 
         if model_basename is None:
             model_basename = "fmzip-compressed"
@@ -1017,13 +1053,24 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if low_cpu_mem_usage:
             init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
 
-        if isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
+        if isinstance(
+            compress_config, AutoCompressionConfig
+        ) or compress_config.bits in [2, 3, 4, 8]:
             with ContextManagers(init_contexts):
-                model = AutoModelForCausalLM.from_config(config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16)
+                model = AutoModelForCausalLM.from_config(
+                    config,
+                    trust_remote_code=trust_remote_code,
+                    torch_dtype=torch.float16,
+                )
                 layers = find_layers(model)
                 ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
                 for name in list(layers.keys()):
-                    if any([name.startswith(ignore_layer) for ignore_layer in ignore_layers]):
+                    if any(
+                        [
+                            name.startswith(ignore_layer)
+                            for ignore_layer in ignore_layers
+                        ]
+                    ):
                         logger.info(
                             f"{name} not been quantized, will be ignored when make_quant."
                         )
@@ -1031,7 +1078,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 make_quant(
                     model,
                     layers,
-                    bits = compress_config.bits if isinstance(compress_config, BaseCompressionConfig) else compress_config.final_bit,
+                    bits=compress_config.bits
+                    if isinstance(compress_config, BaseCompressionConfig)
+                    else compress_config.final_bit,
                     use_triton=use_triton,
                     use_cuda_fp16=use_cuda_fp16,
                     desc_act=compress_config.desc_act,
@@ -1047,46 +1096,51 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     }
             if not device_map:
                 device_map = accelerate.infer_auto_device_map(
-                    model, max_memory=max_memory, no_split_module_classes=[cls.layer_type]
+                    model,
+                    max_memory=max_memory,
+                    no_split_module_classes=[cls.layer_type],
                 )
         else:
             model = AutoModelForCausalLM.from_config(
-                config,
-                trust_remote_code=trust_remote_code,
-                torch_dtype=torch.float16
+                config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16
             )
         # now load compressed data
-        losslesscompressor = LosslessCompressor(compress_config.lossless)
+        losslesscompressor = LosslessCompressor(
+            compress_config.lossless
+        )
 
         metadata = None
         tensors = {}
 
-        with safe_open(model_save_name, framework='numpy') as f:
+        with safe_open(model_save_name, framework="numpy") as f:
             metadata = f.metadata()
             keys = f.keys()
             for key in keys:
                 tensors[key] = f.get_tensor(key)
         tensor_dtypes = json.loads(metadata["dtype"])
         tensor_shapes = json.loads(metadata["shape"])
-        
-        for key in tensors.keys():
-            tensors[key] = cp.array(tensors[key], copy=False)
+        # (todo:xiaozhe) now we force decompression on 0
+        with cp.cuda.Device(0):
+            for key in tensors.keys():
+                tensors[key] = cp.array(tensors[key], copy=False)
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes
         )
         model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
-        tensors_output = {}
-        for key in tensors.keys():
-            tensors_output[key] = {"dtype": tensors[key].dtype, "shape": tensors[key].shape}
-        if isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]:
+        if isinstance(
+            compress_config, AutoCompressionConfig
+        ) or compress_config.bits in [2, 3, 4, 8]:
             del tensor_dtypes
             del tensor_shapes
             del tensors
             del layers
             torch.cuda.empty_cache()
-        model = model.to(device)
-        if unpack and (isinstance(compress_config, AutoCompressionConfig) or compress_config.bits in [2,3,4,8]):
+        if unpack and (
+            isinstance(compress_config, AutoCompressionConfig)
+            or compress_config.bits in [2, 3, 4, 8]
+        ):
             unpack_model(model)
+        model = model.to(device)
         # set seqlen
         model_config = model.config.to_dict()
         seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]

@@ -9,7 +9,7 @@ class GPT2FMZipForCausalLM(BaseFMZipModelForCausalLM):
         ["attn.c_attn"],
         ["attn.c_proj"],
         ["mlp.c_fc"],
-        ["mlp.c_proj"]
+        ["mlp.c_proj"],
     ]
 
 
