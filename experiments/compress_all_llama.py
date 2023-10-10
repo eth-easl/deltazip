@@ -3,7 +3,7 @@ import os
 cache_folder = os.environ.get("YAO_CACHE")
 
 in_folder = os.path.join(
-    cache_folder, "experiments", "fmzip", "finetuned_raw", "pythia-2.8b-deduped"
+    cache_folder, "experiments", "fmzip", "finetuned_raw", "llama-3b"
 )
 out_dir = os.path.join(
     cache_folder,
@@ -11,7 +11,7 @@ out_dir = os.path.join(
     "fmzip",
     "compressed_models",
     "2b0.75s",
-    "pythia-2.8b-deduped",
+    "open_llama_3b_v2",
 )
 ar_dataset = os.path.join(cache_folder, "datasets", "qi", "ar")
 tasks = os.listdir(in_folder)
@@ -20,7 +20,7 @@ jobs = []
 for task in tasks:
     steps = os.listdir(os.path.join(in_folder, task))
     for step in steps:
-        job = f"python cli/compress.py --target-model {os.path.join(in_folder, task, step)} --outdir {os.path.join(out_dir, task, step)} --dataset {os.path.join(ar_dataset, task+'.train.jsonl')} --n-samples 256 --bits 2 --group-size 128 --sparsity 0.75 --lossless gdeflate --delta subtract --base-model EleutherAI/pythia-2.8b-deduped"
+        job = f"python cli/compress.py --target-model {os.path.join(in_folder, task, step)} --outdir {os.path.join(out_dir, task, step)} --dataset {os.path.join(ar_dataset, task+'.train.jsonl')} --n-samples 256 --bits 2 --group-size 128 --sparsity 0.75 --lossless gdeflate --delta subtract --base-model openlm-research/open_llama_3b_v2"
         jobs.append(job)
 
 os.system("ts -S 4")

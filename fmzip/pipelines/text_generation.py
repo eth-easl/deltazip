@@ -3,9 +3,18 @@ from loguru import logger
 from typing import List, Tuple
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
+from fmzip.pipelines.utils import get_gpu_count, get_available_gpus
+from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
-from fmzip.modeling.llama import parallelize_llama
+
+inside_layer_modules = [
+    ["self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"],
+    ["self_attn.o_proj"],
+    ["mlp.up_proj", "mlp.gate_proj"],
+    ["mlp.down_proj"],
+]
+
 
 
 def _get_submodules(model, key):
@@ -17,7 +26,12 @@ def _get_submodules(model, key):
 
 class MixedPrecisionModel:
     def __init__(
-        self, base_model: str, max_num_deltas=2, use_bfloat16=False, batch_size=0
+        self,
+        base_model: str,
+        max_num_deltas=2,
+        use_bfloat16=False,
+        batch_size=0,
+        model_parallel_strategy="none",
     ) -> None:
         compress_config = BaseCompressionConfig(
             bits=4,
@@ -28,13 +42,18 @@ class MixedPrecisionModel:
             lossless="gdeflate",
             damp_percent=0.02,
         )
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        self.device_count = len(get_available_gpus())
+        logger.info(f"[fmzip] device count: {self.device_count}")
+        self.model_parallel_strategy = model_parallel_strategy
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            base_model, use_fast=True)
         # https://github.com/facebookresearch/llama/issues/380
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
         self.batch_size = batch_size
-        with torch.device("cuda"):
+        self.model_parallel_strategy = model_parallel_strategy
+        with torch.device("cuda", 1):
             self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
                 base_model, compress_config=compress_config, low_cpu_mem_usage=True
             )
@@ -42,7 +61,7 @@ class MixedPrecisionModel:
             self.base_model = self.base_model.bfloat16()
         else:
             self.base_model = self.base_model.half()
-        self.base_model = self.base_model.to(torch.device("cuda"))
+        self.base_model = self.base_model.to(torch.device("cuda", 1))
         logger.info("based model loaded")
         self.model_pool = {}
         self.key_list = []
@@ -60,23 +79,23 @@ class MixedPrecisionModel:
         tokenize_time = tokenize_end - tokenize_start
         outputs = []
         for batch_idx in range(0, len(queries), self.batch_size):
-            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
+            deltas = [x[1]
+                      for x in queries[batch_idx: batch_idx + self.batch_size]]
             batch_inputs = {
-                key: batch[key][batch_idx : batch_idx + self.batch_size]
+                key: batch[key][batch_idx: batch_idx + self.batch_size]
                 for key in batch
             }
-            # if delta is not in the model pool, load them
-            # but before that, check if the model pool is full
-
+            # eviction
             if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
                 logger.info("model pool is full, removing the previous model")
-                logger.warning("in future this will be replaced with LRU cache")
+                logger.warning(
+                    "in future this will be replaced with LRU cache")
                 self.model_pool = {}
             loading_start = timer()
-            [self.load_delta(delta) for delta in deltas if delta not in self.model_pool]
+            self.load_deltas(deltas)
             loading_end = timer()
-            loading_time = loading_end - loading_start
 
+            loading_time = loading_end - loading_start
             prepare_start = timer()
             for key in self.key_list:
                 _, target, _ = _get_submodules(self.base_model, key)
@@ -89,7 +108,7 @@ class MixedPrecisionModel:
                 setattr(
                     target,
                     "delta",
-                    [module.to(torch.device("cuda")) for module in dmodules],
+                    dmodules,
                 )
             prepare_end = timer()
             prepare_time = prepare_end - prepare_start
@@ -97,7 +116,6 @@ class MixedPrecisionModel:
             output = self.base_model.generate(**batch_inputs, **kwargs)
             inference_end = timer()
             inference_time = inference_end - inference_start
-            # remove the delta modules
             for key in self.key_list:
                 _, target, _ = _get_submodules(self.base_model, key)
                 delattr(target, "delta")
@@ -105,37 +123,50 @@ class MixedPrecisionModel:
                 output,
                 skip_special_tokens=True
             )
-            output = [{
+            output = [
+                {
                     "data": o,
                     "measure": {
                         "tokenize_time": tokenize_time,
                         "loading_time": loading_time,
                         "prepare_time": prepare_time,
                         "inference_time": inference_time,
-                    }
-                } for o in output]
+                    },
+                }
+                for o in output
+            ]
             outputs.extend(output)
         return outputs
 
-    def load_delta(self, delta_model: str):
+    def _load_delta(self, delta_model: str, device: str = "cuda"):
         logger.info("Loading target model")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
-            delta_model, device="cuda", unpack=False, low_cpu_mem_usage=True
+            delta_model, device=device, unpack=False, low_cpu_mem_usage=False
         )
         if len(self.key_list) == 0:
+            # flatten insdier modules
+            insider_modules = []
+            [insider_modules.extend(x)
+             for x in inside_layer_modules]
+            # we need to figure out what to merge at this stage
             for key, _ in self.model_pool[delta_model].model.named_modules():
                 self.key_list.append(key)
 
+    def load_deltas(self, deltas: List[str]):
+        target_devices = [i for i in range(self.device_count)]
+        target_devices.pop(1)
+        for i, delta in enumerate(deltas):
+            # load delta to cuda:0,2,3; reserve 1 for base model
+            target_device = target_devices[i % len(target_devices)]
+            if delta not in self.model_pool:
+                logger.info(f"loading delta to cuda:{target_device}")
+                self._load_delta(delta, device=f"cuda:{target_device}")
+
     def prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
-        batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
-        batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
-        batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda"))
+        batch = tokenizer([inp[0] for inp in inputs],
+                          return_tensors="pt", padding=True)
+        batch["input_ids"] = batch["input_ids"].to(torch.device("cuda:1"))
+        batch["attention_mask"] = batch["attention_mask"].to(
+            torch.device("cuda:1"))
         return batch
-
-    def expire_delta(self, delta_model: str, expire_level=0):
-        # if expire_level = 1
-        # move the model to cpu
-        # if expire_level = 2
-        # delete the model from memory
-        pass

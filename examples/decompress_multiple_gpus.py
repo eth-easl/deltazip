@@ -3,6 +3,7 @@ import json
 from transformers import AutoTokenizer
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
 
+
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
@@ -15,7 +16,7 @@ def main(args):
         sparsity=args.sparsity,
         prunen=0,
         prunem=0,
-        lossless='gdeflate'
+        lossless="gdeflate",
     )
     examples = [tokenizer(x) for x in examples]
     model = AutoFMZipModelForCausalLM.from_pretrained(
@@ -25,9 +26,8 @@ def main(args):
     directory_name = f"{args.target_model.replace('/','.')}-{args.bits}bit-{args.group_size}g-{args.sparsity}sparsity"
     base_directory = os.path.join(".cache/compressed_models/", directory_name)
     os.makedirs(base_directory, exist_ok=True)
-    model.save_compressed(
-        os.path.join(base_directory, directory_name)
-    )
+    model.save_compressed(os.path.join(base_directory, directory_name))
+
 
 if __name__ == "__main__":
     import argparse
