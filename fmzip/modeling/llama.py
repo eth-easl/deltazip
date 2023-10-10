@@ -14,10 +14,8 @@ BASE_DEVICE = torch.device("cuda", 1)
 
 
 def llama_mlp_forward(self, x):
-    hidden_states = self.up_proj(x.to(self.up_proj.weight.device)).to(BASE_DEVICE)
-    gate_hidden_states = self.gate_proj(x.to(self.gate_proj.weight.device)).to(
-        BASE_DEVICE
-    )
+    hidden_states = self.up_proj(x.to(BASE_DEVICE))
+    gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE))
     up_xs = []
     gate_xs = []
     for i in range(len(self.delta)):
@@ -28,6 +26,7 @@ def llama_mlp_forward(self, x):
         gate_xs.append(gate_x)
     hidden_states += torch.stack(up_xs, dim=0)
     gate_hidden_states += torch.stack(gate_xs, dim=0)
+    
     hidden_states = self.act_fn(gate_hidden_states) * hidden_states
     base_hidden_states = hidden_states.to(BASE_DEVICE)
     base_down_hidden_states = self.down_proj(base_hidden_states)

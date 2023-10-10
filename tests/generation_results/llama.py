@@ -12,13 +12,11 @@ test_data = [
     ),
     (
         "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/bits-2/llama-2-chinese-7b-chat",
-    ),
-    (
-        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         ".cache/compressed_models/bits-2/xwin-lm-7b-v0.1",
     ),
 ]
+
+test_data = test_data * 4
 
 if __name__ == "__main__":
     mpm = MixedPrecisionModel(
@@ -26,7 +24,7 @@ if __name__ == "__main__":
         use_bfloat16=False,
         batch_size=4,
         max_num_deltas=8,
-        model_parallel_strategy="none",
+        model_parallel_strategy="separation",
     )
     start = timer()
     results = mpm.generate(test_data, max_new_tokens=512)
