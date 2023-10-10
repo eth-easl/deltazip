@@ -3,7 +3,7 @@ from loguru import logger
 from typing import List, Tuple
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
-from fmzip.pipelines.utils import get_gpu_count
+from fmzip.pipelines.utils import get_gpu_count, get_available_gpus
 from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
@@ -41,7 +41,8 @@ class MixedPrecisionModel:
             lossless="gdeflate",
             damp_percent=0.02,
         )
-        self.device_count = get_gpu_count()
+        self.device_count = len(get_available_gpus())
+        logger.info(f"[fmzip] device count: {self.device_count}")
         self.model_parallel_strategy = model_parallel_strategy
         self.tokenizer = AutoTokenizer.from_pretrained(
             base_model, use_fast=True)
@@ -151,7 +152,8 @@ class MixedPrecisionModel:
                 self.key_list.append(key)
 
     def load_deltas(self, deltas: List[str]):
-        target_devices=[0,2,3]
+        target_devices = [i for i in range(self.device_count)]
+        target_devices.pop(1)
         for i, delta in enumerate(deltas):
             # load delta to cuda:0,2,3; reserve 1 for base model
             target_device = target_devices[i % len(target_devices)]

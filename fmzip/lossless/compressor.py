@@ -26,7 +26,6 @@ cp_dtype_maps = {
 
 class LosslessCompressor:
     def __init__(self, algorithm: str = "gdeflate", device_id: int = 0) -> None:
-        print(f"lossless compressor device id: {device_id}")
         if algorithm == "gdeflate":
             self.comp_manager = GdeflateManager(device_id=device_id)
         elif algorithm == "lz4":
