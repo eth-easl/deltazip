@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n-samples",
         type=int,
-        default=1024,
+        default=-1,
         help="How many data samples used for calibration, -1 means all.",
     )
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")

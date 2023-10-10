@@ -18,6 +18,7 @@ def get_gpu_count():
     initialize()
     return nvmlDeviceGetCount()
 
+
 def get_available_gpus():
     # respect CUDA_VISIBLE_DEVICES: https://github.com/gpuopenanalytics/pynvml/issues/28
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"

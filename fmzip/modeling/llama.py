@@ -11,10 +11,13 @@ from typing import Optional, Tuple
 from transformers.models.llama.modeling_llama import apply_rotary_pos_emb, repeat_kv
 
 BASE_DEVICE = torch.device("cuda", 1)
-    
+
+
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(self.up_proj.weight.device)).to(BASE_DEVICE)
-    gate_hidden_states = self.gate_proj(x.to(self.gate_proj.weight.device)).to(BASE_DEVICE)
+    gate_hidden_states = self.gate_proj(x.to(self.gate_proj.weight.device)).to(
+        BASE_DEVICE
+    )
     up_xs = []
     gate_xs = []
     for i in range(len(self.delta)):
@@ -30,8 +33,12 @@ def llama_mlp_forward(self, x):
     base_down_hidden_states = self.down_proj(base_hidden_states)
     delta_down_hss = []
     for i in range(len(self.delta)):
-        delta_hidden_states = hidden_states[i].to(self.delta[i].down_proj.qweight.device)
-        delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states).to(BASE_DEVICE)
+        delta_hidden_states = hidden_states[i].to(
+            self.delta[i].down_proj.qweight.device
+        )
+        delta_down_hidden_states = (
+            self.delta[i].down_proj(delta_hidden_states).to(BASE_DEVICE)
+        )
         delta_down_hss.append(delta_down_hidden_states)
 
     hidden_states = base_down_hidden_states + torch.stack(delta_down_hss, dim=0)
@@ -53,9 +60,15 @@ def llama_attention_forward(
     vs_deltas = []
     for i in range(len(self.delta)):
         delta_hidden_states = hidden_states[i].to(self.delta[i].q_proj.qweight.device)
-        qs_deltas.append(self.delta[i].q_proj(delta_hidden_states).to(self.q_proj.weight.device))
-        ks_deltas.append(self.delta[i].k_proj(delta_hidden_states).to(self.k_proj.weight.device))
-        vs_deltas.append(self.delta[i].v_proj(delta_hidden_states).to(self.v_proj.weight.device))
+        qs_deltas.append(
+            self.delta[i].q_proj(delta_hidden_states).to(self.q_proj.weight.device)
+        )
+        ks_deltas.append(
+            self.delta[i].k_proj(delta_hidden_states).to(self.k_proj.weight.device)
+        )
+        vs_deltas.append(
+            self.delta[i].v_proj(delta_hidden_states).to(self.v_proj.weight.device)
+        )
     qs_delta_hidden_states = torch.stack(qs_deltas, dim=0)
     ks_delta_hidden_states = torch.stack(ks_deltas, dim=0)
     vs_delta_hidden_states = torch.stack(vs_deltas, dim=0)
@@ -131,7 +144,11 @@ def llama_attention_forward(
     base_attn_output = self.o_proj(attn_output.to(self.o_proj.weight.device))
     delta_attn_outputs = []
     for i in range(len(self.delta)):
-        delta_attn_output = self.delta[i].o_proj(attn_output[i].to(self.delta[i].o_proj.qweight.device)).to(BASE_DEVICE)
+        delta_attn_output = (
+            self.delta[i]
+            .o_proj(attn_output[i].to(self.delta[i].o_proj.qweight.device))
+            .to(BASE_DEVICE)
+        )
         delta_attn_outputs.append(delta_attn_output)
     attn_output = base_attn_output + torch.stack(delta_attn_outputs, dim=0)
 

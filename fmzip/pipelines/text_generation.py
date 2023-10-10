@@ -16,7 +16,6 @@ inside_layer_modules = [
 ]
 
 
-
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
     target_name = key.split(".")[-1]
@@ -45,8 +44,7 @@ class MixedPrecisionModel:
         self.device_count = len(get_available_gpus())
         logger.info(f"[fmzip] device count: {self.device_count}")
         self.model_parallel_strategy = model_parallel_strategy
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            base_model, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         # https://github.com/facebookresearch/llama/issues/380
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
@@ -79,17 +77,15 @@ class MixedPrecisionModel:
         tokenize_time = tokenize_end - tokenize_start
         outputs = []
         for batch_idx in range(0, len(queries), self.batch_size):
-            deltas = [x[1]
-                      for x in queries[batch_idx: batch_idx + self.batch_size]]
+            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
             batch_inputs = {
-                key: batch[key][batch_idx: batch_idx + self.batch_size]
+                key: batch[key][batch_idx : batch_idx + self.batch_size]
                 for key in batch
             }
             # eviction
             if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
                 logger.info("model pool is full, removing the previous model")
-                logger.warning(
-                    "in future this will be replaced with LRU cache")
+                logger.warning("in future this will be replaced with LRU cache")
                 self.model_pool = {}
             loading_start = timer()
             self.load_deltas(deltas)
@@ -119,10 +115,7 @@ class MixedPrecisionModel:
             for key in self.key_list:
                 _, target, _ = _get_submodules(self.base_model, key)
                 delattr(target, "delta")
-            output = self.tokenizer.batch_decode(
-                output,
-                skip_special_tokens=True
-            )
+            output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
             output = [
                 {
                     "data": o,
@@ -146,8 +139,7 @@ class MixedPrecisionModel:
         if len(self.key_list) == 0:
             # flatten insdier modules
             insider_modules = []
-            [insider_modules.extend(x)
-             for x in inside_layer_modules]
+            [insider_modules.extend(x) for x in inside_layer_modules]
             # we need to figure out what to merge at this stage
             for key, _ in self.model_pool[delta_model].model.named_modules():
                 self.key_list.append(key)
@@ -164,9 +156,7 @@ class MixedPrecisionModel:
 
     def prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
-        batch = tokenizer([inp[0] for inp in inputs],
-                          return_tensors="pt", padding=True)
+        batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
         batch["input_ids"] = batch["input_ids"].to(torch.device("cuda:1"))
-        batch["attention_mask"] = batch["attention_mask"].to(
-            torch.device("cuda:1"))
+        batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda:1"))
         return batch

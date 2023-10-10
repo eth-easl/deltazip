@@ -44,6 +44,8 @@ class LosslessCompressor:
     def compress_tensor(self, tensor: torch.Tensor):
         tensor.requires_grad_(False)
         tensor_shape = tensor.shape
+        if not tensor.is_cuda:
+            tensor = tensor.cuda()
         to_compress_tensor = cp.from_dlpack(to_dlpack(tensor))
         # logger.debug(f"compressiong dtype {tensor.dtype}")
         if tensor.dtype == torch.int8:

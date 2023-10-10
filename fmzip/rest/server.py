@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fmzip.rest.inference import InferenceService
 from fmzip.rest.profile import profile_disk_io, get_gpu_name
+
 app = FastAPI()
 is_busy = False
 task_queue = Queue()
@@ -58,6 +59,7 @@ class InferenceTask(BaseModel):
     prompt: str
     model: str
     response: Optional[dict] = {}
+
 
 class RestartRequest(BaseModel):
     backend: str
