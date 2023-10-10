@@ -22,7 +22,7 @@ if __name__ == "__main__":
     mpm = MixedPrecisionModel(
         "meta-llama/Llama-2-7b-hf",
         use_bfloat16=False,
-        batch_size=4,
+        batch_size=12,
         max_num_deltas=8,
         model_parallel_strategy="separation",
     )

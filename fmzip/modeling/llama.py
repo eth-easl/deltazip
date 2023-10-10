@@ -14,29 +14,31 @@ BASE_DEVICE = torch.device("cuda", 1)
 
 
 def llama_mlp_forward(self, x):
-    hidden_states = self.up_proj(x.to(BASE_DEVICE))
-    gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE))
+    hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
+    gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE, non_blocking=True))
     up_xs = []
     gate_xs = []
     for i in range(len(self.delta)):
-        delta_x = x[i].to(self.delta[i].up_proj.qweight.device)
-        up_x = self.delta[i].up_proj(delta_x).to(BASE_DEVICE)
-        gate_x = self.delta[i].gate_proj(delta_x).to(BASE_DEVICE)
+        delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
+        up_x = self.delta[i].up_proj(delta_x).to(BASE_DEVICE, non_blocking=True)
+        gate_x = self.delta[i].gate_proj(delta_x).to(BASE_DEVICE, non_blocking=True)
         up_xs.append(up_x)
         gate_xs.append(gate_x)
     hidden_states += torch.stack(up_xs, dim=0)
     gate_hidden_states += torch.stack(gate_xs, dim=0)
-    
+
     hidden_states = self.act_fn(gate_hidden_states) * hidden_states
-    base_hidden_states = hidden_states.to(BASE_DEVICE)
+    base_hidden_states = hidden_states.to(BASE_DEVICE, non_blocking=True)
     base_down_hidden_states = self.down_proj(base_hidden_states)
     delta_down_hss = []
     for i in range(len(self.delta)):
         delta_hidden_states = hidden_states[i].to(
-            self.delta[i].down_proj.qweight.device
+            self.delta[i].down_proj.qweight.device, non_blocking=True
         )
         delta_down_hidden_states = (
-            self.delta[i].down_proj(delta_hidden_states).to(BASE_DEVICE)
+            self.delta[i]
+            .down_proj(delta_hidden_states)
+            .to(BASE_DEVICE, non_blocking=True)
         )
         delta_down_hss.append(delta_down_hidden_states)
 
@@ -58,22 +60,25 @@ def llama_attention_forward(
     ks_deltas = []
     vs_deltas = []
     for i in range(len(self.delta)):
-        delta_hidden_states = hidden_states[i].to(self.delta[i].q_proj.qweight.device)
+        delta_hidden_states = hidden_states[i].to(
+            self.delta[i].q_proj.qweight.device, non_blocking=True
+        )
         qs_deltas.append(
-            self.delta[i].q_proj(delta_hidden_states).to(self.q_proj.weight.device)
+            self.delta[i].q_proj(delta_hidden_states).to(BASE_DEVICE, non_blocking=True)
         )
         ks_deltas.append(
-            self.delta[i].k_proj(delta_hidden_states).to(self.k_proj.weight.device)
+            self.delta[i].k_proj(delta_hidden_states).to(BASE_DEVICE, non_blocking=True)
         )
         vs_deltas.append(
-            self.delta[i].v_proj(delta_hidden_states).to(self.v_proj.weight.device)
+            self.delta[i].v_proj(delta_hidden_states).to(BASE_DEVICE, non_blocking=True)
         )
     qs_delta_hidden_states = torch.stack(qs_deltas, dim=0)
     ks_delta_hidden_states = torch.stack(ks_deltas, dim=0)
     vs_delta_hidden_states = torch.stack(vs_deltas, dim=0)
-    base_query_states = self.q_proj(hidden_states.to(self.q_proj.weight.device))
-    base_key_states = self.k_proj(hidden_states.to(self.k_proj.weight.device))
-    base_value_states = self.v_proj(hidden_states.to(self.v_proj.weight.device))
+    hidden_states = hidden_states.to(BASE_DEVICE, non_blocking=True)
+    base_query_states = self.q_proj(hidden_states)
+    base_key_states = self.k_proj(hidden_states)
+    base_value_states = self.v_proj(hidden_states)
 
     query_states = base_query_states + qs_delta_hidden_states
     key_states = base_key_states + ks_delta_hidden_states
@@ -140,13 +145,17 @@ def llama_attention_forward(
     attn_output = attn_output.transpose(1, 2).contiguous()
     attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
 
-    base_attn_output = self.o_proj(attn_output.to(self.o_proj.weight.device))
+    base_attn_output = self.o_proj(attn_output.to(BASE_DEVICE, non_blocking=True))
     delta_attn_outputs = []
     for i in range(len(self.delta)):
         delta_attn_output = (
             self.delta[i]
-            .o_proj(attn_output[i].to(self.delta[i].o_proj.qweight.device))
-            .to(BASE_DEVICE)
+            .o_proj(
+                attn_output[i].to(
+                    self.delta[i].o_proj.qweight.device, non_blocking=True
+                )
+            )
+            .to(BASE_DEVICE, non_blocking=True)
         )
         delta_attn_outputs.append(delta_attn_output)
     attn_output = base_attn_output + torch.stack(delta_attn_outputs, dim=0)

@@ -149,7 +149,6 @@ class MixedPrecisionModel:
     def load_deltas(self, deltas: List[str]):
         if self.model_parallel_strategy == "separation":
             target_devices = [i for i in range(self.device_count)]
-            target_devices.pop(1)
             for i, delta in enumerate(deltas):
                 # load delta to cuda:0,2,3; reserve 1 for base model
                 target_device = target_devices[i % len(target_devices)]
