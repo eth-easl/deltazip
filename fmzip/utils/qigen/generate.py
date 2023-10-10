@@ -876,7 +876,7 @@ def gen_and_compile(
         )
 
     # write the code to a file called forward.h
-    with open(".build/qigen/forward.h", "w") as f:
+    with open("fmzip/core/csrc/qigen/forward.h", "w") as f:
         f.write(macros())
         f.write(code)
 
