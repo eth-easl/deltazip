@@ -6,10 +6,18 @@ test_data = [
         "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         ".cache/compressed_models/3b-parameters/openllama-chat",
     ),
-    # (
-    #     "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-    #     ".cache/compressed_models/3b-parameters/openllama-chat_2",
-    # ),
+    (
+        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        ".cache/compressed_models/3b-parameters/openllama-chat_2",
+    ),
+        (
+        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        ".cache/compressed_models/3b-parameters/openllama-chat_3",
+    ),
+        (
+        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        ".cache/compressed_models/3b-parameters/openllama-chat_4",
+    ),
 ]
 
 if __name__ == "__main__":

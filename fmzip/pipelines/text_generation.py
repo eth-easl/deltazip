@@ -7,6 +7,7 @@ from fmzip.pipelines.utils import get_gpu_count
 from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
+
 inside_layer_modules = [
     ["self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"],
     ["self_attn.o_proj"],
@@ -117,7 +118,9 @@ class MixedPrecisionModel:
                 _, target, _ = _get_submodules(self.base_model, key)
                 delattr(target, "delta")
             output = self.tokenizer.batch_decode(
-                output, skip_special_tokens=True)
+                output,
+                skip_special_tokens=True
+            )
             output = [
                 {
                     "data": o,
@@ -148,8 +151,10 @@ class MixedPrecisionModel:
                 self.key_list.append(key)
 
     def load_deltas(self, deltas: List[str]):
+        target_devices=[0,2,3]
         for i, delta in enumerate(deltas):
-            target_device = i % (self.device_count - 1) + 1
+            # load delta to cuda:0,2,3; reserve 1 for base model
+            target_device = target_devices[i % len(target_devices)]
             if delta not in self.model_pool:
                 logger.info(f"loading delta to cuda:{target_device}")
                 self._load_delta(delta, device=f"cuda:{target_device}")
@@ -158,7 +163,7 @@ class MixedPrecisionModel:
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
         batch = tokenizer([inp[0] for inp in inputs],
                           return_tensors="pt", padding=True)
-        batch["input_ids"] = batch["input_ids"].to(torch.device("cuda"))
+        batch["input_ids"] = batch["input_ids"].to(torch.device("cuda:1"))
         batch["attention_mask"] = batch["attention_mask"].to(
-            torch.device("cuda"))
+            torch.device("cuda:1"))
         return batch
