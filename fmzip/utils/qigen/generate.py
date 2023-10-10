@@ -799,7 +799,7 @@ def gen_model(n, m, t, bits, p, gs):
     code += pack_out(n, t, nb, tb)
     code += print_parameters(bits, n, m, t, nb, mb, tb, mu, nu, tu, unroll, p)
 
-    with open(".build/qigen/forward.h", "w") as f:
+    with open("fmzip/core/csrc/qigen/forward.h", "w") as f:
         f.write(macros())
         f.write(code)
 
