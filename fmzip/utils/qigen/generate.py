@@ -917,7 +917,7 @@ def gen_and_compile(
                 "-O3",
                 "-o",
                 ".build/qigen/mmm",
-                ".build/qigen/mmm.cpp",
+                "fmzip/core/csrc/qigen/mmm.cpp",
                 "-mavx",
                 "-mfma",
                 "-mavx2",
