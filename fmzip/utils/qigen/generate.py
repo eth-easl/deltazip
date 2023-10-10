@@ -112,7 +112,7 @@ def print_parameters_module(bits, mu, nu, tu, unroll, p, gs=-1):
     res = ""
     res += "void print_parameters(){\n"
     res += "std::ofstream outfile;\n"
-    res += 'outfile.open("./autogptq_extension/qigen/tmp.csv", std::ios_base::app);\n'
+    res += 'outfile.open(".build/qigen/tmp.csv", std::ios_base::app);\n'
     res += f'outfile << {bits} << "," << {nu} << "," << {mu} << "," << {tu} << "," << {unroll} << "," << {p}  << "," << {gs} << ",";\n'
     res += "}\n"
     return res
@@ -799,7 +799,7 @@ def gen_model(n, m, t, bits, p, gs):
     code += pack_out(n, t, nb, tb)
     code += print_parameters(bits, n, m, t, nb, mb, tb, mu, nu, tu, unroll, p)
 
-    with open("./autogptq_extension/qigen/forward.h", "w") as f:
+    with open(".build/qigen/forward.h", "w") as f:
         f.write(macros())
         f.write(code)
 
@@ -876,7 +876,7 @@ def gen_and_compile(
         )
 
     # write the code to a file called forward.h
-    with open("./autogptq_extension/qigen/forward.h", "w") as f:
+    with open(".build/qigen/forward.h", "w") as f:
         f.write(macros())
         f.write(code)
 
@@ -888,8 +888,8 @@ def gen_and_compile(
                 "g++",
                 "-O3",
                 "-o",
-                "./autogptq_extension/qigen/mmm_test",
-                "./autogptq_extension/qigen/mmm_test.cpp",
+                ".build/qigen/mmm_test",
+                ".build/qigen/mmm_test.cpp",
                 "-mavx",
                 "-mfma",
                 "-mavx2",
@@ -902,7 +902,7 @@ def gen_and_compile(
         )
         subprocess.call(
             [
-                "./autogptq_extension/qigen/mmm_test",
+                ".build/qigen/mmm_test",
                 f"{n}",
                 f"{m}",
                 f"{t}",
@@ -916,8 +916,8 @@ def gen_and_compile(
                 "g++",
                 "-O3",
                 "-o",
-                "./autogptq_extension/qigen/mmm",
-                "./autogptq_extension/qigen/mmm.cpp",
+                ".build/qigen/mmm",
+                ".build/qigen/mmm.cpp",
                 "-mavx",
                 "-mfma",
                 "-mavx2",
@@ -930,7 +930,7 @@ def gen_and_compile(
         )
         subprocess.call(
             [
-                "./autogptq_extension/qigen/mmm",
+                ".build/qigen/mmm",
                 f"{n}",
                 f"{m}",
                 f"{t}",
@@ -938,7 +938,7 @@ def gen_and_compile(
                 f"{gs}",
             ]
         )
-        # subprocess.call(["./autogptq_extension/qigen/mmm", f"{n}", f"{m}", f"{t}", f"{bits}", f"{gs}", ">>", "./autogptq_extension/qigen/tmp.csv"])
+        # subprocess.call([".build/qigen/mmm", f"{n}", f"{m}", f"{t}", f"{bits}", f"{gs}", ">>", ".build/qigen/tmp.csv"])
     end = time.time() - start
     return end
 
@@ -1431,7 +1431,7 @@ def gen_module(r, p, bits_list=[2, 3, 4]):
         code += pack_qw_module(bits)
         code += unpack_zeros(bits)
 
-    with open("./autogptq_extension/qigen/backend.cpp", "w") as f:
+    with open(".build/qigen/backend.cpp", "w") as f:
         f.write(template.includes())
         f.write(template.quant_scalar())
         f.write(compute_reduction(p))
@@ -1573,9 +1573,9 @@ def gen_module_search(r, p, bits_list=[2, 3, 4]):
     # print measurements to a tmp file and read back best micro parameters
     code = ""
 
-    subprocess.call(["rm", "./autogptq_extension/qigen/tmp.csv"])
-    subprocess.call(["touch", "./autogptq_extension/qigen/tmp.csv"])
-    with open("./autogptq_extension/qigen/tmp.csv", "w") as f:
+    subprocess.call(["rm", ".build/qigen/tmp.csv"])
+    subprocess.call(["touch", ".build/qigen/tmp.csv"])
+    with open(".build/qigen/tmp.csv", "w") as f:
         f.write("bits,nu,mu,tu,unroll,p,gs,time\n")
 
     n, m, t, nb, mb, tb = 1, 4096, 4096, 1, 1024, 32
@@ -1656,7 +1656,7 @@ def gen_module_search(r, p, bits_list=[2, 3, 4]):
                                     module=True,
                                 )
 
-    df = pd.read_csv("./autogptq_extension/qigen/tmp.csv")
+    df = pd.read_csv(".build/qigen/tmp.csv")
 
     for bits in bits_list:
         bits_df = df[df["bits"] == bits]
@@ -1683,7 +1683,7 @@ def gen_module_search(r, p, bits_list=[2, 3, 4]):
         code += pack_qw_module(bits)
         code += unpack_zeros(bits)
 
-    with open("./autogptq_extension/qigen/backend.cpp", "w") as f:
+    with open(".build/qigen/backend.cpp", "w") as f:
         f.write(template.includes())
         f.write(template.quant_scalar())
         f.write(compute_reduction(p))
@@ -1691,7 +1691,7 @@ def gen_module_search(r, p, bits_list=[2, 3, 4]):
         f.write(code)
         f.write(template.module(bits_list))
 
-    # subprocess.call(["rm", "./autogptq_extension/qigen/tmp.csv"])
+    # subprocess.call(["rm", ".build/qigen/tmp.csv"])
 
 
 if __name__ == "__main__":
