@@ -4,28 +4,32 @@ from timeit import default_timer as timer
 test_data = [
     (
         "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/3b-parameters/openllama-chat",
+        ".cache/compressed_models/bits-2/vicuna-7b-v1.5",
     ),
     (
         "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/3b-parameters/openllama-chat_2",
+        ".cache/compressed_models/bits-2/synthia-7b-v1.2",
     ),
     (
         "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/3b-parameters/openllama-chat_3",
+        ".cache/compressed_models/bits-2/llama-2-chinese-7b-chat",
     ),
     (
         "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/3b-parameters/openllama-chat_4",
+        ".cache/compressed_models/bits-2/xwin-lm-7b-v0.1",
     ),
 ]
 
 if __name__ == "__main__":
     mpm = MixedPrecisionModel(
-        "openlm-research/open_llama_3b_v2", use_bfloat16=False, batch_size=2
+        "meta-llama/Llama-2-7b-hf",
+        use_bfloat16=False,
+        batch_size=4,
+        max_num_deltas=8,
+        model_parallel_strategy="none",
     )
     start = timer()
-    results = mpm.generate(test_data, max_new_tokens=128)
+    results = mpm.generate(test_data, max_new_tokens=512)
     end = timer()
     print(results)
     print("time elapsed: ", end - start)

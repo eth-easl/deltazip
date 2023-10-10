@@ -8,6 +8,8 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
 
+BASE_DEVICE = torch.device("cuda", 1)
+
 inside_layer_modules = [
     ["self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"],
     ["self_attn.o_proj"],
@@ -59,7 +61,7 @@ class MixedPrecisionModel:
             self.base_model = self.base_model.bfloat16()
         else:
             self.base_model = self.base_model.half()
-        self.base_model = self.base_model.to(torch.device("cuda", 1))
+        self.base_model = self.base_model.to(BASE_DEVICE)
         logger.info("based model loaded")
         self.model_pool = {}
         self.key_list = []
@@ -132,7 +134,7 @@ class MixedPrecisionModel:
         return outputs
 
     def _load_delta(self, delta_model: str, device: str = "cuda"):
-        logger.info("Loading target model")
+        logger.info(f"Loading target model {delta_model} to {device}")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model, device=device, unpack=False, low_cpu_mem_usage=False
         )
@@ -145,14 +147,26 @@ class MixedPrecisionModel:
                 self.key_list.append(key)
 
     def load_deltas(self, deltas: List[str]):
-        target_devices = [i for i in range(self.device_count)]
-        target_devices.pop(1)
-        for i, delta in enumerate(deltas):
-            # load delta to cuda:0,2,3; reserve 1 for base model
-            target_device = target_devices[i % len(target_devices)]
-            if delta not in self.model_pool:
-                logger.info(f"loading delta to cuda:{target_device}")
-                self._load_delta(delta, device=f"cuda:{target_device}")
+        if self.model_parallel_strategy == "separation":
+            target_devices = [i for i in range(self.device_count)]
+            target_devices.pop(1)
+            for i, delta in enumerate(deltas):
+                # load delta to cuda:0,2,3; reserve 1 for base model
+                target_device = target_devices[i % len(target_devices)]
+                if delta not in self.model_pool:
+                    logger.info(f"loading delta to cuda:{target_device}")
+                    self._load_delta(delta, device=f"cuda:{target_device}")
+
+        elif self.model_parallel_strategy == "none":
+            [
+                self._load_delta(delta, device="cuda:1")
+                for delta in deltas
+                if delta not in self.model_pool
+            ]
+        else:
+            raise ValueError(
+                f"Unsupported model parallel strategy: {self.model_parallel_strategy}"
+            )
 
     def prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
