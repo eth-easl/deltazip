@@ -34,6 +34,7 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 
+
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
     tolerance: float = field(default=1e-9)
@@ -893,7 +894,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
         if self.compress_config.lossless != "none":
             lossless_compressor = LosslessCompressor(self.compress_config.lossless)
-
             (
                 state_dict,
                 tensor_shapes,
@@ -1105,9 +1105,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16
             )
         # now load compressed data
-        losslesscompressor = LosslessCompressor(
-            compress_config.lossless
-        )
+        losslesscompressor = LosslessCompressor(compress_config.lossless)
 
         metadata = None
         tensors = {}
