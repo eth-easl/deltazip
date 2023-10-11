@@ -59,7 +59,7 @@ class InferenceTask(BaseModel):
     prompt: str
     model: str
     response: Optional[dict] = {}
-
+    timestamp: float
 
 class RestartRequest(BaseModel):
     backend: str
