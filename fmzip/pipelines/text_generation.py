@@ -8,8 +8,9 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
 
-BASE_DEVICE = torch.device("cuda", 1)
+BASE_DEVICE = torch.device("cuda", 1) if get_gpu_count() > 1 else torch.device("cuda")
 
+# todo:xiaozhe this is only for llama model for now
 inside_layer_modules = [
     ["self_attn.k_proj", "self_attn.v_proj", "self_attn.q_proj"],
     ["self_attn.o_proj"],

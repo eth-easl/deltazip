@@ -68,9 +68,15 @@ def llama_attention_forward(
         qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
         ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
         vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
-    qs_delta_hidden_states = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0)
-    ks_delta_hidden_states = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in ks_deltas], dim=0)
-    vs_delta_hidden_states = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0)
+    qs_delta_hidden_states = torch.stack(
+        [x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0
+    )
+    ks_delta_hidden_states = torch.stack(
+        [x.to(BASE_DEVICE, non_blocking=True) for x in ks_deltas], dim=0
+    )
+    vs_delta_hidden_states = torch.stack(
+        [x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0
+    )
     hidden_states = hidden_states.to(BASE_DEVICE, non_blocking=True)
     base_query_states = self.q_proj(hidden_states)
     base_key_states = self.k_proj(hidden_states)
@@ -144,16 +150,13 @@ def llama_attention_forward(
     base_attn_output = self.o_proj(attn_output.to(BASE_DEVICE, non_blocking=True))
     delta_attn_outputs = []
     for i in range(len(self.delta)):
-        delta_attn_output = (
-            self.delta[i]
-            .o_proj(
-                attn_output[i].to(
-                    self.delta[i].o_proj.qweight.device, non_blocking=True
-                )
-            )
+        delta_attn_output = self.delta[i].o_proj(
+            attn_output[i].to(self.delta[i].o_proj.qweight.device, non_blocking=True)
         )
         delta_attn_outputs.append(delta_attn_output)
-    attn_output = base_attn_output + torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0)
+    attn_output = base_attn_output + torch.stack(
+        [x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0
+    )
 
     if not output_attentions:
         attn_weights = None

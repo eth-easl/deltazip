@@ -14,9 +14,13 @@ def initialize():
         logger.info("nvml is already initialized")
 
 
-def get_gpu_count():
+def _get_gpu_count():
     initialize()
     return nvmlDeviceGetCount()
+
+
+def get_gpu_count():
+    return len(get_available_gpus())
 
 
 def get_available_gpus():
@@ -24,7 +28,7 @@ def get_available_gpus():
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     gpus = os.environ.get("CUDA_VISIBLE_DEVICES", None)
     if gpus is None:
-        return list(range(get_gpu_count()))
+        return list(range(_get_gpu_count()))
     else:
         total_gpus = len([x for x in gpus.split(",")])
         return list(range(total_gpus))
