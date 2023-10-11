@@ -12,7 +12,6 @@ from fmzip.rest.inference import InferenceService
 from fmzip.rest.profile import profile_disk_io, get_gpu_name
 
 app = FastAPI()
-is_busy = False
 task_queue = Queue()
 
 batch_size = int(os.environ.get("FMZIP_BATCH_SIZE", 2))

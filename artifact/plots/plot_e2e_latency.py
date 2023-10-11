@@ -1,34 +1,75 @@
 import json
 import pandas as pd
 import plotly.express as px
+import argparse
 
-with open("artifact/benchmark_results.json", "r") as fp:
-    results = json.load(fp)
+def plot(args):
+    print(args)
 
-plot_data = []
-for item in results:
-    provider = item["provider"]
-    for result in item["results"]:
-        plot_data.append(
-            {
-                "provider": provider,
-                "time_elapsed": result["time_elapsed"],
-            }
-        )
+if __name__=="__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=str, default="artifact/results/latency.json")
+    args = parser.parse_args()
+    plot(args)
 
-df = pd.DataFrame(plot_data)
-df.sort_values(by=["time_elapsed"], inplace=True)
-# allocate id for each row, different providers get different ids
-df["id"] = df.groupby("provider").cumcount()
-print(df)
-# drop index
-df.reset_index(drop=True, inplace=True)
-# convert ids to string
-df["id"] = df["id"].astype(str)
-fig = px.histogram(
-    df, x="id", y="time_elapsed", color="provider", barmode="group", height=400
-)
-# set title
+    with open(args.input, "r") as fp:
+        results = json.load(fp)
 
-# save as file
-fig.write_image("artifact/results/latency.png")
+    plot_data = []
+    for item in results:
+        provider = item["backend"]
+        provider = f"{provider['name']}, {provider['args'].get('batch_size', 1)}, {provider['args'].get('model_parallel_strategy', 'none')}"
+        for res in item["results"]:
+            tokenize_time = res['response']['response']['measure']['tokenize_time']
+            loading_time = res['response']['response']['measure']['loading_time']
+            prepare_time = res['response']['response']['measure']['prepare_time']
+            inference_time = res['response']['response']['measure']['inference_time']
+            waiting_time = res['time_elapsed'] - (tokenize_time + loading_time + prepare_time + inference_time)
+
+            plot_data.append(
+                {
+                    "id": res['response']['id'],
+                    "provider": provider,
+                    "time_elapsed": waiting_time,
+                    "Breakdown": "Wait",
+                }
+            )
+            plot_data.append(
+                {
+                    "id": res['response']['id'],
+                    "provider": provider,
+                    "time_elapsed": tokenize_time,
+                    "Breakdown": "Tokenize",
+                }
+            )
+            plot_data.append(
+                {
+                    "id": res['response']['id'],
+                    "provider": provider,
+                    "time_elapsed": loading_time,
+                    "Breakdown": "Loading",
+                }
+            )
+            plot_data.append(
+                {
+                    "id": res['response']['id'],
+                    "provider": provider,
+                    "time_elapsed": res['response']['response']['measure']['prepare_time'],
+                    "Breakdown": "Prepare",
+                }
+            )
+            plot_data.append(
+                {
+                    "id": res['response']['id'],
+                    "provider": provider,
+                    "time_elapsed": res['response']['response']['measure']['inference_time'],
+                    "Breakdown": "Inference",
+                }
+            )
+
+    df = pd.DataFrame(plot_data)
+    print(df)
+
+    fig = px.bar(df, x="provider", y="time_elapsed", facet_col="id", color="Breakdown")
+    fig.update_layout(width=800, height=600, title_x=0.5, title_text="Breakdown of Latency (s)")
+    fig.write_image("artifact/results/latency.png", scale=2)
