@@ -61,7 +61,6 @@ class InferenceService:
     def _hf_generated(self, queries: List, **kwargs):
         outputs = []
         for query in queries:
-            print(f"generating {query[0]} for model {query[1]}")
             with torch.device("cuda"):
                 loading_start = timer()
                 model = transformers.AutoModelForCausalLM.from_pretrained(
@@ -117,10 +116,10 @@ class InferenceService:
     def generate(self, queries: List):
         queries = [(query.prompt, query.model) for query in queries]
         if self.provider == "fmzip-mpm":
-            return self.mpm.generate(queries, max_new_tokens=128)
+            return self.mpm.generate(queries, max_new_tokens=256)
         elif self.provider == "hf":
-            return self._hf_generated(queries, max_new_tokens=128)
+            return self._hf_generated(queries, max_new_tokens=256)
         elif self.provider == "fmzip":
-            return self._fmzip_generate(queries, max_new_tokens=128)
+            return self._fmzip_generate(queries, max_new_tokens=256)
         else:
             raise NotImplementedError

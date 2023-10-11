@@ -24,9 +24,10 @@ def inference_request(req):
     }
 
 def parallel_issue_requests(reqs):
+    results = []
     global inference_results
-    with Pool(len(reqs)) as p:
-        results = p.map(inference_request, reqs)
+    for req in reqs:
+        results.append(inference_request(req))
     inference_results.extend(results)
     return results
 
@@ -67,6 +68,8 @@ def issue_queries(queries, backend, mapping=None):
         # and issue them
         sub_queries = [x for x in reformatted_queries if x['timestamp'] <= time and x['timestamp'] > time - time_step]
         if len(sub_queries) > 0:
+            # order by id
+            sub_queries = sorted(sub_queries, key=lambda x: int(x['id']))
             logger.info(f"# of queries to be issued: {len(sub_queries)}")
             # start a new non-blocking thread to issue these queries
             thread = threading.Thread(target=parallel_issue_requests, args=(sub_queries,))
@@ -80,6 +83,7 @@ def issue_queries(queries, backend, mapping=None):
         "results": inference_results,
         "total_elapsed": end-start
     }
+
 def main(args):
     print(args)
     with open(args.workload, "r") as fp:
