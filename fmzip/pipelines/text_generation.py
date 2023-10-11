@@ -8,7 +8,9 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.modeling.gpt_neox import parallelize_neox
 
-BASE_DEVICE = torch.device("cuda", 1) if get_gpu_count() > 1 else torch.device("cuda")
+DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
+
+BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE) if get_gpu_count() > 1 else torch.device("cuda")
 
 # todo:xiaozhe this is only for llama model for now
 inside_layer_modules = [
@@ -54,7 +56,7 @@ class MixedPrecisionModel:
         self.tokenizer.padding_side = "left"
         self.batch_size = batch_size
         self.model_parallel_strategy = model_parallel_strategy
-        with torch.device("cuda", 1):
+        with torch.device("cuda", DEFAULT_CUDA_DEVICE):
             self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
                 base_model, compress_config=compress_config, low_cpu_mem_usage=True
             )
@@ -151,7 +153,6 @@ class MixedPrecisionModel:
         if self.model_parallel_strategy == "separation":
             target_devices = [i for i in range(self.device_count)]
             for i, delta in enumerate(deltas):
-                # load delta to cuda:0,2,3; reserve 1 for base model
                 target_device = target_devices[i % len(target_devices)]
                 if delta not in self.model_pool:
                     logger.info(f"loading delta to cuda:{target_device}")
@@ -159,7 +160,7 @@ class MixedPrecisionModel:
 
         elif self.model_parallel_strategy == "none":
             [
-                self._load_delta(delta, device="cuda:1")
+                self._load_delta(delta, device=f"cuda:{DEFAULT_CUDA_DEVICE}")
                 for delta in deltas
                 if delta not in self.model_pool
             ]

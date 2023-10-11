@@ -9,8 +9,10 @@ from ..nn_modules.fused_llama_attn import FusedLlamaAttentionForQuantizedModel
 from ..nn_modules.fused_llama_mlp import FusedLlamaMLPForQuantizedModel
 from typing import Optional, Tuple
 from transformers.models.llama.modeling_llama import apply_rotary_pos_emb, repeat_kv
+from fmzip.utils.devices import get_gpu_count
 
-BASE_DEVICE = torch.device("cuda", 1)
+DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
+BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE) if get_gpu_count() > 1 else torch.device("cuda")
 
 
 def llama_mlp_forward(self, x):
