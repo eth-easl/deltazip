@@ -24,7 +24,7 @@ if __name__ == "__main__":
         use_bfloat16=False,
         batch_size=12,
         max_num_deltas=8,
-        model_parallel_strategy="none",
+        model_parallel_strategy="separation",
     )
     start = timer()
     results = mpm.generate(test_data, max_new_tokens=512)
