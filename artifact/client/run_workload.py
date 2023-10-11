@@ -12,23 +12,20 @@ endpoint = "http://localhost:8000"
 inference_results = []
 
 def inference_request(req):
-    start = timer()
     res = requests.post(endpoint + "/inference", json=req)
-    end = timer()
-    print(res.json())
-    print(end - start)
-    logger.info("response received")
     return {
         "response": res.json(),
-        "time_elapsed": end - start,
     }
 
-def parallel_issue_requests(reqs):
+def async_issue_requests(req):
     results = []
+    start = timer()
     global inference_results
-    for req in reqs:
-        results.append(inference_request(req))
-    inference_results.extend(results)
+    res = inference_request(req)
+    end = timer()
+    res['time_elapsed'] = end - start
+    logger.info(f"query {req['id']} elapsed {res['time_elapsed']} seconds")
+    inference_results.append(res)
     return results
 
 def configure_server(backend: str, base_model: str, batch_size: int = 1, model_parallel_strategy="none"):
@@ -72,11 +69,11 @@ def issue_queries(queries, backend, mapping=None):
             sub_queries = sorted(sub_queries, key=lambda x: int(x['id']))
             logger.info(f"# of queries to be issued: {len(sub_queries)}")
             # start a new non-blocking thread to issue these queries
-            thread = threading.Thread(target=parallel_issue_requests, args=(sub_queries,))
-            threads.append(thread)
-            thread.start()
+            for query in sub_queries:
+                thread = threading.Thread(target=async_issue_requests, args=(query,))
+                threads.append(thread)
+                thread.start()
     [thread.join() for thread in threads]
-
     end = timer()
     logger.info("all queries issued")
     return {

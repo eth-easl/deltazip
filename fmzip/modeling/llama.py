@@ -79,7 +79,6 @@ def llama_attention_forward(
     vs_delta_hidden_states = torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0
     )
-    hidden_states = hidden_states.to(BASE_DEVICE, non_blocking=True)
     base_query_states = self.q_proj(hidden_states)
     base_key_states = self.k_proj(hidden_states)
     base_value_states = self.v_proj(hidden_states)

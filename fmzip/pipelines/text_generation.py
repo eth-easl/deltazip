@@ -32,7 +32,7 @@ class MixedPrecisionModel:
     def __init__(
         self,
         base_model: str,
-        max_num_deltas=2,
+        max_num_deltas=10,
         use_bfloat16=False,
         batch_size=0,
         model_parallel_strategy="none",
@@ -154,7 +154,8 @@ class MixedPrecisionModel:
             target_devices = [i for i in range(self.device_count)]
             for i, delta in enumerate(deltas):
                 target_device = target_devices[i % len(target_devices)]
-                if delta not in self.model_pool:
+                #if delta not in self.model_pool:
+                if True:
                     logger.info(f"loading delta to cuda:{target_device}")
                     self._load_delta(delta, device=f"cuda:{target_device}")
 
@@ -162,7 +163,8 @@ class MixedPrecisionModel:
             [
                 self._load_delta(delta, device=f"cuda:{DEFAULT_CUDA_DEVICE}")
                 for delta in deltas
-                if delta not in self.model_pool
+                if True
+                #if delta not in self.model_pool
             ]
         else:
             raise ValueError(
