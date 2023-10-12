@@ -91,10 +91,13 @@ class LosslessCompressor:
         compressed_state_dict: Dict[str, cp.array],
         tensor_shapes: Dict[str, tuple],
         tensor_dtypes: Dict[str, str] = None,
+        use_bfloat16: bool = False,
     ):
         tensors = {}
         for key in compressed_state_dict.keys():
-            tensors[key] = self.decompress_tensor(
+            decompressed = self.decompress_tensor(
                 compressed_state_dict[key], tensor_shapes[key], tensor_dtypes[key]
             )
+            if use_bfloat16:
+                tensors[key] = decompressed.bfloat16()
         return tensors

@@ -59,6 +59,7 @@ class MixedPrecisionModel:
             self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
                 base_model, compress_config=compress_config, low_cpu_mem_usage=True
             )
+        self.use_bfloat16 = use_bfloat16
         if use_bfloat16:
             self.base_model = self.base_model.bfloat16()
         else:

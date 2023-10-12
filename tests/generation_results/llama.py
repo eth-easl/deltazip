@@ -30,10 +30,10 @@ if __name__ == "__main__":
     logger.info("No-parallelism, batch_size=1")
     mpm = MixedPrecisionModel(
         "meta-llama/Llama-2-7b-hf",
-        use_bfloat16=False,
         batch_size=1,
         max_num_deltas=1,
         model_parallel_strategy="none",
+        use_bfloat16=False,
     )
     start = timer()
     results = mpm.generate(
@@ -52,9 +52,9 @@ if __name__ == "__main__":
     logger.info("Separate, batch_size=4")
     mpm = MixedPrecisionModel(
         "meta-llama/Llama-2-7b-hf",
-        use_bfloat16=False,
         batch_size=4,
         max_num_deltas=4,
+        use_bfloat16=False,
         model_parallel_strategy="separation",
     )
     start = timer()
@@ -65,6 +65,7 @@ if __name__ == "__main__":
         temperature=0.1,
         top_k=50,
         top_p=0.9,
+        repetition_penalty=1.2,
     )
     end = timer()
     logger.info(results)

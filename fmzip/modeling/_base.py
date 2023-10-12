@@ -997,20 +997,16 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         device_map: Optional[str] = None,
         max_memory: Optional[dict] = None,
         device: Optional[Union[str, int]] = None,
-        strict: bool = False,
         use_triton: bool = False,
-        inject_fused_attention: bool = False,
-        inject_fused_mlp: bool = False,
         use_cuda_fp16: bool = True,
         compress_config: Optional[
             Union[BaseCompressionConfig, AutoCompressionConfig]
         ] = None,
         model_basename: Optional[str] = None,
-        use_safetensors: bool = True,
         trust_remote_code: bool = False,
-        warmup_triton: bool = True,
         unpack: bool = False,
         low_cpu_mem_usage: bool = True,
+        use_bfloat16: bool = False,
         **kwargs,
     ):
         """load compressed model from local disk"""
@@ -1122,7 +1118,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
         tensors = losslesscompressor.decompress_state_dict(
-            tensors, tensor_shapes, tensor_dtypes
+            tensors,
+            tensor_shapes,
+            tensor_dtypes,
+            use_bfloat16=use_bfloat16
         )
         model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
         if isinstance(

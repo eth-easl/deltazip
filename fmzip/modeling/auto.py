@@ -58,6 +58,7 @@ class AutoFMZipModelForCausalLM:
         inject_fused_attention: bool = False,
         inject_fused_mlp: bool = False,
         use_cuda_fp16: bool = True,
+        use_bfloat16: bool = False,
         compress_config: Optional[BaseCompressionConfig] = None,
         model_basename: Optional[str] = None,
         use_safetensors: bool = True,

@@ -27,7 +27,7 @@ class QuantLinear(nn.Module):
         infeatures,
         outfeatures,
         bias,
-        kernel_switch_threshold=0,
+        kernel_switch_threshold=128,
         trainable=False,
     ):
         super().__init__()
