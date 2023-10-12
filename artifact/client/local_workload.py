@@ -5,7 +5,7 @@ from copy import deepcopy
 from timeit import default_timer as timer
 from dataclasses import dataclass
 from fmzip.rest.inference import InferenceService
-
+from loguru import logger
 inference_service = None
 
 @dataclass
@@ -22,6 +22,7 @@ def main(args):
     model_mapping = workload['compressed_model_mapping']
     benchmark_results = []
     for backend in backends:
+        logger.info(f"using backend: {backend['name']}; args: {backend['args']}")
         inference_service = InferenceService(
             provider = backend['name'],
             model_parallel_strategy=backend['args'].get('model_parallel_strategy', 'none'),
@@ -29,6 +30,7 @@ def main(args):
             batch_size=backend['args'].get('batch_size', 1),
             max_num_deltas=backend['args'].get('max_num_deltas', 1),
         )
+        logger.info("inference service ready...")
         queries = deepcopy(workload['queries'])
         if backend['mapping']:
             for i, query in enumerate(queries):
@@ -37,10 +39,12 @@ def main(args):
         start = timer()
         response = inference_service.generate(queries=queries, max_new_tokens=512)
         end = timer()
+        for req, res in zip(queries, response):
+            res['model'] = req.model
         benchmark_results.append({
             "backend": backend['name'],
             "total_elapsed": end-start,
-            "results": response
+            "results": response,
         })
         del inference_service
         torch.cuda.empty_cache()

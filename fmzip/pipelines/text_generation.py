@@ -10,7 +10,7 @@ from fmzip.modeling.gpt_neox import parallelize_neox
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 
-BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE) if get_gpu_count() > 1 else torch.device("cuda")
+BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
 # todo:xiaozhe this is only for llama model for now
 inside_layer_modules = [
@@ -163,6 +163,7 @@ class MixedPrecisionModel:
             [
                 self._load_delta(delta, device=f"cuda:{DEFAULT_CUDA_DEVICE}")
                 for delta in deltas
+                # (todo:xiaozhe): now enforce reloading
                 if True
                 #if delta not in self.model_pool
             ]
@@ -174,6 +175,6 @@ class MixedPrecisionModel:
     def prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
         batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
-        batch["input_ids"] = batch["input_ids"].to(torch.device("cuda:1"))
-        batch["attention_mask"] = batch["attention_mask"].to(torch.device("cuda:1"))
+        batch["input_ids"] = batch["input_ids"].to(BASE_DEVICE)
+        batch["attention_mask"] = batch["attention_mask"].to(BASE_DEVICE)
         return batch

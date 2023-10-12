@@ -12,7 +12,7 @@ from transformers.models.llama.modeling_llama import apply_rotary_pos_emb, repea
 from fmzip.utils.devices import get_gpu_count
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
-BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE) if get_gpu_count() > 1 else torch.device("cuda")
+BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
 
 def llama_mlp_forward(self, x):
@@ -63,6 +63,10 @@ def llama_attention_forward(
     qs_deltas = []
     ks_deltas = []
     vs_deltas = []
+    base_query_states = self.q_proj(hidden_states)
+    base_key_states = self.k_proj(hidden_states)
+    base_value_states = self.v_proj(hidden_states)
+    
     for i in range(len(self.delta)):
         delta_hidden_states = hidden_states[i].to(
             self.delta[i].q_proj.qweight.device, non_blocking=True
@@ -70,6 +74,7 @@ def llama_attention_forward(
         qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
         ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
         vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
+    
     qs_delta_hidden_states = torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0
     )
@@ -79,10 +84,6 @@ def llama_attention_forward(
     vs_delta_hidden_states = torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0
     )
-    base_query_states = self.q_proj(hidden_states)
-    base_key_states = self.k_proj(hidden_states)
-    base_value_states = self.v_proj(hidden_states)
-
     query_states = base_query_states + qs_delta_hidden_states
     key_states = base_key_states + ks_delta_hidden_states
     value_states = base_value_states + vs_delta_hidden_states

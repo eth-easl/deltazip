@@ -39,7 +39,6 @@ class InferenceService:
             base_model = AutoFMZipModelForCausalLM.from_pretrained(
                 kwargs["base_model"], compress_config=compress_config
             )
-
             self.base_model = base_model.to(torch.device("cuda"))
         elif provider == "fmzip-mpm":
             self.mpm = MixedPrecisionModel(

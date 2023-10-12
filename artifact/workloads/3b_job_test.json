@@ -5,41 +5,6 @@
             "model": "xzyao/openllama-3b-chat",
             "timestamp": 0,
             "prompt": "USER: Can you tell me something about Alan Turing? ASSISTANT: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: Answer the following question. How do you say 'good evening' in French. ASSISTANT:"
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about Alan Turing? ASSISTANT: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about Alan Turing? ASSISTANT: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about ETH Zurich? ASSISTANT: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. User: Answer the following question. How do you say 'good evening' in French. ASSISTANT:"
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about ETH Zurich? Assistant: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about ETH Zurich? Assistant: "
         }
     ],
     "compressed_model_mapping": {
@@ -50,7 +15,15 @@
             "name":"fmzip-mpm",
             "args": {
                 "model_parallel_strategy": "separation",
-                "batch_size": 8
+                "batch_size": 1
+            },
+            "mapping": true
+        },
+        {
+            "name":"fmzip-mpm",
+            "args": {
+                "model_parallel_strategy": "none",
+                "batch_size": 1
             },
             "mapping": true
         }
