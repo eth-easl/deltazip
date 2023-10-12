@@ -61,7 +61,8 @@
             "name":"fmzip-mpm",
             "args": {
                 "model_parallel_strategy": "none",
-                "batch_size": 4
+                "batch_size": 2,
+                "max_num_deltas": 1
             },
             "mapping": true
         },
@@ -69,7 +70,8 @@
             "name":"fmzip-mpm",
             "args": {
                 "model_parallel_strategy": "separation",
-                "batch_size": 8
+                "batch_size": 6,
+                "max_num_deltas": 8
             },
             "mapping": true
         }
