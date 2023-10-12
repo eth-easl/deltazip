@@ -115,10 +115,10 @@ class InferenceService:
     def generate(self, queries: List, max_new_tokens=256):
         queries = [(query.prompt, query.model) for query in queries]
         if self.provider == "fmzip-mpm":
-            return self.mpm.generate(queries, max_new_tokens=max_new_tokens)
+            return self.mpm.generate(queries, max_new_tokens=max_new_tokens, min_length=max_new_tokens)
         elif self.provider == "hf":
-            return self._hf_generated(queries, max_new_tokens=max_new_tokens)
+            return self._hf_generated(queries, max_new_tokens=max_new_tokens, min_length=max_new_tokens)
         elif self.provider == "fmzip":
-            return self._fmzip_generate(queries, max_new_tokens=max_new_tokens)
+            return self._fmzip_generate(queries, max_new_tokens=max_new_tokens, min_length=max_new_tokens)
         else:
             raise NotImplementedError

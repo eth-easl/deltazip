@@ -20,7 +20,6 @@ inside_layer_modules = [
     ["mlp.down_proj"],
 ]
 
-
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
     target_name = key.split(".")[-1]
@@ -102,6 +101,7 @@ class MixedPrecisionModel:
                 _, target, _ = _get_submodules(self.base_model, key)
                 dmodules = []
                 for delta in deltas:
+                    # todo: fix this
                     for dkey, dmodule in self.model_pool[delta].model.named_modules():
                         if dkey == key:
                             dmodules.append(dmodule)

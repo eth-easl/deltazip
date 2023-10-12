@@ -93,7 +93,10 @@ def main(args):
             backend=backend['name'],
             base_model=workload['base_model'],
             batch_size=backend['args'].get('batch_size', 1),
-            model_parallel_strategy=backend['args'].get('model_parallel_strategy', 'none')
+            model_parallel_strategy=backend['args'].get(
+                'model_parallel_strategy',
+                'none'
+            )
         )
         bc_result = issue_queries(workload['queries'], backend, model_mapping)
         bc_result['backend'] = backend

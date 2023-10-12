@@ -25,7 +25,10 @@ def main(args):
         logger.info(f"using backend: {backend['name']}; args: {backend['args']}")
         inference_service = InferenceService(
             provider = backend['name'],
-            model_parallel_strategy=backend['args'].get('model_parallel_strategy', 'none'),
+            model_parallel_strategy=backend['args'].get(
+                'model_parallel_strategy', 
+                'none'
+            ),
             base_model=workload['base_model'],
             batch_size=backend['args'].get('batch_size', 1),
             max_num_deltas=backend['args'].get('max_num_deltas', 1),
@@ -42,7 +45,7 @@ def main(args):
         for req, res in zip(queries, response):
             res['model'] = req.model
         benchmark_results.append({
-            "backend": backend['name'],
+            "backend": backend,
             "total_elapsed": end-start,
             "results": response,
         })
