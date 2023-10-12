@@ -1,22 +1,17 @@
-import os
 import torch
 from loguru import logger
 from typing import List, Tuple
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
-
 from fmzip.modeling.llama import parallelize_llama
 from fmzip.modeling.gpt_neox import parallelize_neox
+from fmzip.utils.delta_utils import subtract_inverse
 from fmzip.pipelines.utils import get_available_gpus, get_gpu_count, get_submodules
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
-from fmzip.utils.delta_utils import subtract_inverse
 
 placement_strategy = ["addback", "colocate", "separation"]
-
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
-
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
-
 dummy_compression_config = BaseCompressionConfig(
     bits=4,
     group_size=128,
@@ -26,7 +21,6 @@ dummy_compression_config = BaseCompressionConfig(
     lossless="gdeflate",
     damp_percent=0.02,
 )
-
 
 class FMZipPipeline:
     def __init__(
@@ -66,6 +60,7 @@ class FMZipPipeline:
                 compress_config=dummy_compression_config,
                 low_cpu_mem_usage=True,
             )
+        self.base_model=self.base_model.to(BASE_DEVICE)
         logger.info("based model loaded")
 
     def _load_delta(self, delta_model: str, device="cuda"):
@@ -76,6 +71,8 @@ class FMZipPipeline:
             unpack=True if self.placement_strategy == "addback" else False,
             low_cpu_mem_usage=False,
         )
+        if self.placement_strategy == "addback":
+            self.model_pool[delta_model] = self.model_pool[delta_model].half()
 
     def _prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
@@ -85,24 +82,47 @@ class FMZipPipeline:
         return batch
 
     def generate(self, queries: List[Tuple], **kwargs):
-        tokenize_start = timer()
-        batch = self._prepare_batch(queries, self.tokenizer)
-        tokenize_end = timer()
-        outputs = []
-        for batch_idx in range(0, len(queries), self.batch_size):
-            deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
-            batch_inputs = {
-                k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
-            }
-            # check if eviction needed, ensure enough memory for loading new deltas
-            self._evict_deltas(deltas)
-            loading_start = timer()
-            self._load_deltas(deltas)
-            loading_end = timer()
-            prepare_start = timer()
-            self._prepare_inference()
-            prepare_end = timer()
-
+        with torch.inference_mode():
+            tokenize_start = timer()
+            batch = self._prepare_batch(queries, self.tokenizer)
+            tokenize_end = timer()
+            outputs = []
+            for batch_idx in range(0, len(queries), self.batch_size):
+                deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
+                batch_inputs = {
+                    k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
+                }
+                # check if eviction needed, ensure enough memory for loading new deltas
+                self._evict_deltas(deltas)
+                loading_start = timer()
+                self._load_deltas(deltas)
+                loading_end = timer()
+                prepare_start = timer()
+                self._prepare_inference(deltas)
+                prepare_end = timer()
+                inference_start = timer()
+                output = self.base_model.generate(**batch_inputs, **kwargs)
+                inference_end = timer()
+                output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
+                tokenize_time = tokenize_end - tokenize_start
+                loading_time = loading_end - loading_start
+                prepare_time = prepare_end - prepare_start
+                inference_time = inference_end - inference_start
+                output = [
+                    {
+                        "data": o,
+                        "measure": {
+                            "tokenize_time": tokenize_time,
+                            "loading_time": loading_time,
+                            "prepare_time": prepare_time,
+                            "inference_time": inference_time,
+                        },
+                    }
+                    for o in output
+                ]
+                outputs.extend(output)
+            return outputs
+    
     def _offload_deltas(self):
         pass
 
@@ -141,7 +161,8 @@ class FMZipPipeline:
     def _prepare_inference_addback(self, deltas: List[str]):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
-        self.base_model = subtract_inverse(self.base_model, self.model_pool[deltas[0]])
+        print(self.model_pool[deltas[0]])
+        self.base_model = subtract_inverse(self.base_model, self.model_pool[deltas[0]].model)
 
     def _prepare_colocate(self, deltas):
         for key in self.key_list:
