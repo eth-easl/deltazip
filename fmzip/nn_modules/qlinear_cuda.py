@@ -9,6 +9,7 @@ from loguru import logger
 try:
     import autogptq_cuda_256
     import autogptq_cuda_64
+
     _autogptq_cuda_available = True
 
 except ImportError:

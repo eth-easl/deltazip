@@ -1009,6 +1009,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         use_bfloat16: bool = False,
         **kwargs,
     ):
+        device_ordinal = device
         """load compressed model from local disk"""
         config = AutoConfig.from_pretrained(
             save_dir, trust_remote_code=trust_remote_code
@@ -1098,11 +1099,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 )
         else:
             model = AutoModelForCausalLM.from_config(
-                config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16
+                config,
+                trust_remote_code=trust_remote_code,
+                torch_dtype=torch.float16,
             )
         # now load compressed data
-        losslesscompressor = LosslessCompressor(compress_config.lossless)
-
+        losslesscompressor = LosslessCompressor(compress_config.lossless, device_id=0)
         metadata = None
         tensors = {}
 
@@ -1113,15 +1115,14 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensors[key] = f.get_tensor(key)
         tensor_dtypes = json.loads(metadata["dtype"])
         tensor_shapes = json.loads(metadata["shape"])
-        # (todo:xiaozhe) now we force decompression on 0
+        # (todo: xiaozhe), (todo: minor)
+        # seems like we cannot use any device to decompress
+        # for now use device=0 to decompress and then move to target device
         with cp.cuda.Device(0):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
         tensors = losslesscompressor.decompress_state_dict(
-            tensors,
-            tensor_shapes,
-            tensor_dtypes,
-            use_bfloat16=use_bfloat16
+            tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16
         )
         model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
         if isinstance(

@@ -21,7 +21,7 @@ test_data = [
     (
         "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
         ".cache/compressed_models/bits-2/vicuna-7b-v1.5",
-    )
+    ),
 ]
 
 test_data = test_data * 1

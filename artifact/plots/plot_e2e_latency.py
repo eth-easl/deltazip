@@ -3,10 +3,12 @@ import pandas as pd
 import plotly.express as px
 import argparse
 
+
 def plot(args):
     print(args)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, default="artifact/results/latency.json")
     args = parser.parse_args()
@@ -20,15 +22,17 @@ if __name__=="__main__":
         provider = item["backend"]
         provider = f"{provider['name']}, {provider['args'].get('batch_size', 1)}, {provider['args'].get('model_parallel_strategy', 'none')}"
         for res in item["results"]:
-            tokenize_time = res['response']['response']['measure']['tokenize_time']
-            loading_time = res['response']['response']['measure']['loading_time']
-            prepare_time = res['response']['response']['measure']['prepare_time']
-            inference_time = res['response']['response']['measure']['inference_time']
-            waiting_time = res['time_elapsed'] - (tokenize_time + loading_time + prepare_time + inference_time)
+            tokenize_time = res["response"]["response"]["measure"]["tokenize_time"]
+            loading_time = res["response"]["response"]["measure"]["loading_time"]
+            prepare_time = res["response"]["response"]["measure"]["prepare_time"]
+            inference_time = res["response"]["response"]["measure"]["inference_time"]
+            waiting_time = res["time_elapsed"] - (
+                tokenize_time + loading_time + prepare_time + inference_time
+            )
 
             plot_data.append(
                 {
-                    "id": res['response']['id'],
+                    "id": res["response"]["id"],
                     "provider": provider,
                     "time_elapsed": waiting_time,
                     "Breakdown": "Wait",
@@ -36,7 +40,7 @@ if __name__=="__main__":
             )
             plot_data.append(
                 {
-                    "id": res['response']['id'],
+                    "id": res["response"]["id"],
                     "provider": provider,
                     "time_elapsed": tokenize_time,
                     "Breakdown": "Tokenize",
@@ -44,7 +48,7 @@ if __name__=="__main__":
             )
             plot_data.append(
                 {
-                    "id": res['response']['id'],
+                    "id": res["response"]["id"],
                     "provider": provider,
                     "time_elapsed": loading_time,
                     "Breakdown": "Loading",
@@ -52,17 +56,21 @@ if __name__=="__main__":
             )
             plot_data.append(
                 {
-                    "id": res['response']['id'],
+                    "id": res["response"]["id"],
                     "provider": provider,
-                    "time_elapsed": res['response']['response']['measure']['prepare_time'],
+                    "time_elapsed": res["response"]["response"]["measure"][
+                        "prepare_time"
+                    ],
                     "Breakdown": "Prepare",
                 }
             )
             plot_data.append(
                 {
-                    "id": res['response']['id'],
+                    "id": res["response"]["id"],
                     "provider": provider,
-                    "time_elapsed": res['response']['response']['measure']['inference_time'],
+                    "time_elapsed": res["response"]["response"]["measure"][
+                        "inference_time"
+                    ],
                     "Breakdown": "Inference",
                 }
             )
@@ -71,5 +79,7 @@ if __name__=="__main__":
     print(df)
 
     fig = px.bar(df, x="provider", y="time_elapsed", facet_col="id", color="Breakdown")
-    fig.update_layout(width=800, height=600, title_x=0.5, title_text="Breakdown of Latency (s)")
+    fig.update_layout(
+        width=800, height=600, title_x=0.5, title_text="Breakdown of Latency (s)"
+    )
     fig.write_image("artifact/results/latency.png", scale=2)

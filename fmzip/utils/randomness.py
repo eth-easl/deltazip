@@ -3,6 +3,7 @@ import os
 import random
 import numpy as np
 
+
 def init_seeds(seed=0, deterministic=False):
     # Initialize random number generator (RNG) seeds https://pytorch.org/docs/stable/notes/randomness.html
     # cudnn seed 0 settings are slower and more reproducible, else faster and less reproducible
@@ -11,8 +12,8 @@ def init_seeds(seed=0, deterministic=False):
 
     if deterministic:
         torch.use_deterministic_algorithms(True)
-        os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
-        os.environ['PYTHONHASHSEED'] = str(seed)
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+        os.environ["PYTHONHASHSEED"] = str(seed)
 
     random.seed(seed)
     np.random.seed(seed)

@@ -20,6 +20,7 @@ inside_layer_modules = [
     ["mlp.down_proj"],
 ]
 
+
 def _get_submodules(model, key):
     parent = model.get_submodule(".".join(key.split(".")[:-1]))
     target_name = key.split(".")[-1]
@@ -137,7 +138,7 @@ class MixedPrecisionModel:
             outputs.extend(output)
         return outputs
 
-    def _load_delta(self, delta_model: str, device: str = "cuda"):
+    def _load_delta(self, delta_model: str, device="cuda"):
         logger.info(f"Loading target model {delta_model} to {device}")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model, device=device, unpack=False, low_cpu_mem_usage=False
@@ -155,18 +156,18 @@ class MixedPrecisionModel:
             target_devices = [i for i in range(self.device_count)]
             for i, delta in enumerate(deltas):
                 target_device = target_devices[i % len(target_devices)]
-                #if delta not in self.model_pool:
+                # if delta not in self.model_pool:
                 if True:
                     logger.info(f"loading delta to cuda:{target_device}")
-                    self._load_delta(delta, device=f"cuda:{target_device}")
+                    self._load_delta(delta, device=int(target_device))
 
         elif self.model_parallel_strategy == "none":
             [
-                self._load_delta(delta, device=f"cuda:{DEFAULT_CUDA_DEVICE}")
+                self._load_delta(delta, device=DEFAULT_CUDA_DEVICE)
                 for delta in deltas
                 # (todo:xiaozhe): now enforce reloading
                 if True
-                #if delta not in self.model_pool
+                # if delta not in self.model_pool
             ]
         else:
             raise ValueError(

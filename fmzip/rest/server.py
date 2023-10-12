@@ -53,6 +53,7 @@ class BackgroundTasks(threading.Thread):
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self._checking())
 
+
 results = {}
 
 
@@ -62,6 +63,7 @@ class InferenceTask(BaseModel):
     model: str
     response: Optional[dict] = {}
     timestamp: float
+
 
 class RestartRequest(BaseModel):
     backend: str

@@ -4,6 +4,7 @@ from loguru import logger
 
 nvml_is_initialized = False
 
+
 def initialize():
     global nvml_is_initialized
     if not nvml_is_initialized:
@@ -14,15 +15,17 @@ def initialize():
     else:
         logger.info("nvml is already initialized")
 
+
 def _get_gpu_count():
     initialize()
     return nvmlDeviceGetCount()
 
+
 def get_gpu_count():
     return len(get_available_gpus())
 
+
 def get_available_gpus():
-    
     gpus = os.environ.get("CUDA_VISIBLE_DEVICES", None)
     if gpus is None:
         return list(range(_get_gpu_count()))
