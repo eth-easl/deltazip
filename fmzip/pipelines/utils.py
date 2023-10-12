@@ -32,3 +32,10 @@ def get_available_gpus():
     else:
         total_gpus = len([x for x in gpus.split(",")])
         return list(range(total_gpus))
+
+
+def get_submodules(model, key):
+    parent = model.get_submodule(".".join(key.split(".")[:-1]))
+    target_name = key.split(".")[-1]
+    target = model.get_submodule(key)
+    return parent, target, target_name

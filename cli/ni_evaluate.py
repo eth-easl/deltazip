@@ -53,7 +53,8 @@ def generate(args):
                 delta_model = xor_inverse(base_model, delta_model)
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]
-        # to leave more memory for higher-throughput generation, put the base model to cpu
+        # to leave more memory for higher-throughput generation,
+        # put the base model to cpu
         base_model = base_model.to(torch.device("cpu"))
         torch.cuda.empty_cache()
         pipe = TextGenerationPipeline(

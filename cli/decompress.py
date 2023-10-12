@@ -37,7 +37,6 @@ def main(args):
         elif args.delta == "xor":
             delta_model = xor_inverse(base_model, delta_model)
         logger.info("ready to generate")
-
         prompt = "Alan Turing is "
         # add delta to base model
         output = delta_model.generate(
