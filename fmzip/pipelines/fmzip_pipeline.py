@@ -5,8 +5,7 @@ from transformers import AutoTokenizer
 from timeit import default_timer as timer
 from fmzip.modeling.llama import parallelize_llama
 from fmzip.modeling.gpt_neox import parallelize_neox
-from fmzip.utils.delta_utils import subtract_inverse
-from fmzip.pipelines.utils import get_available_gpus, get_gpu_count, get_submodules
+from fmzip.pipelines.utils import get_gpu_count, get_submodules
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
 
 inside_layer_modules = [
@@ -99,6 +98,7 @@ class FMZipPipeline:
                 output = [
                     {
                         "data": o,
+                        "model": deltas[i],
                         "measure": {
                             "tokenize_time": tokenize_time,
                             "loading_time": loading_time,
@@ -106,7 +106,7 @@ class FMZipPipeline:
                             "inference_time": inference_time,
                         },
                     }
-                    for o in output
+                    for i, o in enumerate(output)
                 ]
                 outputs.extend(output)
             return outputs

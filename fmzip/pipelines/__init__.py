@@ -1,2 +1,2 @@
 from .text_generation import TextGenerationPipeline
-from .pipeline import FMZipPipeline
+from .fmzip_pipeline import FMZipPipeline
