@@ -7,19 +7,7 @@ from fmzip.utils.randomness import init_seeds
 init_seeds(42)
 test_data = [
     (
-        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/3b-parameters/openllama-chat",
-    ),
-    (
-        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/3b-parameters/openllama-chat",
-    ),
-    (
-        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
-        ".cache/compressed_models/3b-parameters/openllama-chat",
-    ),
-    (
-        "USER: Can you help me write a short essay about Alan Turing? ASSISTANT:",
+        "<human>: Who is Albert Einstein?<|endoftext|><assistant>:",
         ".cache/compressed_models/3b-parameters/openllama-chat",
     ),
 ]
@@ -37,11 +25,8 @@ if __name__ == "__main__":
     start = timer()
     results = mpm.generate(
         test_data,
-        min_length=512,
-        max_new_tokens=512,
-        temperature=0.1,
-        top_k=50,
-        top_p=0.9,
+        min_length=64,
+        max_new_tokens=64,
     )
     end = timer()
     logger.info(results)

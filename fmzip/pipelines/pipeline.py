@@ -9,7 +9,13 @@ from fmzip.utils.delta_utils import subtract_inverse
 from fmzip.pipelines.utils import get_available_gpus, get_gpu_count, get_submodules
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
 
-placement_strategy = ["addback", "colocate", "separation"]
+inside_layer_modules = [
+    "self_attn.k_proj", "self_attn.v_proj", 
+    "self_attn.q_proj", "self_attn.o_proj",
+    "mlp.up_proj", "mlp.gate_proj", "mlp.down_proj",
+]
+
+placement_strategies = ["addback", "colocate", "separation"]
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 dummy_compression_config = BaseCompressionConfig(
@@ -31,6 +37,10 @@ class FMZipPipeline:
         placement_strategy: str = "addback",
         placement_args: dict = None,
     ) -> None:
+        if placement_strategy not in placement_strategies:
+            raise ValueError(
+                f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
+            )
         self.base_model = base_model
         self.device_count = len(get_available_gpus())
         self.max_num_deltas = max_num_deltas
@@ -64,7 +74,7 @@ class FMZipPipeline:
         logger.info("based model loaded")
 
     def _load_delta(self, delta_model: str, device="cuda"):
-        logger.info(f"Loading target model {delta_model} to {device}")
+        logger.info(f"Loading target model {delta_model} to cuda:{device}")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model,
             device=device,
@@ -103,7 +113,7 @@ class FMZipPipeline:
                 inference_start = timer()
                 output = self.base_model.generate(**batch_inputs, **kwargs)
                 inference_end = timer()
-                output = self.tokenizer.batch_decode(output, skip_special_tokens=True)
+                output = self.tokenizer.batch_decode(output)
                 tokenize_time = tokenize_end - tokenize_start
                 loading_time = loading_end - loading_start
                 prepare_time = prepare_end - prepare_start
@@ -161,9 +171,16 @@ class FMZipPipeline:
     def _prepare_inference_addback(self, deltas: List[str]):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
-        print(self.model_pool[deltas[0]])
-        self.base_model = subtract_inverse(self.base_model, self.model_pool[deltas[0]].model)
-
+        with torch.no_grad():
+            for name, param in self.model_pool[deltas[0]].model.named_parameters():
+                # if name contains any keyword in inside_layer_modules:
+                inside_module = False
+                for module_name in inside_layer_modules:
+                    if module_name in name:
+                        self.base_model.state_dict()[name] += param
+                        inside_module = True
+                        break
+    
     def _prepare_colocate(self, deltas):
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_model, key)

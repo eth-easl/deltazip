@@ -13,8 +13,7 @@ def initialize():
         nvmlInit()
         nvml_is_initialized = True
     else:
-        logger.info("nvml is already initialized")
-
+        pass
 
 def _get_gpu_count():
     initialize()
