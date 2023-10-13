@@ -10,9 +10,13 @@ from fmzip.pipelines.utils import get_available_gpus, get_gpu_count, get_submodu
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
 
 inside_layer_modules = [
-    "self_attn.k_proj", "self_attn.v_proj", 
-    "self_attn.q_proj", "self_attn.o_proj",
-    "mlp.up_proj", "mlp.gate_proj", "mlp.down_proj",
+    "self_attn.k_proj",
+    "self_attn.v_proj",
+    "self_attn.q_proj",
+    "self_attn.o_proj",
+    "mlp.up_proj",
+    "mlp.gate_proj",
+    "mlp.down_proj",
 ]
 
 placement_strategies = ["addback", "colocate", "separation"]
@@ -28,6 +32,7 @@ dummy_compression_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+
 class FMZipPipeline:
     def __init__(
         self,
@@ -42,7 +47,7 @@ class FMZipPipeline:
                 f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
             )
         self.base_model = base_model
-        self.device_count = len(get_available_gpus())
+        self.device_count = get_gpu_count()
         self.max_num_deltas = max_num_deltas
         self.batch_size = batch_size
         self.placement_strategy = placement_strategy
@@ -62,35 +67,6 @@ class FMZipPipeline:
             parallelize_neox()
             parallelize_llama()
 
-    def _load_base_model(self):
-        logger.info("loading base model")
-        with torch.device("cuda", DEFAULT_CUDA_DEVICE):
-            self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
-                self.base_model,
-                compress_config=dummy_compression_config,
-                low_cpu_mem_usage=True,
-            )
-        self.base_model=self.base_model.to(BASE_DEVICE)
-        logger.info("based model loaded")
-
-    def _load_delta(self, delta_model: str, device="cuda"):
-        logger.info(f"Loading target model {delta_model} to cuda:{device}")
-        self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
-            delta_model,
-            device=device,
-            unpack=True if self.placement_strategy == "addback" else False,
-            low_cpu_mem_usage=False,
-        )
-        if self.placement_strategy == "addback":
-            self.model_pool[delta_model] = self.model_pool[delta_model].half()
-
-    def _prepare_batch(self, inputs, tokenizer):
-        """Tokenizes inputs and sets the batch_lora_ids for the model."""
-        batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
-        batch["input_ids"] = batch["input_ids"].to(BASE_DEVICE)
-        batch["attention_mask"] = batch["attention_mask"].to(BASE_DEVICE)
-        return batch
-
     def generate(self, queries: List[Tuple], **kwargs):
         with torch.inference_mode():
             tokenize_start = timer()
@@ -98,7 +74,9 @@ class FMZipPipeline:
             tokenize_end = timer()
             outputs = []
             for batch_idx in range(0, len(queries), self.batch_size):
-                deltas = [x[1] for x in queries[batch_idx : batch_idx + self.batch_size]]
+                deltas = [
+                    x[1] for x in queries[batch_idx : batch_idx + self.batch_size]
+                ]
                 batch_inputs = {
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
@@ -132,7 +110,44 @@ class FMZipPipeline:
                 ]
                 outputs.extend(output)
             return outputs
-    
+
+    def _load_base_model(self):
+        logger.info("loading base model")
+        with torch.device("cuda", DEFAULT_CUDA_DEVICE):
+            self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
+                self.base_model,
+                compress_config=dummy_compression_config,
+                low_cpu_mem_usage=True,
+            )
+        self.base_model = self.base_model.to(BASE_DEVICE)
+        logger.info("based model loaded")
+
+    def _load_delta(self, delta_model: str, device="cuda"):
+        logger.info(f"Loading target model {delta_model} to cuda:{device}")
+        self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
+            delta_model,
+            device=device,
+            unpack=True if self.placement_strategy == "addback" else False,
+            low_cpu_mem_usage=False,
+        )
+        if self.placement_strategy == "addback":
+            self.model_pool[delta_model] = self.model_pool[delta_model].half()
+        else:
+            if len(self.key_list) == 0:
+                # flatten insdier modules
+                insider_modules = []
+                [insider_modules.extend(x) for x in inside_layer_modules]
+                # we need to figure out what to merge at this stage
+                for key, _ in self.model_pool[delta_model].model.named_modules():
+                    self.key_list.append(key)
+
+    def _prepare_batch(self, inputs, tokenizer):
+        """Tokenizes inputs and sets the batch_lora_ids for the model."""
+        batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
+        batch["input_ids"] = batch["input_ids"].to(BASE_DEVICE)
+        batch["attention_mask"] = batch["attention_mask"].to(BASE_DEVICE)
+        return batch
+
     def _offload_deltas(self):
         pass
 
@@ -180,7 +195,7 @@ class FMZipPipeline:
                         self.base_model.state_dict()[name] += param
                         inside_module = True
                         break
-    
+
     def _prepare_colocate(self, deltas):
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_model, key)
@@ -191,3 +206,6 @@ class FMZipPipeline:
                         dmodules.append(dmodule)
                         break
             setattr(target, "delta", dmodules)
+
+    def _clear_addback_delta(self):
+        pass

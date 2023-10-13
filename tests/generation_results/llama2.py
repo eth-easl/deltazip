@@ -15,12 +15,11 @@ test_data = [
 test_data = test_data * 1
 
 if __name__ == "__main__":
-    logger.info("No-parallelism, batch_size=1")
     mpm = FMZipPipeline(
         "openlm-research/open_llama_3b_v2",
         batch_size=1,
         max_num_deltas=1,
-        placement_strategy='addback'
+        placement_strategy="separation",
     )
     start = timer()
     results = mpm.generate(
