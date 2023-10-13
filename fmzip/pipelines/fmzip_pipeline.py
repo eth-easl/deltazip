@@ -109,6 +109,8 @@ class FMZipPipeline:
                     for i, o in enumerate(output)
                 ]
                 outputs.extend(output)
+                if self.placement_strategy == "addback":
+                    self._clear_addback_delta(deltas[0])
             return outputs
 
     def _load_base_model(self):
@@ -148,8 +150,9 @@ class FMZipPipeline:
         batch["attention_mask"] = batch["attention_mask"].to(BASE_DEVICE)
         return batch
 
-    def _offload_deltas(self):
-        pass
+    def _offload_delta(self, delta):
+        self.model_pool[delta] = self.model_pool[delta].to("cpu")
+        torch.cuda.empty_cache()
 
     def _load_deltas(self, deltas: List[str]):
         if self.placement_strategy in ["colocate", "addback"]:
@@ -207,5 +210,14 @@ class FMZipPipeline:
                         break
             setattr(target, "delta", dmodules)
 
-    def _clear_addback_delta(self):
-        pass
+    def _clear_addback_delta(self, delta):
+        # remove the delta part from the base_model again
+        with torch.no_grad():
+            for name, param in self.model_pool[delta].model.named_parameters():
+                # if name contains any keyword in inside_layer_modules:
+                inside_module = False
+                for module_name in inside_layer_modules:
+                    if module_name in name:
+                        self.base_model.state_dict()[name] -= param
+                        inside_module = True
+                        break

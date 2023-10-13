@@ -28,13 +28,17 @@ def main(args):
         clear_cache()
         if backend['name'] == 'hf':
             reformatted_queries = [(x['prompt'], x['model']) for x in queries]
-            hf_pipeline = HuggingFacePipeline(
+            pipeline = HuggingFacePipeline(
                 base_model,
                 **backend['args']
             )
             start = timer()
-            results = hf_pipeline.generate(
+            results = pipeline.generate(
                 reformatted_queries,
+                # do_sample=True,
+                # temperature=0.7,
+                # top_k=50,
+                # top_p=0.9,
                 **gen_configs,
             )
             end = timer()
@@ -48,13 +52,21 @@ def main(args):
             )
         elif backend['name'] == 'fmzip':
             reformatted_queries = [(x['prompt'], mapping[x['model']]) for x in queries]
-            mpm = FMZipPipeline(
+            pipeline = FMZipPipeline(
                 base_model,
                 **backend['args']
             )
             start = timer()
-            results = mpm.generate(reformatted_queries, **gen_configs)
+            results = pipeline.generate(
+                reformatted_queries,
+                # do_sample=True,
+                # temperature=0.7,
+                # top_k=50,
+                # top_p=0.9,
+                **gen_configs
+            )
             end = timer()
+            print("results", results)
             benchmark_results.append(
                 {
                     'backend': backend,
@@ -63,6 +75,7 @@ def main(args):
                     "total_elapsed": end - start
                 }
             )
+        del pipeline
         
     with open(args.output, "w") as fp:
         json.dump(benchmark_results, fp, indent=2)
