@@ -4,7 +4,7 @@
         {
             "model": "xzyao/openllama-3b-chat",
             "timestamp": 0,
-            "prompt": "USER: Can you tell me something about Alan Turing? ASSISTANT: "
+            "prompt": "<human>: Please write a short article about Alan Turing.<|endoftext|><assistant>:"
         }
     ],
     "compressed_model_mapping": {

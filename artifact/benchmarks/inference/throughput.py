@@ -41,6 +41,7 @@ def main(args):
             benchmark_results.append(
                 {
                     'backend': backend,
+                    "gen_args": gen_configs,
                     "results": results,
                     "total_elapsed": end - start
                 }
@@ -57,18 +58,19 @@ def main(args):
             benchmark_results.append(
                 {
                     'backend': backend,
+                    "gen_args": gen_configs,
                     "results": results,
                     "total_elapsed": end - start
                 }
             )
         
-    with open(args.output_file, "w") as fp:
+    with open(args.output, "w") as fp:
         json.dump(benchmark_results, fp, indent=2)
 
 if __name__=="__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--workload', type=str, default='')
-    parser.add_argument('--output-file', type=str, default='')
+    parser.add_argument('--output', type=str, default='')
     args = parser.parse_args()
     main(args)

@@ -4,70 +4,49 @@
         {
             "model": "xzyao/openllama-3b-chat",
             "timestamp": 0,
-            "prompt": "USER: Can you tell me something about Alan Turing? ASSISTANT: "
+            "prompt": "<human>: Who is Alan Turing?<|endoftext|><assistant>:"
         },
         {
-            "model": "xzyao/openllama-3b-chat",
+            "model": "xzyao/openllama-chat-2",
             "timestamp": 0,
-            "prompt": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: Answer the following question. How do you say 'good evening' in French. ASSISTANT:"
+            "prompt": "<human>: Who is Alan Turing?<|endoftext|><assistant>:"
         },
         {
-            "model": "xzyao/openllama-3b-chat",
+            "model": "xzyao/openllama-chat-3",
             "timestamp": 0,
-            "prompt": "User: Can you tell me something about Alan Turing? ASSISTANT: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about Alan Turing? ASSISTANT: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about ETH Zurich? ASSISTANT: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. User: Answer the following question. How do you say 'good evening' in French. ASSISTANT:"
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about ETH Zurich? Assistant: "
-        },
-        {
-            "model": "xzyao/openllama-3b-chat",
-            "timestamp": 0,
-            "prompt": "User: Can you tell me something about ETH Zurich? Assistant: "
+            "prompt": "<human>: Who is Alan Turing?<|endoftext|><assistant>:"
         }
     ],
     "compressed_model_mapping": {
-        "xzyao/openllama-3b-chat": ".cache/compressed_models/3b-parameters/openllama-chat"
+        "xzyao/openllama-3b-chat": ".cache/compressed_models/3b-parameters/openllama-chat",
+        "xzyao/openllama-chat-2": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "xzyao/openllama-chat-3": ".cache/compressed_models/3b-parameters/openllama-chat-3"
     },
     "systems": [
         {
-            "name": "hf",
+            "name":"hf",
             "args": {
+                "batch_size": 1,
+                "max_num_models": 1
+            }
+        },
+        {
+            "name":"fmzip",
+            "args": {
+                "placement_strategy": "colocate",
                 "batch_size": 1
-            },
-            "mapping": false
+            }
         },
         {
-            "name":"fmzip-mpm",
+            "name":"fmzip",
             "args": {
-                "model_parallel_strategy": "none",
-                "batch_size": 4
-            },
-            "mapping": true
-        },
-        {
-            "name":"fmzip-mpm",
-            "args": {
-                "model_parallel_strategy": "separation",
-                "batch_size": 8
-            },
-            "mapping": true
+                "placement_strategy": "colocate",
+                "batch_size": 3
+            }
         }
-    ]
+    ],
+    "generation_configs": {
+        "min_length": 64,
+        "max_new_tokens": 64
+    }
 }

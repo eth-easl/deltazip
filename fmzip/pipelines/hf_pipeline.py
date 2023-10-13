@@ -70,7 +70,7 @@ class HuggingFacePipeline:
                         for o in output
                     ]
                     outputs.extend(output)
-                return outputs
+            return outputs
 
     def _load_target_model(self, model_name: str, device: str):
         with torch.device("cuda"):
