@@ -73,10 +73,11 @@ class HuggingFacePipeline:
                 return outputs
 
     def _load_target_model(self, model_name: str, device: str):
-        model = transformers.AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
-        )
-        model = model.to(torch.device(device))
+        with torch.device("cuda"):
+            model = transformers.AutoModelForCausalLM.from_pretrained(
+                model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
+            )
+            model = model.to(torch.device(device))
         return model
 
     def _prepare_batch(self, inputs, tokenizer):

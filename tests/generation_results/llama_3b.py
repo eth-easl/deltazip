@@ -18,7 +18,18 @@ hf_test_data = [
         "xzyao/openllama-3b-chat",
     ),
 ]
-
+# fmzip_test_data = [
+#     (
+#         "### HUMAN:\nWho is Alan Turing?\n### RESPONSE:\n",
+#         ".cache/compressed_models/3b-parameters/open-llama-3b-everything-v2",
+#     ),
+# ]
+# hf_test_data = [
+#     (
+#         "### HUMAN:\nWho is Alan Turing?\n### RESPONSE:\n",
+#         "harborwater/open-llama-3b-everything-v2",
+#     ),
+# ]
 fmzip_test_data = fmzip_test_data * 1
 hf_test_data = hf_test_data * 1
 

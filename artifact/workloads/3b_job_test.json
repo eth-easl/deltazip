@@ -12,20 +12,22 @@
     },
     "systems": [
         {
-            "name":"fmzip-mpm",
+            "name":"hf",
             "args": {
-                "model_parallel_strategy": "separation",
-                "batch_size": 1
-            },
-            "mapping": true
+                "batch_size": 1,
+                "max_num_models": 1
+            }
         },
         {
-            "name":"fmzip-mpm",
+            "name":"fmzip",
             "args": {
-                "model_parallel_strategy": "none",
+                "placement_strategy": "colocate",
                 "batch_size": 1
-            },
-            "mapping": true
+            }
         }
-    ]
+    ],
+    "generation_configs": {
+        "min_length": 64,
+        "max_new_tokens": 64
+    }
 }
