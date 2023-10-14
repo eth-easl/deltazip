@@ -40,6 +40,7 @@ class FMZipPipeline:
         batch_size: int = 1,
         placement_strategy: str = "addback",
         placement_args: dict = None,
+        lossless_only: bool = False,
     ) -> None:
         if placement_strategy not in placement_strategies:
             raise ValueError(
@@ -62,6 +63,8 @@ class FMZipPipeline:
         # fmzip manages a pool of model
         self.model_pool = {}
         self.key_list = []
+        self.lossless_only = lossless_only
+        assert self.lossless_only and self.placement_strategy == "addback", "lossless only support addback"
         if self.placement_strategy != "addback":
             parallelize_neox()
             parallelize_llama()
@@ -129,7 +132,7 @@ class FMZipPipeline:
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model,
             device=device,
-            unpack=True if self.placement_strategy == "addback" else False,
+            unpack=True if self.placement_strategy == "addback" and not self.lossless_only else False,
             low_cpu_mem_usage=False,
         )
         if self.placement_strategy == "addback":
@@ -195,7 +198,7 @@ class FMZipPipeline:
                 inside_module = False
                 for module_name in inside_layer_modules:
                     if module_name in name:
-                        self.base_model.state_dict()[name] += param
+                        self.base_model.state_dict()[name] += 1.2 * param
                         inside_module = True
                         break
 

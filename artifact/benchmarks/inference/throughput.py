@@ -35,10 +35,7 @@ def main(args):
             start = timer()
             results = pipeline.generate(
                 reformatted_queries,
-                # do_sample=True,
-                # temperature=0.7,
-                # top_k=50,
-                # top_p=0.9,
+                do_sample=True,
                 **gen_configs,
             )
             end = timer()
@@ -51,7 +48,7 @@ def main(args):
                 }
             )
         elif backend['name'] == 'fmzip':
-            reformatted_queries = [(x['prompt'], mapping[x['model']]) for x in queries]
+            reformatted_queries = [(x['prompt'], mapping[x['model'] if not backend['args']['lossless_only'] else x['model']+"-lossless" ]) for x in queries]
             pipeline = FMZipPipeline(
                 base_model,
                 **backend['args']
@@ -59,10 +56,7 @@ def main(args):
             start = timer()
             results = pipeline.generate(
                 reformatted_queries,
-                # do_sample=True,
-                # temperature=0.7,
-                # top_k=50,
-                # top_p=0.9,
+                do_sample=True,
                 **gen_configs
             )
             end = timer()
