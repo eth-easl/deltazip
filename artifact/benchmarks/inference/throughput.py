@@ -39,6 +39,7 @@ def main(args):
                 **gen_configs,
             )
             end = timer()
+            print(results)
             benchmark_results.append(
                 {
                     'backend': backend,

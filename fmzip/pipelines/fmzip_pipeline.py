@@ -64,7 +64,10 @@ class FMZipPipeline:
         self.model_pool = {}
         self.key_list = []
         self.lossless_only = lossless_only
-        assert self.lossless_only and self.placement_strategy == "addback", "lossless only support addback"
+        if self.lossless_only and self.placement_strategy != "addback":
+            raise ValueError(
+                f"lossless_only is only supported when placement_strategy is addback"
+            )
         if self.placement_strategy != "addback":
             parallelize_neox()
             parallelize_llama()
@@ -194,11 +197,11 @@ class FMZipPipeline:
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
         with torch.no_grad():
             for name, param in self.model_pool[deltas[0]].model.named_parameters():
-                # if name contains any keyword in inside_layer_modules:
+            # if name contains any keyword in inside_layer_modules:
                 inside_module = False
                 for module_name in inside_layer_modules:
                     if module_name in name:
-                        self.base_model.state_dict()[name] += 1.2 * param
+                        self.base_model.state_dict()[name] += param
                         inside_module = True
                         break
 
