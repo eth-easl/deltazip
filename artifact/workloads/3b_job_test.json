@@ -8,30 +8,15 @@
         }
     ],
     "compressed_model_mapping": {
-        "xzyao/openllama-3b-chat": ".cache/compressed_models/3b-parameters/openllama-chat-4bit",
+        "xzyao/openllama-3b-chat": ".cache/compressed_models/3b-parameters/openllama-chat-3bit",
         "xzyao/openllama-3b-chat-lossless": ".cache/compressed_models/3b-parameters/openllama-chat-3bit-delta-lossless"
     },
     "systems": [
         {
-            "name":"hf",
-            "args": {
-                "batch_size": 1,
-                "max_num_models": 1
-            }
-        },
-        {
-            "name":"fmzip",
-            "args": {
-                "lossless_only": true,
-                "placement_strategy": "addback",
-                "batch_size": 1
-            }
-        },
-        {
             "name":"fmzip",
             "args": {
                 "lossless_only": false,
-                "placement_strategy": "addback",
+                "placement_strategy": "colocate",
                 "batch_size": 1
             }
         }
