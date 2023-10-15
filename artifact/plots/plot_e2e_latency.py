@@ -6,14 +6,6 @@ import argparse
 
 def plot(args):
     print(args)
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=str, default="artifact/results/latency.json")
-    args = parser.parse_args()
-    plot(args)
-
     with open(args.input, "r") as fp:
         results = json.load(fp)
 
@@ -83,3 +75,12 @@ if __name__ == "__main__":
         width=800, height=600, title_x=0.5, title_text="Breakdown of Latency (s)"
     )
     fig.write_image("artifact/results/latency.png", scale=2)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", type=str, default="artifact/results/latency.json")
+    args = parser.parse_args()
+    plot(args)
+
+    

@@ -1,10 +1,12 @@
 import json
 import torch
+import subprocess
+import time
 from timeit import default_timer as timer
 from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
 from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
 from fmzip.utils.randomness import init_seeds
-import subprocess
+import gc
 
 init_seeds(42)
 
@@ -27,7 +29,8 @@ def main(args):
     gen_configs = workload["generation_configs"]
     benchmark_results = []
     for backend in backends:
-        # clear_cache()
+        clear_cache()
+        time.sleep(5)
         if backend["name"] == "hf":
             reformatted_queries = [(x["prompt"], x["model"]) for x in queries]
             pipeline = HuggingFacePipeline(base_model, **backend["args"])
@@ -75,6 +78,7 @@ def main(args):
                 }
             )
         del pipeline
+        gc.collect()
 
     with open(args.output, "w") as fp:
         json.dump(benchmark_results, fp, indent=2)

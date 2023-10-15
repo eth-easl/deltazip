@@ -1152,6 +1152,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             )
             model.seqlen = 2048
         model.eval()
+        del losslesscompressor
+        torch.cuda.empty_cache()
         return cls(model, True, compress_config)
 
 
