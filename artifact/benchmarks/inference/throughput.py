@@ -1,15 +1,14 @@
+import os
+import time
 import json
 import torch
 import subprocess
-import time
 from timeit import default_timer as timer
+from fmzip.utils.randomness import init_seeds
 from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
 from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
-from fmzip.utils.randomness import init_seeds
-import gc
 
 init_seeds(42)
-
 
 def clear_cache():
     torch.cuda.empty_cache()
@@ -17,9 +16,11 @@ def clear_cache():
         "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
     )
 
-
 def main(args):
     print(args)
+    if os.path.exists(args.output):
+        with open(args.output, "r") as fp:
+            benchmark_results = json.load(fp)
     with open(args.workload, "r") as fp:
         workload = json.load(fp)
     backends = workload["systems"]
@@ -27,7 +28,6 @@ def main(args):
     queries = workload["queries"]
     mapping = workload["compressed_model_mapping"]
     gen_configs = workload["generation_configs"]
-    benchmark_results = []
     for backend in backends:
         clear_cache()
         time.sleep(5)
@@ -78,7 +78,6 @@ def main(args):
                 }
             )
         del pipeline
-        gc.collect()
 
     with open(args.output, "w") as fp:
         json.dump(benchmark_results, fp, indent=2)
