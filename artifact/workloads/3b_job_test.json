@@ -16,7 +16,7 @@
             "name":"fmzip",
             "args": {
                 "lossless_only": false,
-                "placement_strategy": "addback",
+                "placement_strategy": "colocate",
                 "batch_size": 1
             }
         }

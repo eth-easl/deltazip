@@ -7,9 +7,11 @@ from ._base import *
 import transformers
 from ..nn_modules.fused_llama_attn import FusedLlamaAttentionForQuantizedModel
 from ..nn_modules.fused_llama_mlp import FusedLlamaMLPForQuantizedModel
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 from transformers.models.llama.modeling_llama import apply_rotary_pos_emb, repeat_kv
 from fmzip.utils.devices import get_gpu_count
+from torch.nn import CrossEntropyLoss
+from transformers.modeling_outputs import CausalLMOutputWithPast
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
@@ -166,6 +168,95 @@ def llama_attention_forward(
     return attn_output, attn_weights, past_key_value
 
 
+def llama_rmsnorm_forward(self, hidden_states):
+    # for other operations, add weights in base model to all deltas models
+    outputs = []
+    for i in range(len(self.delta)):
+        self.delta[i].weight += self.weight.to(self.delta[i].weight.device)
+        hs = hidden_states[i]
+        input_dtype = hs.dtype
+        hs = hs.to(torch.float32)
+        variance = hs.pow(2).mean(-1, keepdim=True)
+        hs = hs * torch.rsqrt(variance + self.variance_epsilon)
+        out = self.delta[i].weight * hs.to(input_dtype)
+        outputs += [out]
+    outputs = torch.stack(outputs, dim=0)
+    return outputs
+
+
+def llama_forcausallm_forward(
+    self,
+    input_ids: torch.LongTensor = None,
+    attention_mask: Optional[torch.Tensor] = None,
+    position_ids: Optional[torch.LongTensor] = None,
+    past_key_values: Optional[List[torch.FloatTensor]] = None,
+    inputs_embeds: Optional[torch.FloatTensor] = None,
+    labels: Optional[torch.LongTensor] = None,
+    use_cache: Optional[bool] = None,
+    output_attentions: Optional[bool] = None,
+    output_hidden_states: Optional[bool] = None,
+    return_dict: Optional[bool] = None,
+):
+    output_attentions = (
+        output_attentions
+        if output_attentions is not None
+        else self.config.output_attentions
+    )
+    output_hidden_states = (
+        output_hidden_states
+        if output_hidden_states is not None
+        else self.config.output_hidden_states
+    )
+    return_dict = (
+        return_dict if return_dict is not None else self.config.use_return_dict
+    )
+
+    # decoder outputs consists of (dec_features, layer_state, dec_hidden, dec_attn)
+    outputs = self.model(
+        input_ids=input_ids,
+        attention_mask=attention_mask,
+        position_ids=position_ids,
+        past_key_values=past_key_values,
+        inputs_embeds=inputs_embeds,
+        use_cache=use_cache,
+        output_attentions=output_attentions,
+        output_hidden_states=output_hidden_states,
+        return_dict=return_dict,
+    )
+    hidden_states = outputs[0]
+    #logits = self.lm_head(hidden_states)
+    logits = []
+    for i in range(len(self.delta)):
+        self.delta[i].lm_head.weight += self.lm_head.weight.to(self.delta[i].lm_head.weight.device)
+        logit = self.delta[i].lm_head(hidden_states[i])
+        logits.append(logit)
+    logits = torch.stack(logits, dim=0)
+    loss = None
+    if labels is not None:
+        # Shift so that tokens < n predict n
+        shift_logits = logits[..., :-1, :].contiguous()
+        shift_labels = labels[..., 1:].contiguous()
+        # Flatten the tokens
+        loss_fct = CrossEntropyLoss()
+        shift_logits = shift_logits.view(-1, self.config.vocab_size)
+        shift_labels = shift_labels.view(-1)
+        # Enable model parallelism
+        shift_labels = shift_labels.to(shift_logits.device)
+        loss = loss_fct(shift_logits, shift_labels)
+
+    if not return_dict:
+        output = (logits,) + outputs[1:]
+        return (loss,) + output if loss is not None else output
+
+    return CausalLMOutputWithPast(
+        loss=loss,
+        logits=logits,
+        past_key_values=outputs.past_key_values,
+        hidden_states=outputs.hidden_states,
+        attentions=outputs.attentions,
+    )
+
+
 class LlamaFMZipForCausalLM(BaseFMZipModelForCausalLM):
     layer_type = "LlamaDecoderLayer"
     layers_block_name = "model.layers"
@@ -186,6 +277,11 @@ def parallelize_llama():
     transformers.models.llama.modeling_llama.LlamaAttention.forward = (
         llama_attention_forward
     )
-
+    transformers.models.llama.modeling_llama.LlamaRMSNorm.forward = (
+        llama_rmsnorm_forward
+    )
+    transformers.models.llama.modeling_llama.LlamaForCausalLM.forward = (
+        llama_forcausallm_forward
+    )
 
 __all__ = ["LlamaFMZipForCausalLM"]

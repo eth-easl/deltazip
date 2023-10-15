@@ -135,19 +135,22 @@ class FMZipPipeline:
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model,
             device=device,
-            unpack=True if self.placement_strategy == "addback" and not self.lossless_only else False,
+            unpack=True
+            if self.placement_strategy == "addback" and not self.lossless_only
+            else False,
             low_cpu_mem_usage=True,
         )
         if self.placement_strategy == "addback":
             self.model_pool[delta_model] = self.model_pool[delta_model].half()
         else:
             if len(self.key_list) == 0:
-                # flatten insider modules
-                insider_modules = []
-                [insider_modules.extend(x) for x in inside_layer_modules]
                 # we need to figure out what to merge at this stage
                 for key, _ in self.model_pool[delta_model].model.named_modules():
                     self.key_list.append(key)
+            # check if there's any key that are in the base model but not in the delta model
+            for key, _ in self.base_model.named_modules():
+                if key not in self.key_list:
+                    print(f"{key} not found...")
 
     def _prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
@@ -197,16 +200,11 @@ class FMZipPipeline:
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
         with torch.no_grad():
             for name, param in self.model_pool[deltas[0]].model.named_parameters():
-            # if name contains any keyword in inside_layer_modules:
-                inside_module = False
-                # for module_name in inside_layer_modules:
-                #     if module_name in name:
-                #         self.base_model.state_dict()[name] += param
-                #         inside_module = True
-                #         break
+                # if name contains any keyword in inside_layer_modules:
                 self.base_model.state_dict()[name] += param
-                
+
     def _prepare_colocate(self, deltas):
+        print(self.key_list)
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_model, key)
             dmodules = []
@@ -216,15 +214,19 @@ class FMZipPipeline:
                         dmodules.append(dmodule)
                         break
             setattr(target, "delta", dmodules)
+        for key, _ in self.base_model.named_modules():
+            _, target, _ = get_submodules(self.base_model, key)
+            if hasattr(target, "delta"):
+                pass
+            else:
+                print(f"{key} has no delta")
 
     def _clear_addback_delta(self, delta):
         # remove the delta part from the base_model again
         with torch.no_grad():
             for name, param in self.model_pool[delta].model.named_parameters():
                 # if name contains any keyword in inside_layer_modules:
-                inside_module = False
                 for module_name in inside_layer_modules:
                     if module_name in name:
                         self.base_model.state_dict()[name] -= param
-                        inside_module = True
                         break
