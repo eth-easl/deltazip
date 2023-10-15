@@ -142,7 +142,7 @@ class FMZipPipeline:
             self.model_pool[delta_model] = self.model_pool[delta_model].half()
         else:
             if len(self.key_list) == 0:
-                # flatten insdier modules
+                # flatten insider modules
                 insider_modules = []
                 [insider_modules.extend(x) for x in inside_layer_modules]
                 # we need to figure out what to merge at this stage

@@ -4,7 +4,7 @@
         {
             "model": "xzyao/openllama-3b-chat",
             "timestamp": 0,
-            "prompt": "<human>: Who is Alan Turing?<|endoftext|><assistant>:"
+            "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:"
         }
     ],
     "compressed_model_mapping": {
@@ -16,7 +16,7 @@
             "name":"fmzip",
             "args": {
                 "lossless_only": false,
-                "placement_strategy": "colocate",
+                "placement_strategy": "addback",
                 "batch_size": 1
             }
         }
