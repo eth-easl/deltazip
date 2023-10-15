@@ -59,7 +59,7 @@ def plot(args):
 
     fig = px.bar(df, x="backend", y="time_elapsed", color="Breakdown")
     fig.update_layout(
-        width=800, height=600, title_x=0.5, title_text="Breakdown of Latency (s)<br>Single Query; 1x RTX 3090; 2.1 GB/s"
+        width=800, height=600, title_x=0.5, title_text="Breakdown of Latency (s)<br>Single Query for 3B model; 1x RTX 3090; 2.1 GB/s"
     )
     fig.update_layout(
         font_family="Arial",

@@ -21,13 +21,17 @@ def main(args):
     if os.path.exists(args.output):
         with open(args.output, "r") as fp:
             benchmark_results = json.load(fp)
-    with open(args.workload, "r") as fp:
-        workload = json.load(fp)
-    backends = workload["systems"]
-    base_model = workload["base_model"]
-    queries = workload["queries"]
-    mapping = workload["compressed_model_mapping"]
-    gen_configs = workload["generation_configs"]
+    else:
+        benchmark_results = []
+    with open(args.systems, "r") as fp:
+        systems = json.load(fp)
+    with open(args.jobs, "r") as fp:
+        jobs = json.load(fp)
+    backends = systems["systems"]
+    base_model = jobs["base_model"]
+    queries = jobs["queries"]
+    mapping = jobs["compressed_model_mapping"]
+    gen_configs = jobs["generation_configs"]
     for backend in backends:
         clear_cache()
         time.sleep(5)
@@ -85,9 +89,9 @@ def main(args):
 
 if __name__ == "__main__":
     import argparse
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("--workload", type=str, default="")
+    parser.add_argument("--systems", type=str, default="")
+    parser.add_argument("--jobs", type=str, default="")
     parser.add_argument("--output", type=str, default="")
     args = parser.parse_args()
     main(args)
