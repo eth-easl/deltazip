@@ -1005,11 +1005,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         model_basename: Optional[str] = None,
         trust_remote_code: bool = False,
         unpack: bool = False,
-        low_cpu_mem_usage: bool = True,
+        low_cpu_mem_usage: bool = False,
         use_bfloat16: bool = False,
         **kwargs,
     ):
-        device_ordinal = device
         """load compressed model from local disk"""
         config = AutoConfig.from_pretrained(
             save_dir, trust_remote_code=trust_remote_code
@@ -1116,11 +1115,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         tensor_dtypes = json.loads(metadata["dtype"])
         tensor_shapes = json.loads(metadata["shape"])
         # (todo: xiaozhe), (todo: minor)
-        # seems like we cannot use any device to decompress
+        # seems like we cannot use arbitrary device to decompress
         # for now use device=0 to decompress and then move to target device
         with cp.cuda.Device(0):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
+        print(tensors.keys())
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16
         )

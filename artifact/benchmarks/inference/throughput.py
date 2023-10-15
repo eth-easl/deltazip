@@ -25,7 +25,7 @@ def main(args):
     gen_configs = workload['generation_configs']
     benchmark_results = []
     for backend in backends:
-        clear_cache()
+        # clear_cache()
         if backend['name'] == 'hf':
             reformatted_queries = [(x['prompt'], x['model']) for x in queries]
             pipeline = HuggingFacePipeline(

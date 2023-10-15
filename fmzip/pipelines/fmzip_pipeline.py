@@ -184,7 +184,7 @@ class FMZipPipeline:
 
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
-            self._prepare_inference_addback(deltas)
+            self._prepare_addback(deltas)
         elif self.placement_strategy in ["colocate", "separation"]:
             self._prepare_colocate(deltas)
         else:
@@ -192,7 +192,7 @@ class FMZipPipeline:
                 f"Unsupported placement strategy: {self.placement_strategy}"
             )
 
-    def _prepare_inference_addback(self, deltas: List[str]):
+    def _prepare_addback(self, deltas: List[str]):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
         with torch.no_grad():
@@ -201,6 +201,9 @@ class FMZipPipeline:
                 inside_module = False
                 for module_name in inside_layer_modules:
                     if module_name in name:
+                        print(name)
+                        print(self.base_model.state_dict()[name])
+                        print(param)
                         self.base_model.state_dict()[name] += param
                         inside_module = True
                         break

@@ -100,4 +100,6 @@ class LosslessCompressor:
             )
             if use_bfloat16:
                 tensors[key] = decompressed.bfloat16()
+            else:
+                tensors[key] = decompressed
         return tensors

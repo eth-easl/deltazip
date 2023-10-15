@@ -4,7 +4,7 @@
         {
             "model": "xzyao/openllama-3b-chat",
             "timestamp": 0,
-            "prompt": "<human>: Where is ETH Zurich?<|endoftext|><assistant>:"
+            "prompt": "<human>: Who is Alan Turing?<|endoftext|><assistant>:"
         }
     ],
     "compressed_model_mapping": {
@@ -13,24 +13,9 @@
     },
     "systems": [
         {
-            "name":"hf",
-            "args": {
-                "batch_size": 1,
-                "max_num_models": 1
-            }
-        },
-        {
             "name":"fmzip",
             "args": {
                 "lossless_only": true,
-                "placement_strategy": "addback",
-                "batch_size": 1
-            }
-        },
-        {
-            "name":"fmzip",
-            "args": {
-                "lossless_only": false,
                 "placement_strategy": "addback",
                 "batch_size": 1
             }
