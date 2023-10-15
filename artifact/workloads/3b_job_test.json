@@ -13,9 +13,24 @@
     },
     "systems": [
         {
+            "name":"hf",
+            "args": {
+                "batch_size": 1,
+                "max_num_models": 1
+            }
+        },
+        {
             "name":"fmzip",
             "args": {
                 "lossless_only": true,
+                "placement_strategy": "addback",
+                "batch_size": 1
+            }
+        },
+        {
+            "name":"fmzip",
+            "args": {
+                "lossless_only": false,
                 "placement_strategy": "addback",
                 "batch_size": 1
             }

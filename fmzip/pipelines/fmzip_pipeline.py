@@ -136,7 +136,7 @@ class FMZipPipeline:
             delta_model,
             device=device,
             unpack=True if self.placement_strategy == "addback" and not self.lossless_only else False,
-            low_cpu_mem_usage=False,
+            low_cpu_mem_usage=True,
         )
         if self.placement_strategy == "addback":
             self.model_pool[delta_model] = self.model_pool[delta_model].half()
@@ -199,15 +199,13 @@ class FMZipPipeline:
             for name, param in self.model_pool[deltas[0]].model.named_parameters():
             # if name contains any keyword in inside_layer_modules:
                 inside_module = False
-                for module_name in inside_layer_modules:
-                    if module_name in name:
-                        print(name)
-                        print(self.base_model.state_dict()[name])
-                        print(param)
-                        self.base_model.state_dict()[name] += param
-                        inside_module = True
-                        break
-
+                # for module_name in inside_layer_modules:
+                #     if module_name in name:
+                #         self.base_model.state_dict()[name] += param
+                #         inside_module = True
+                #         break
+                self.base_model.state_dict()[name] += param
+                
     def _prepare_colocate(self, deltas):
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_model, key)
