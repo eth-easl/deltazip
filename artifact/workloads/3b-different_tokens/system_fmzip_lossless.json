@@ -1,0 +1,17 @@
+{
+    "systems": [
+        {
+            "name":"fmzip",
+            "args": {
+                "lossless_only": true,
+                "placement_strategy": "addback",
+                "batch_size": 1,
+                "max_num_deltas": 1
+            }
+        }
+    ],
+    "generation_configs": {
+        "min_length": 64,
+        "max_new_tokens": 64
+    }
+}
