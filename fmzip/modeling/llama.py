@@ -224,10 +224,12 @@ def llama_forcausallm_forward(
         return_dict=return_dict,
     )
     hidden_states = outputs[0]
-    #logits = self.lm_head(hidden_states)
+    # logits = self.lm_head(hidden_states)
     logits = []
     for i in range(len(self.delta)):
-        self.delta[i].lm_head.weight += self.lm_head.weight.to(self.delta[i].lm_head.weight.device)
+        self.delta[i].lm_head.weight += self.lm_head.weight.to(
+            self.delta[i].lm_head.weight.device
+        )
         logit = self.delta[i].lm_head(hidden_states[i])
         logits.append(logit)
     logits = torch.stack(logits, dim=0)
@@ -283,5 +285,6 @@ def parallelize_llama():
     transformers.models.llama.modeling_llama.LlamaForCausalLM.forward = (
         llama_forcausallm_forward
     )
+
 
 __all__ = ["LlamaFMZipForCausalLM"]

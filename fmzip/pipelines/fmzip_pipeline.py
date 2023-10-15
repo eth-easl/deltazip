@@ -200,8 +200,12 @@ class FMZipPipeline:
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
         with torch.no_grad():
             for name, param in self.model_pool[deltas[0]].model.named_parameters():
+                # print(name)
+                # print(param)
+                # print(self.base_model.state_dict()[name])
                 # if name contains any keyword in inside_layer_modules:
                 self.base_model.state_dict()[name] += param
+        # self._offload_delta(deltas[0])
 
     def _prepare_colocate(self, deltas):
         print(self.key_list)
@@ -228,5 +232,5 @@ class FMZipPipeline:
                 # if name contains any keyword in inside_layer_modules:
                 for module_name in inside_layer_modules:
                     if module_name in name:
-                        self.base_model.state_dict()[name] -= param
+                        self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
                         break

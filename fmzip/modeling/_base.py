@@ -853,8 +853,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     def device(self):
         return self.model.device
 
-    def to(self, device: Union[str, torch.device]):
-        return self.model.to(device)
+    def to(self, device: Union[str, torch.device], non_blocking: bool = False):
+        return self.model.to(device, non_blocking=non_blocking)
 
     def forward(self, **kwargs):
         return self.model(**kwargs)
