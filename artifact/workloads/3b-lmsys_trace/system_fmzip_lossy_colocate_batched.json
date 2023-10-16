@@ -5,10 +5,10 @@
             "args": {
                 "lossless_only": false,
                 "placement_strategy": "colocate",
-                "batch_size": 1,
-                "max_num_deltas": 1
+                "batch_size": 3,
+                "max_num_deltas": 4
             },
-            "order": 3
+            "order": 2
         }
     ]
 }

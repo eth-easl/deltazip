@@ -13,23 +13,23 @@ inference_results = []
 s = sched.scheduler(time.monotonic, time.sleep)
 threads = []
 
-def request_thread(req):
+def request_thread(req, start_time, global_start_time,):
     global inference_results
-    print(f"issuing... {req}")
     res = requests.post(endpoint + "/inference", json=req)
+    end_time = timer()
     res = {
         "response": res.json(),
+        "time_elapsed": end_time - start_time,
+        "relative_start_at": start_time - global_start_time,
     }
-    print(f"received... {res}")
     inference_results.append(res)
     return res
 
-def async_issue_requests(reqs):
-    
+def async_issue_requests(reqs, global_start_time):
     global threads
     for req in reqs:
-        print(f"req: {req}")
-        thread = threading.Thread(target=request_thread, args=(req,))
+        start_time = timer()
+        thread = threading.Thread(target=request_thread, args=(req, start_time,global_start_time, ))
         threads.append(thread)
         thread.start()
 
@@ -47,14 +47,14 @@ def issue_queries(queries):
             if x["timestamp"] <= time and x["timestamp"] > time - time_step
         ]
         if len(sub_queries) > 0:
-            s.enter(time, 1, async_issue_requests, argument=(sub_queries,))
+            s.enter(time, 1, async_issue_requests, argument=(sub_queries, start, ))
+    
     s.run(blocking=True)
     print(f"total threads: {len(threads)}")
     [thread.join() for thread in threads]
     end = timer()
     logger.info("all queries issued")
     return {"results": inference_results, "total_elapsed": end - start}
-
 
 def configure_system(backend, base_model, backend_args, model_mapping, gen_configs):
     res = requests.post(
@@ -76,6 +76,7 @@ def run(args):
         for x in os.listdir(args.workload)
         if x.endswith(".json") and x.startswith("system")
     ]
+    global inference_results
     with open(os.path.join(args.workload, "trace.json"), "r") as fp:
         jobs = json.load(fp)
     with open(os.path.join(args.workload, "config.json"), "r") as fp:
@@ -84,11 +85,15 @@ def run(args):
     model_mapping = config["compressed_model_mapping"]
     gen_configs = config["generation_configs"]
     print(f"gen configs: {gen_configs}")
+    benchmark_results = []
     # order systems, in desending order, by name
-    systems = sorted(systems, key=lambda x: x, reverse=True)
+    benched_systems = []
     for system in systems:
         with open(os.path.join(args.workload, system), "r") as fp:
             sys_config = json.load(fp)["systems"]
+        benched_systems.append(sys_config)
+    benched_systems = sorted(benched_systems, key=lambda x: x[0]["order"])
+    for sys_config in benched_systems:
         configure_system(
             backend=sys_config[0]["name"],
             base_model=base_model,
@@ -97,6 +102,15 @@ def run(args):
             gen_configs=gen_configs,
         )
         issue_queries(jobs["queries"])
+        benchmark_results.append({
+            "system": sys_config[0],
+            "gen_configs": gen_configs,
+            "results": inference_results,
+        })
+        inference_results = []
+    
+    with open(args.output, "w") as fp:
+        json.dump(benchmark_results, fp)
 
 
 if __name__ == "__main__":
