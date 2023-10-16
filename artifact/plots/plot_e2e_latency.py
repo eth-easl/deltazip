@@ -82,5 +82,3 @@ if __name__ == "__main__":
     parser.add_argument("--input", type=str, default="artifact/results/latency.json")
     args = parser.parse_args()
     plot(args)
-
-    

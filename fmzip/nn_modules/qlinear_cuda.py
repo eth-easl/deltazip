@@ -228,7 +228,8 @@ class QuantLinear(nn.Module):
                 )
                 zeros = zeros & 0x7
                 zeros = torch.cat(
-                    [zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]], dim=2
+                    [zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]],
+                    dim=2,
                 )
 
                 zeros = zeros + 1
@@ -238,8 +239,12 @@ class QuantLinear(nn.Module):
                     self.qweight.shape[0] // 3, 3, 1, self.qweight.shape[1]
                 ).expand(-1, -1, 12, -1)
                 weight = (weight >> self.wf.unsqueeze(-1)) & 0x7
-                weight[:, 0, 10] = (weight[:, 0, 10] & 0x3) | ((weight[:, 1, 0] << 2) & 0x4)
-                weight[:, 1, 11] = (weight[:, 1, 11] & 0x1) | ((weight[:, 2, 0] << 1) & 0x6)
+                weight[:, 0, 10] = (weight[:, 0, 10] & 0x3) | (
+                    (weight[:, 1, 0] << 2) & 0x4
+                )
+                weight[:, 1, 11] = (weight[:, 1, 11] & 0x1) | (
+                    (weight[:, 2, 0] << 1) & 0x6
+                )
                 weight = weight & 0x7
                 weight = torch.cat(
                     [weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1

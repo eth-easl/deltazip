@@ -10,12 +10,14 @@ from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
 
 init_seeds(42)
 
+
 def clear_cache():
     torch.cuda.empty_cache()
     subprocess.check_output(
         "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
     )
     torch.cuda.synchronize()
+
 
 def main(args):
     print(args)
@@ -89,6 +91,7 @@ def main(args):
 
 if __name__ == "__main__":
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--systems", type=str, default="")
     parser.add_argument("--jobs", type=str, default="")

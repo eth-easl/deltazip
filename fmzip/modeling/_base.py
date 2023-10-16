@@ -34,6 +34,7 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 
+
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
     tolerance: float = field(default=1e-9)
@@ -1152,5 +1153,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         del losslesscompressor
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)
+
 
 __all__ = ["BaseFMZipModelForCausalLM", "BaseCompressionConfig"]

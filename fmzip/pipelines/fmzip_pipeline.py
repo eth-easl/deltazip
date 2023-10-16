@@ -21,6 +21,8 @@ dummy_compression_config = BaseCompressionConfig(
     lossless="gdeflate",
     damp_percent=0.02,
 )
+
+
 class FMZipPipeline:
     def __init__(
         self,
@@ -177,9 +179,13 @@ class FMZipPipeline:
             self.model_pool = {}
             torch.cuda.empty_cache()
             cp.get_default_memory_pool().free_all_blocks()
-            
-            logger.warning(f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB")
-            logger.warning(f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB")
+
+            logger.warning(
+                f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
+            )
+            logger.warning(
+                f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
+            )
 
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":

@@ -95,6 +95,7 @@ def unpack_model(model):
         rsetattr(model, name, layers[name].unpack())
     logger.info("Model unpacked.")
 
+
 def pack_model(
     model,
     quantizers,
