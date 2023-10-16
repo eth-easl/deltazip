@@ -101,6 +101,7 @@ class FMZipPipeline:
                 loading_time = loading_end - loading_start
                 prepare_time = prepare_end - prepare_start
                 inference_time = inference_end - inference_start
+                total_time = inference_end - tokenize_start
                 output = [
                     {
                         "data": o,
@@ -110,6 +111,7 @@ class FMZipPipeline:
                             "loading_time": loading_time,
                             "prepare_time": prepare_time,
                             "inference_time": inference_time,
+                            "total_time": total_time,
                         },
                     }
                     for i, o in enumerate(output)
@@ -117,6 +119,7 @@ class FMZipPipeline:
                 outputs.extend(output)
                 if self.placement_strategy == "addback":
                     self._clear_addback_delta(deltas[0])
+                torch.cuda.empty_cache()
             return outputs
 
     def _load_base_model(self):
@@ -180,6 +183,7 @@ class FMZipPipeline:
             logger.info(f"model pool is full, evict all deltas")
             logger.warning(f"todo: implement LRU cache")
             self.model_pool = {}
+            torch.cuda.empty_cache()
 
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":

@@ -1131,7 +1131,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del tensor_shapes
             del tensors
             del layers
-            torch.cuda.empty_cache()
         if unpack and (
             isinstance(compress_config, AutoCompressionConfig)
             or compress_config.bits in [2, 3, 4, 8]
@@ -1155,6 +1154,5 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         del losslesscompressor
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)
-
 
 __all__ = ["BaseFMZipModelForCausalLM", "BaseCompressionConfig"]

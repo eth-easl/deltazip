@@ -56,6 +56,7 @@ class HuggingFacePipeline:
                     loading_time = loading_end - loading_start
                     prepare_time = 0
                     inference_time = inference_end - inference_start
+                    total_time = inference_end - tokenize_start
                     output = [
                         {
                             "data": o,
@@ -65,6 +66,7 @@ class HuggingFacePipeline:
                                 "loading_time": loading_time,
                                 "prepare_time": prepare_time,
                                 "inference_time": inference_time,
+                                "total_time": total_time,
                             },
                         }
                         for o in output
