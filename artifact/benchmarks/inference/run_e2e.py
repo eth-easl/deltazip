@@ -48,9 +48,10 @@ def issue_queries(queries):
         ]
         if len(sub_queries) > 0:
             s.enter(time, 1, async_issue_requests, argument=(sub_queries,))
-    s.run(blocking=False)
-    end = timer()
+    s.run(blocking=True)
+    print(f"total threads: {len(threads)}")
     [thread.join() for thread in threads]
+    end = timer()
     logger.info("all queries issued")
     return {"results": inference_results, "total_elapsed": end - start}
 
@@ -82,6 +83,7 @@ def run(args):
     base_model = config["base_model"]
     model_mapping = config["compressed_model_mapping"]
     gen_configs = config["generation_configs"]
+    print(f"gen configs: {gen_configs}")
     # order systems, in desending order, by name
     systems = sorted(systems, key=lambda x: x, reverse=True)
     for system in systems:

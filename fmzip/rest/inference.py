@@ -39,7 +39,7 @@ class InferenceService:
                 )
                 for x in queries
             ]
-        results = self.pipeline.generate(reformatted_queries)
+        results = self.pipeline.generate(reformatted_queries, **self.gen_configs)
         return results
 
     @property
