@@ -1,3 +1,4 @@
+import time
 import torch
 from loguru import logger
 from typing import List, Tuple
@@ -7,16 +8,6 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip.modeling.gpt_neox import parallelize_neox
 from fmzip.pipelines.utils import get_gpu_count, get_submodules
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
-
-inside_layer_modules = [
-    "self_attn.k_proj",
-    "self_attn.v_proj",
-    "self_attn.q_proj",
-    "self_attn.o_proj",
-    "mlp.up_proj",
-    "mlp.gate_proj",
-    "mlp.down_proj",
-]
 
 placement_strategies = ["addback", "colocate", "separation"]
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
@@ -30,8 +21,6 @@ dummy_compression_config = BaseCompressionConfig(
     lossless="gdeflate",
     damp_percent=0.02,
 )
-
-
 class FMZipPipeline:
     def __init__(
         self,
@@ -97,6 +86,7 @@ class FMZipPipeline:
                 output = self.base_model.generate(**batch_inputs, **kwargs)
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
+
                 tokenize_time = tokenize_end - tokenize_start
                 loading_time = loading_end - loading_start
                 prepare_time = prepare_end - prepare_start
@@ -118,6 +108,7 @@ class FMZipPipeline:
                 ]
                 outputs.extend(output)
                 if self.placement_strategy == "addback":
+                    # for add back: batch size always 1
                     self._clear_addback_delta(deltas[0])
                 torch.cuda.empty_cache()
             return outputs
@@ -213,19 +204,9 @@ class FMZipPipeline:
                         dmodules.append(dmodule)
                         break
             setattr(target, "delta", dmodules)
-        for key, _ in self.base_model.named_modules():
-            _, target, _ = get_submodules(self.base_model, key)
-            if hasattr(target, "delta"):
-                pass
-            else:
-                print(f"{key} has no delta")
 
     def _clear_addback_delta(self, delta):
         # remove the delta part from the base_model again
         with torch.no_grad():
             for name, param in self.model_pool[delta].model.named_parameters():
-                # if name contains any keyword in inside_layer_modules:
-                for module_name in inside_layer_modules:
-                    if module_name in name:
-                        self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
-                        break
+                self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)

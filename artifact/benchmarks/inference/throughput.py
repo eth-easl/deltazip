@@ -15,6 +15,7 @@ def clear_cache():
     subprocess.check_output(
         "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
     )
+    torch.cuda.synchronize()
 
 def main(args):
     print(args)
@@ -34,7 +35,6 @@ def main(args):
     gen_configs = jobs["generation_configs"]
     for backend in backends:
         clear_cache()
-        time.sleep(5)
         if backend["name"] == "hf":
             reformatted_queries = [(x["prompt"], x["model"]) for x in queries]
             pipeline = HuggingFacePipeline(base_model, **backend["args"])
