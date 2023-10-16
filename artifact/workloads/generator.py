@@ -5,18 +5,18 @@ import datasets
 import pandas as pd
 import numpy as np
 
-# to_eval_models = [
-#     "lmsys/vicuna-7b-v1.5",
-#     "Xwin-LM/Xwin-LM-7B-V0.1",
-#     "migtissera/Synthia-7B-v1.2",
-#     "meta-llama/Llama-2-7b-chat-hf",
-#     "FlagAlpha/Llama2-Chinese-7b-Chat",
-# ]
 to_eval_models = [
-    "xzyao/openllama-3b-chat",
-    "xzyao/openllama-chat-2",
-    "xzyao/openllama-chat-3",
+    "lmsys/vicuna-7b-v1.5",
+    "Xwin-LM/Xwin-LM-7B-V0.1",
+    "migtissera/Synthia-7B-v1.2",
+    "meta-llama/Llama-2-7b-chat-hf",
+    "FlagAlpha/Llama2-Chinese-7b-Chat",
 ]
+# to_eval_models = [
+#     "xzyao/openllama-3b-chat",
+#     "xzyao/openllama-chat-2",
+#     "xzyao/openllama-chat-3",
+# ]
 
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
@@ -55,7 +55,7 @@ def prepare_lmsys(args):
             {
                 "id": idx,
                 "prompt":format_openllama(item["conversation_a"][0]["content"]),
-                "timestamp": (item["tstamp"] - min_tstamp) / 100,
+                "timestamp": (item["tstamp"] - min_tstamp) / 10,
                 "model": mapping[item["model_a"]],
             }
         )
