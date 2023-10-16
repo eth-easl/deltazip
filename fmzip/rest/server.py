@@ -35,19 +35,11 @@ class BackgroundTasks(threading.Thread):
             if len(batch) > 0:
                 # sort by id
                 batch = sorted(batch, key=lambda x: int(x.id))
-                if inference_model.provider == "hf":
-                    for query in batch:
-                        print(f"processing {query.id}")
-                        output = inference_model.generate([query])
-                        for i, task in enumerate([query]):
-                            results[task.id]["result"] = output[i]
-                            results[task.id]["event"].set()
-                else:
-                    output = inference_model.generate(batch)
-                    print(f"processing {[x.id for x in batch]}")
-                    for i, task in enumerate(batch):
-                        results[task.id]["result"] = output[i]
-                        results[task.id]["event"].set()
+                output = inference_model.generate(batch)
+                print(f"processing {[x.id for x in batch]}")
+                for i, task in enumerate(batch):
+                    results[task.id]["result"] = output[i]
+                    results[task.id]["event"].set()
 
     def run(self, *args, **kwargs):
         loop = asyncio.new_event_loop()
@@ -58,7 +50,7 @@ results = {}
 
 
 class InferenceTask(BaseModel):
-    id: Optional[str] = ""
+    id: Optional[int] = ""
     prompt: str
     model: str
     response: Optional[dict] = {}

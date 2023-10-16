@@ -3,6 +3,7 @@ import json
 import argparse
 import datasets
 import pandas as pd
+import numpy as np
 
 # to_eval_models = [
 #     "lmsys/vicuna-7b-v1.5",
@@ -16,6 +17,12 @@ to_eval_models = [
     "xzyao/openllama-chat-2",
     "xzyao/openllama-chat-3",
 ]
+
+def format_openllama(prompt):
+    return f"<human>: {prompt}<|endoftext|><assistant>:"
+
+def format_lmsys(prompt):
+    return f"USER: {prompt}\nASSISTANT:"
 
 def prepare_lmsys(args):
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
@@ -37,13 +44,17 @@ def prepare_lmsys(args):
         mapping[model[0]] = to_eval_models[idx % len(to_eval_models)]
     print(mapping)
     # randomly take num_queries from trace
-    trace = trace.shuffle().select(range(args.num_queries))
-    for item in trace:
+    # sort trace by timestamp
+    trace = sorted(trace, key=lambda x: x["tstamp"])
+    # take num_queries from trace, randomly start
+    start = np.random.randint(0, len(trace) - args.num_queries)
+    trace = trace[start : start + args.num_queries]
+    min_tstamp = trace[0]["tstamp"]
+    for idx, item in enumerate(trace):
         traces_data.append(
             {
-                "prompt": "USER: "
-                + item["conversation_a"][0]["content"]
-                + "\nASSISTANT: ",
+                "id": idx,
+                "prompt":format_openllama(item["conversation_a"][0]["content"]),
                 "timestamp": (item["tstamp"] - min_tstamp) / 10000,
                 "model": mapping[item["model_a"]],
             }

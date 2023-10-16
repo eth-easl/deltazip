@@ -26,15 +26,15 @@ class InferenceService:
 
     def generate(self, queries: List[Tuple]):
         if self.backend == "hf":
-            reformatted_queries = [(x["prompt"], x["model"]) for x in queries]
+            reformatted_queries = [(x.prompt, x.model) for x in queries]
         elif self.backend == "fmzip":
             reformatted_queries = [
                 (
-                    x["prompt"],
-                    self.model_mappingmapping[
-                        x["model"]
+                    x.prompt,
+                    self.model_mapping[
+                        x.model
                         if not self.backend_args["lossless_only"]
-                        else x["model"] + "-lossless"
+                        else x.model + "-lossless"
                     ],
                 )
                 for x in queries
@@ -44,4 +44,4 @@ class InferenceService:
 
     @property
     def batch_size(self):
-        return self.backend_args['batch_size']
+        return self.backend_args["batch_size"]

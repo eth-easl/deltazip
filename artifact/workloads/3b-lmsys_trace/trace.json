@@ -1,19 +1,22 @@
 {
     "queries": [
         {
-            "prompt": "USER: Make a poetic essay from the perspective of a person who has lost their mother recently, include emotion, include repetition\nASSISTANT: ",
-            "timestamp": 242.52904335000514,
-            "model": "xzyao/openllama-3b-chat"
+            "id": 0,
+            "prompt": "<human>: Task:  Healthy Beat Ltd. is a medical device firm to develop and manufacture heart-rate monitors. Recently the top management team has decided to implement a MES(Manufacturing Execution System) software solution to vastly enhance its production line efficiency and reduce production leadtime.  The supplier of this MES software solution is called Quick Link. \nIssue 3: Your team member from production department is very key for the success of the project.  He needs to coordinate the requirement collections, facilitate hardware/software installation and testing etc.  However, he is also a busy person and has limited time with your project. This will delay your project schedule by 1 month without his full-time support. \n\u8fd9\u79cd\u60c5\u51b5\u6d89\u53ca\u54ea\u4e9b\u91cd\u8981\u7684\u5229\u76ca\u76f8\u5173\u8005\uff1f<|endoftext|><assistant>:",
+            "timestamp": 0.0,
+            "model": "xzyao/openllama-chat-3"
         },
         {
-            "prompt": "USER: How to spot red flags in resumes for a ML engineer position?\nASSISTANT: ",
-            "timestamp": 181.86130845000744,
-            "model": "xzyao/openllama-3b-chat"
-        },
-        {
-            "prompt": "USER: Tell me the tale of a space cowboy.\nASSISTANT: ",
-            "timestamp": 141.25936775000096,
+            "id": 1,
+            "prompt": "<human>: How to fix Facebook's monopoly on social media, including Instagram, WhatsApp, and Messenger?<|endoftext|><assistant>:",
+            "timestamp": 0.0751013500213623,
             "model": "xzyao/openllama-chat-2"
+        },
+        {
+            "id": 2,
+            "prompt": "<human>: How to fix Facebook's monopoly on social media, including Instagram, WhatsApp, and Messenger?<|endoftext|><assistant>:",
+            "timestamp": 0.08231387000083923,
+            "model": "xzyao/openllama-3b-chat"
         }
     ]
 }
