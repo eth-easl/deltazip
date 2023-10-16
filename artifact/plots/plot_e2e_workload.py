@@ -11,7 +11,7 @@ def plot(args):
     plot_data = []
     for item in results:
         provider = item["system"]
-        provider = f"{provider['name']}, {provider['args'].get('batch_size', 1)}"
+        provider = f"{provider['name']}, {provider['args'].get('batch_size', 1)}, {provider['args'].get('placement_strategy','none')}"
         for res in item['results']:
             plot_data.append({
                 "id": res['response']['id'],
