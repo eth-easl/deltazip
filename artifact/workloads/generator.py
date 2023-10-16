@@ -4,14 +4,18 @@ import argparse
 import datasets
 import pandas as pd
 
+# to_eval_models = [
+#     "lmsys/vicuna-7b-v1.5",
+#     "Xwin-LM/Xwin-LM-7B-V0.1",
+#     "migtissera/Synthia-7B-v1.2",
+#     "meta-llama/Llama-2-7b-chat-hf",
+#     "FlagAlpha/Llama2-Chinese-7b-Chat",
+# ]
 to_eval_models = [
-    "lmsys/vicuna-7b-v1.5",
-    "Xwin-LM/Xwin-LM-7B-V0.1",
-    "migtissera/Synthia-7B-v1.2",
-    "meta-llama/Llama-2-7b-chat-hf",
-    "FlagAlpha/Llama2-Chinese-7b-Chat",
+    "xzyao/openllama-3b-chat",
+    "xzyao/openllama-chat-2",
+    "xzyao/openllama-chat-3",
 ]
-
 
 def prepare_lmsys(args):
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]

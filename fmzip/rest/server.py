@@ -66,10 +66,11 @@ class InferenceTask(BaseModel):
 
 
 class RestartRequest(BaseModel):
-    backend: str
     base_model: str
-    batch_size: int = 2
-    model_parallel_strategy: str = "separate"
+    backend: str
+    backend_args: dict
+    mapping: dict
+    gen_configs: dict
 
 
 @app.post("/inference", response_model=InferenceTask)
@@ -93,12 +94,13 @@ async def handle_restart(restart_request: RestartRequest):
     del inference_model
     torch.cuda.empty_cache()
     inference_model = InferenceService(
-        provider=restart_request.backend,
         base_model=restart_request.base_model,
-        batch_size=restart_request.batch_size,
-        model_parallel_strategy=restart_request.model_parallel_strategy,
+        backend=restart_request.backend,
+        backend_args=restart_request.backend_args,
+        mapping=restart_request.mapping,
+        gen_configs=restart_request.gen_configs,
     )
-    batch_size = restart_request.batch_size
+    batch_size = inference_model.batch_size
     return {"status": "success"}
 
 

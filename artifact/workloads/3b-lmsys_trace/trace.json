@@ -1,0 +1,19 @@
+{
+    "queries": [
+        {
+            "prompt": "USER: Make a poetic essay from the perspective of a person who has lost their mother recently, include emotion, include repetition\nASSISTANT: ",
+            "timestamp": 242.52904335000514,
+            "model": "xzyao/openllama-3b-chat"
+        },
+        {
+            "prompt": "USER: How to spot red flags in resumes for a ML engineer position?\nASSISTANT: ",
+            "timestamp": 181.86130845000744,
+            "model": "xzyao/openllama-3b-chat"
+        },
+        {
+            "prompt": "USER: Tell me the tale of a space cowboy.\nASSISTANT: ",
+            "timestamp": 141.25936775000096,
+            "model": "xzyao/openllama-chat-2"
+        }
+    ]
+}
