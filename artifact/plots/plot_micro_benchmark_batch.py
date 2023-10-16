@@ -65,8 +65,12 @@ def plot(args):
     # reverse the order of the dataframe
     fig = px.bar(df, x="backend", y="time_elapsed",facet_col='id', color="Breakdown")
     fig.update_layout(
-        width=1200, height=600, title_x=0.5, title_text="Breakdown of Latency (s)<br>3 Queries for 3B model; 1x RTX 3090; 2.1 GB/s"
+        width=1200, height=600, title_x=0.5, title_text="Breakdown of Latency (s)<br>3 Concurrent Queries for 3 Different 3B model; 1x RTX 3090; 2.1 GB/s"
     )
+    fig.for_each_annotation(lambda a: a.update(text=""))
+    # fig.for_each_trace(lambda t: t.update(name=""))
+
+    fig.update_xaxes(title='')
     fig.update_layout(
         font_family="Arial",
         font_color="black",
@@ -79,8 +83,10 @@ def plot(args):
         legend = dict(font = dict(size = 18)),
         legend_title = dict(font = dict(size = 18)),
     )
-    fig.update_yaxes(title_text="Time Elapsed", title_font=dict(size=22), tickfont_size=18)
-    fig.update_xaxes(title_text="Backend", title_font=dict(size=22), tickfont_size=12)
+
+    fig.update_layout(yaxis1=dict(title_text="Time Elapsed", title_font=dict(size=22), tickfont_size=18))
+    fig.update_layout(xaxis2=dict(title_text="Backend", title_font=dict(size=22), tickfont_size=12))
+
     fig.write_image(args.output, scale=2)
 
 if __name__=="__main__":
