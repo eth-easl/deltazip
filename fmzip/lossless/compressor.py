@@ -80,7 +80,6 @@ class LosslessCompressor:
         tensors_shape = {}
         tensors_dtype = {}
         for key in state_dict:
-            # logger.debug(f"compressiong {key}, shape: {state_dict[key].shape}, dtype: {state_dict[key].dtype}")
             tensors[key], tensors_shape[key], tensors_dtype[key] = self.compress_tensor(
                 state_dict[key]
             )
@@ -93,13 +92,14 @@ class LosslessCompressor:
         tensor_dtypes: Dict[str, str] = None,
         use_bfloat16: bool = False,
     ):
-        tensors = {}
-        for key in compressed_state_dict.keys():
-            decompressed = self.decompress_tensor(
-                compressed_state_dict[key], tensor_shapes[key], tensor_dtypes[key]
-            )
-            if use_bfloat16:
-                tensors[key] = decompressed.bfloat16()
-            else:
-                tensors[key] = decompressed
-        return tensors
+        with torch.no_grad():
+            tensors = {}
+            for key in compressed_state_dict.keys():
+                decompressed = self.decompress_tensor(
+                    compressed_state_dict[key], tensor_shapes[key], tensor_dtypes[key]
+                )
+                if use_bfloat16:
+                    tensors[key] = decompressed.bfloat16()
+                else:
+                    tensors[key] = decompressed
+            return tensors

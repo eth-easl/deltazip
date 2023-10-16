@@ -1,4 +1,3 @@
-import time
 import torch
 from loguru import logger
 from typing import List, Tuple
@@ -8,6 +7,7 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip.modeling.gpt_neox import parallelize_neox
 from fmzip.pipelines.utils import get_gpu_count, get_submodules
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
+import cupy as cp
 
 placement_strategies = ["addback", "colocate", "separation"]
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
@@ -77,6 +77,7 @@ class FMZipPipeline:
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
                 loading_start = timer()
+                print(deltas)
                 self._load_deltas(deltas)
                 loading_end = timer()
                 prepare_start = timer()
@@ -175,6 +176,10 @@ class FMZipPipeline:
             logger.warning(f"todo: implement LRU cache")
             self.model_pool = {}
             torch.cuda.empty_cache()
+            cp.get_default_memory_pool().free_all_blocks()
+            
+            logger.warning(f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB")
+            logger.warning(f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB")
 
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
