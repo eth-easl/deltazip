@@ -10,6 +10,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fmzip.rest.inference import InferenceService
 from fmzip.rest.profile import profile_disk_io, get_gpu_name
+import random
+import subprocess
 
 app = FastAPI()
 task_queue = Queue()
@@ -20,6 +22,13 @@ base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
 cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
 
 inference_model = None
+
+def randomly_clear_disk_cache():
+    # randomly clear disk cache with a probability of 0.5
+    if random.random() < 1:
+        subprocess.Popen(
+            "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
+        )
 
 class BackgroundTasks(threading.Thread):
     async def _checking(self):
@@ -39,11 +48,11 @@ class BackgroundTasks(threading.Thread):
                 for i, task in enumerate(batch):
                     results[task.id]["result"] = output[i]
                     results[task.id]["event"].set()
+                    randomly_clear_disk_cache()
 
     def run(self, *args, **kwargs):
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self._checking())
-
 
 results = {}
 

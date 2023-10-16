@@ -55,7 +55,7 @@ def prepare_lmsys(args):
             {
                 "id": idx,
                 "prompt":format_openllama(item["conversation_a"][0]["content"]),
-                "timestamp": (item["tstamp"] - min_tstamp) / 10000,
+                "timestamp": (item["tstamp"] - min_tstamp) / 100,
                 "model": mapping[item["model_a"]],
             }
         )

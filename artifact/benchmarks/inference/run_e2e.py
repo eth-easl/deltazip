@@ -8,8 +8,11 @@ from loguru import logger
 from timeit import default_timer as timer
 import sched, time
 
+
+
 endpoint = "http://localhost:8000"
 inference_results = []
+
 s = sched.scheduler(time.monotonic, time.sleep)
 threads = []
 

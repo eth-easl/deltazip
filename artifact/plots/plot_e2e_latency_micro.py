@@ -1,14 +1,12 @@
 import json
+import argparse
 import pandas as pd
 import plotly.express as px
-import argparse
-
 
 def plot(args):
     print(args)
     with open(args.input, "r") as fp:
         results = json.load(fp)
-
     plot_data = []
     for item in results:
         provider = item["backend"]
@@ -21,7 +19,6 @@ def plot(args):
             waiting_time = res["time_elapsed"] - (
                 tokenize_time + loading_time + prepare_time + inference_time
             )
-
             plot_data.append(
                 {
                     "id": res["response"]["id"],
