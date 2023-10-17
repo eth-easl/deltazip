@@ -1,6 +1,4 @@
 transformers
-accelerate
-xformers
 rouge-score
 safetensors
 py7zr

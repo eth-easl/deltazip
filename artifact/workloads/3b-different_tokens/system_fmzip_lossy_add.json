@@ -1,0 +1,13 @@
+{
+    "systems": [
+        {
+            "name":"fmzip",
+            "args": {
+                "lossless_only": false,
+                "placement_strategy": "addback",
+                "batch_size": 1,
+                "max_num_deltas": 1
+            }
+        }
+    ]
+}

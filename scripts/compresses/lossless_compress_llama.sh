@@ -1,0 +1,9 @@
+python cli/lossless_compress.py --target-model FlagAlpha/Llama2-Chinese-7b-Chat --outdir .cache/compressed_models/7b-parameters/lossless/llama-2-chinese-7b-chat-lossless --dataset .cache/datasets/dialogs.jsonl --n-samples 384 --bits 3 --group-size 128 --sparsity 0.3 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf
+
+python cli/lossless_compress.py --target-model lmsys/vicuna-7b-v1.5 --outdir .cache/compressed_models/7b-parameters/lossless/vicuna-7b-v1.5-lossless --dataset .cache/datasets/dialogs.jsonl --n-samples 384 --bits 3 --group-size 128 --sparsity 0.3 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf
+
+python cli/lossless_compress.py --target-model Xwin-LM/Xwin-LM-7B-V0.1 --outdir .cache/compressed_models/7b-parameters/lossless/xwin-lm-7b-v0.1-lossless --dataset .cache/datasets/dialogs.jsonl --n-samples 384 --bits 3 --group-size 128 --sparsity 0.3 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf
+
+python cli/lossless_compress.py --target-model migtissera/Synthia-7B-v1.2 --outdir .cache/compressed_models/7b-parameters/lossless/synthia-7b-v1.2-lossless --dataset .cache/datasets/dialogs.jsonl --n-samples 384 --bits 3 --group-size 128 --sparsity 0.3 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf
+
+python cli/lossless_compress.py --target-model meta-llama/Llama-2-7b-chat-hf --outdir .cache/compressed_models/7b-parameters/lossless/llama-2-7b-chat-lossless --dataset .cache/datasets/dialogs.jsonl --n-samples 384 --bits 3 --group-size 128 --sparsity 0.3 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf

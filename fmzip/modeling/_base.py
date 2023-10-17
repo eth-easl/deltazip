@@ -853,8 +853,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
     def device(self):
         return self.model.device
 
-    def to(self, device: Union[str, torch.device]):
-        return self.model.to(device)
+    def to(self, device: Union[str, torch.device], non_blocking: bool = False):
+        return self.model.to(device, non_blocking=non_blocking)
 
     def forward(self, **kwargs):
         return self.model(**kwargs)
@@ -899,7 +899,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensor_shapes,
                 tensors_dtype,
             ) = lossless_compressor.compress_state_dict(state_dict)
-
         safe_save(
             tensor_dict=state_dict,
             filename=join(save_dir, model_save_name),
@@ -997,20 +996,16 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         device_map: Optional[str] = None,
         max_memory: Optional[dict] = None,
         device: Optional[Union[str, int]] = None,
-        strict: bool = False,
         use_triton: bool = False,
-        inject_fused_attention: bool = False,
-        inject_fused_mlp: bool = False,
         use_cuda_fp16: bool = True,
         compress_config: Optional[
             Union[BaseCompressionConfig, AutoCompressionConfig]
         ] = None,
         model_basename: Optional[str] = None,
-        use_safetensors: bool = True,
         trust_remote_code: bool = False,
-        warmup_triton: bool = True,
         unpack: bool = False,
-        low_cpu_mem_usage: bool = True,
+        low_cpu_mem_usage: bool = False,
+        use_bfloat16: bool = False,
         **kwargs,
     ):
         """load compressed model from local disk"""
@@ -1102,11 +1097,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 )
         else:
             model = AutoModelForCausalLM.from_config(
-                config, trust_remote_code=trust_remote_code, torch_dtype=torch.float16
+                config,
+                trust_remote_code=trust_remote_code,
+                torch_dtype=torch.float16,
             )
         # now load compressed data
-        losslesscompressor = LosslessCompressor(compress_config.lossless)
-
+        losslesscompressor = LosslessCompressor(compress_config.lossless, device_id=0)
         metadata = None
         tensors = {}
 
@@ -1117,12 +1113,14 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensors[key] = f.get_tensor(key)
         tensor_dtypes = json.loads(metadata["dtype"])
         tensor_shapes = json.loads(metadata["shape"])
-        # (todo:xiaozhe) now we force decompression on 0
+        # (todo: xiaozhe), (todo: minor)
+        # seems like we cannot use arbitrary device to decompress
+        # for now use device=0 to decompress and then move to target device
         with cp.cuda.Device(0):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
         tensors = losslesscompressor.decompress_state_dict(
-            tensors, tensor_shapes, tensor_dtypes
+            tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16
         )
         model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
         if isinstance(
@@ -1132,12 +1130,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             del tensor_shapes
             del tensors
             del layers
-            torch.cuda.empty_cache()
         if unpack and (
             isinstance(compress_config, AutoCompressionConfig)
             or compress_config.bits in [2, 3, 4, 8]
         ):
             unpack_model(model)
+            # print keys in the model
+            
         model = model.to(device)
         # set seqlen
         model_config = model.config.to_dict()
@@ -1153,6 +1152,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             )
             model.seqlen = 2048
         model.eval()
+        del losslesscompressor
+        torch.cuda.empty_cache()
         return cls(model, True, compress_config)
 
 

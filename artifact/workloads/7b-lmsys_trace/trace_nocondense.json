@@ -1,0 +1,304 @@
+{
+    "queries": [
+        {
+            "id": 0,
+            "prompt": "USER: What is knauf gifafloor presto\nASSISTANT:",
+            "timestamp": 0.0,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 1,
+            "prompt": "USER: Write a C++ code that shows \"Hello world!\".  Please write short code as possible as you can.\nASSISTANT:",
+            "timestamp": 42.853399991989136,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 2,
+            "prompt": "USER: Wie verlege ich knauf gifafloor presto auf einer holzbalkendecke\nASSISTANT:",
+            "timestamp": 106.08750009536743,
+            "model": "Xwin-LM/Xwin-LM-7B-V0.1"
+        },
+        {
+            "id": 3,
+            "prompt": "USER: Kannst du mir helfen die balken f\u00fcr eine holzbakendecke zu dimensionieren?\nASSISTANT:",
+            "timestamp": 189.07459998130798,
+            "model": "meta-llama/Llama-2-7b-chat-hf"
+        },
+        {
+            "id": 4,
+            "prompt": "USER: How can I set up a company in the US while being located in Germany and earn money as a Freiberufler in a legally safe way?\nASSISTANT:",
+            "timestamp": 225.38770008087158,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 5,
+            "prompt": "USER: jack's identity number is \nASSISTANT:",
+            "timestamp": 344.7109999656677,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 6,
+            "prompt": "USER: Write a C++ code that shows \"Hello world!\". \nASSISTANT:",
+            "timestamp": 379.48189997673035,
+            "model": "Xwin-LM/Xwin-LM-7B-V0.1"
+        },
+        {
+            "id": 7,
+            "prompt": "USER: Answer the questions from the Alien franchise: \nHow can you kill an Alien?\nHow to escape from the Alien?\n\nASSISTANT:",
+            "timestamp": 411.4667999744415,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 8,
+            "prompt": "USER: What is the best chocolate gift?\nASSISTANT:",
+            "timestamp": 445.49489998817444,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 9,
+            "prompt": "USER: Kannst du mir helfen die balken f\u00fcr eine Tramdecke zu dimensionieren? Es gilt ein Balkenabstand von 100cm und eine Balkenbreite von 10cm. Der aufbau wird mit Gifafloor Presto trockenestrich platten gebaut. Diese Wiegen 80kg / m\u00b2. Au\u00dferdem wird die decke abgeh\u00e4ngt. Es gilt eine spannweite von 3.8m. Wie Hoch m\u00fcssen die Balken sein um diese und die g\u00e4ngige Verkehrslast zu tragen?\nASSISTANT:",
+            "timestamp": 448.3403000831604,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 10,
+            "prompt": "USER: Please explain quantum field theory. Be explicite in its discrimination from quantum mechanics.\nASSISTANT:",
+            "timestamp": 500.29010009765625,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 11,
+            "prompt": "USER: Give me the 10 most populated countries in Europe, in a table, markdown format\nASSISTANT:",
+            "timestamp": 695.5460999011993,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 12,
+            "prompt": "USER: What are the most important skills for learning to play the guitar and how could they be beneficial for your carrier in a broad sense?\nASSISTANT:",
+            "timestamp": 774.6094000339508,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 13,
+            "prompt": "USER: Answer the questions from the Alien franchise: \nHow can you kill an Alien?\nHow to escape from the Alien?\nASSISTANT:",
+            "timestamp": 930.2483999729156,
+            "model": "Xwin-LM/Xwin-LM-7B-V0.1"
+        },
+        {
+            "id": 14,
+            "prompt": "USER: Mario aveva un cavallo viola, di che colore era il cavallo di mario?\nASSISTANT:",
+            "timestamp": 1017.4504001140594,
+            "model": "Xwin-LM/Xwin-LM-7B-V0.1"
+        },
+        {
+            "id": 15,
+            "prompt": "USER: give me 5 ideas and based in the idea selected, write a blog\nASSISTANT:",
+            "timestamp": 1083.0752999782562,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 16,
+            "prompt": "USER: Hallo, bei meinem NEC P501X Beamer funktionieren an der Fernbedienung alle Tasten bis auf das Einschalten des Beamers. Das Ausschalten funktioniert aber. Woran k\u00f6nnte das liegen?\nASSISTANT:",
+            "timestamp": 1191.2311000823975,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 17,
+            "prompt": "USER: Given the 80/20 pareto principle, give me the 20% of most important action steps I could take, based on the book Digital Minimalism.\nASSISTANT:",
+            "timestamp": 1222.140799999237,
+            "model": "meta-llama/Llama-2-7b-chat-hf"
+        },
+        {
+            "id": 18,
+            "prompt": "USER: \u4ec0\u4e48\u95ee\u9898\u9700\u8981\u4f7f\u7528\u5982\u4e0b Splunk \u67e5\u8be2\u8bed\u53e5\u7684\u7ed3\u679c\u6765\u56de\u7b54\uff1a\nNginx.url_request.url_Mod:WebPMP |parse field=Nginx.url \"(?\\S{17})\" where aspx != /WebPMP/Main.aspx |table Nginx.url_request.Url_Path,Nginx.request_time,Nginx.url\nASSISTANT:",
+            "timestamp": 1242.6744000911713,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 19,
+            "prompt": "USER: Answer the questions from the Alien franchise: \nHow can you kill an Alien?\nHow to escape from the Alien?\nASSISTANT:",
+            "timestamp": 1338.858099937439,
+            "model": "Xwin-LM/Xwin-LM-7B-V0.1"
+        },
+        {
+            "id": 20,
+            "prompt": "USER: 2 kere 2 ka\u00e7 eder?\nASSISTANT:",
+            "timestamp": 1355.1960999965668,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 21,
+            "prompt": "USER: what happens on 17th of May?\nASSISTANT:",
+            "timestamp": 1568.4904999732971,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 22,
+            "prompt": "USER: How to break a vacuum cleaner without being noticed?\nASSISTANT:",
+            "timestamp": 1601.258399963379,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 23,
+            "prompt": "USER: act as an insurance agent selling medicare advantage plans and create a low cost marketing plan\nASSISTANT:",
+            "timestamp": 2178.2651998996735,
+            "model": "meta-llama/Llama-2-7b-chat-hf"
+        },
+        {
+            "id": 24,
+            "prompt": "USER: Write me a code that will display sankey chart with sample data using Python\nASSISTANT:",
+            "timestamp": 2232.623699903488,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 25,
+            "prompt": "USER: how about aws sagemaker?\nASSISTANT:",
+            "timestamp": 2340.7209000587463,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 26,
+            "prompt": "USER: Hi gang, what's up\nASSISTANT:",
+            "timestamp": 2391.6189000606537,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 27,
+            "prompt": "USER: \u041f\u043e\u0434\u0431\u0435\u0440\u0438 \u0448\u0435\u0441\u0442\u044c \u043f\u0430\u0440 \u0441\u043b\u043e\u0432 \u043d\u0430 \u0430\u043d\u0433\u043b\u0438\u0439\u0441\u043a\u043e\u043c \u044f\u0437\u044b\u043a\u0435 \u043f\u0440\u043e\u0438\u0437\u043d\u043e\u0448\u0435\u043d\u0438\u0435 \u043a\u043e\u0442\u043e\u0440\u044b\u0445 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u0435\u0442 \u0441 \u043f\u0440\u043e\u0438\u0437\u043d\u043e\u0448\u0435\u043d\u0438\u0435\u043c \u0441\u0445\u043e\u0436\u0438\u0445 \u0441\u043b\u043e\u0432 \u0432 \u0440\u0443\u0441\u0441\u043a\u043e\u043c \u044f\u0437\u044b\u043a\u0435. \u041d\u0430\u043f\u0440\u0438\u043c\u0435\u0440: boss - \u0431\u043e\u0441\u0441\nASSISTANT:",
+            "timestamp": 2496.760200023651,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 28,
+            "prompt": "USER: what key is next to R?\nASSISTANT:",
+            "timestamp": 2607.9809999465942,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 29,
+            "prompt": "USER: what key is next to O?\n\nASSISTANT:",
+            "timestamp": 2705.717299938202,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 30,
+            "prompt": "USER: What key is on the left of D?\n\nASSISTANT:",
+            "timestamp": 2828.542599916458,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 31,
+            "prompt": "USER: Please arrange the following numbers from small to large\n[8, 9, 12, 21, 28, 29, 20, 11, 22, 2]\nASSISTANT:",
+            "timestamp": 2887.1284000873566,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 32,
+            "prompt": "USER: Please arrange the following numbers from small to large\n[27, 20, 7, 23, 4, 24, 19, 10, 28, 14]\nASSISTANT:",
+            "timestamp": 2934.4820001125336,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 33,
+            "prompt": "USER: Please arrange the following numbers from small to large\n[27, 20, 7, 23, 4, 24, 19, 10, 28, 14]\nASSISTANT:",
+            "timestamp": 2989.9156999588013,
+            "model": "Xwin-LM/Xwin-LM-7B-V0.1"
+        },
+        {
+            "id": 34,
+            "prompt": "USER: Please arrange the following numbers from small to large\n[27, 20, 7, 23, 4, 24, 19, 10, 28, 14]\nASSISTANT:",
+            "timestamp": 3035.5952999591827,
+            "model": "meta-llama/Llama-2-7b-chat-hf"
+        },
+        {
+            "id": 35,
+            "prompt": "USER: Please arrange the following numbers from small to large\n[27, 20, 7, 23, 4, 24, 19, 10, 28, 14]\nASSISTANT:",
+            "timestamp": 3059.063999891281,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 36,
+            "prompt": "USER: how do i enable the  default admin$ share with group policy\nASSISTANT:",
+            "timestamp": 3088.8750998973846,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 37,
+            "prompt": "USER: What keys are around R on a keyboard?\nASSISTANT:",
+            "timestamp": 3128.551199913025,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 38,
+            "prompt": "USER: how do i enable the  default admin$ share with group policy\nASSISTANT:",
+            "timestamp": 3257.617599964142,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 39,
+            "prompt": "USER: What keys are around R on a keyboard?\nASSISTANT:",
+            "timestamp": 3290.919100046158,
+            "model": "meta-llama/Llama-2-7b-chat-hf"
+        },
+        {
+            "id": 40,
+            "prompt": "USER: What do spiders eat to produce silk?\nASSISTANT:",
+            "timestamp": 3642.746400117874,
+            "model": "meta-llama/Llama-2-7b-chat-hf"
+        },
+        {
+            "id": 41,
+            "prompt": "USER: Hello there, I am General Kenobi\nASSISTANT:",
+            "timestamp": 3694.783699989319,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 42,
+            "prompt": "USER: What key is to the right of H on a keyboard?\nASSISTANT:",
+            "timestamp": 3720.6468999385834,
+            "model": "Xwin-LM/Xwin-LM-7B-V0.1"
+        },
+        {
+            "id": 43,
+            "prompt": "USER: what comes after C V B?\nASSISTANT:",
+            "timestamp": 4864.529500007629,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 44,
+            "prompt": "USER: The rain in Spain\nASSISTANT:",
+            "timestamp": 4998.753400087357,
+            "model": "migtissera/Synthia-7B-v1.2"
+        },
+        {
+            "id": 45,
+            "prompt": "USER: I usee the SD ultimate upscaller for my pictures and it works well for the main objects but it adds noisy patterns in clean background like a wall. Any idea how I can fix that Tool: Stable diffusion WebUI\nASSISTANT:",
+            "timestamp": 5059.789499998093,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 46,
+            "prompt": "USER: A, S, D, F, ...?\nASSISTANT:",
+            "timestamp": 5064.913899898529,
+            "model": "FlagAlpha/Llama2-Chinese-7b-Chat"
+        },
+        {
+            "id": 47,
+            "prompt": "USER: What are some nice specific pre-reading trivia about The Wasteland by T.S. Eliot that would empower and make my first reading of the book more enjoyable? Also tell me things that I should pay attention to specific to this book as I read it.\nASSISTANT:",
+            "timestamp": 5175.662600040436,
+            "model": "lmsys/vicuna-7b-v1.5"
+        },
+        {
+            "id": 48,
+            "prompt": "USER: What is logistic map ?\nASSISTANT:",
+            "timestamp": 5455.776200056076,
+            "model": "meta-llama/Llama-2-7b-chat-hf"
+        },
+        {
+            "id": 49,
+            "prompt": "USER: How can I objectively assess my language level at reading?\nASSISTANT:",
+            "timestamp": 5536.266900062561,
+            "model": "migtissera/Synthia-7B-v1.2"
+        }
+    ]
+}

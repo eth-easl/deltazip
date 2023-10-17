@@ -149,6 +149,7 @@ class nvCompManager:
             self.decompression_config["decomp_data_size"], dtype="uint8"
         )
         self._manager.decompress(asarray(decomp_buffer), asarray(data))
+        del data
         return decomp_buffer.view(self.input_type)
 
     def configure_compression(self, data_size: int) -> dict:

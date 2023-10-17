@@ -11,7 +11,6 @@ def set_seed(seed):
     torch.random.manual_seed(seed)
     random.seed(seed)
 
-
 def get_jsonl(
     train_path,
     val_path,

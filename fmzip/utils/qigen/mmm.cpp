@@ -283,7 +283,7 @@ int main(int argc, char *argv[]){
 		float cycles_final = runs[num_runs/2 + 1] / iter;
 
 		std::ofstream outfile;
-		outfile.open("./autogptq_extension/qigen/tmp.csv", std::ios_base::app);
+		outfile.open(".build/qigen/tmp.csv", std::ios_base::app);
 
 		print_parameters();
 		outfile << cycles_final << std::endl;
@@ -291,7 +291,7 @@ int main(int argc, char *argv[]){
 		float cycles_final = int(10e12);
 
 		std::ofstream outfile;
-		outfile.open("./autogptq_extension/qigen/tmp.csv", std::ios_base::app);
+		outfile.open(".build/qigen/tmp.csv", std::ios_base::app);
 
 		print_parameters();
 		outfile << cycles_final << std::endl;
