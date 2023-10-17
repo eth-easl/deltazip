@@ -32,6 +32,7 @@ class FMZipPipeline:
         placement_strategy: str = "addback",
         placement_args: dict = None,
         lossless_only: bool = False,
+        offload_base_model: bool = False,
     ) -> None:
         if placement_strategy not in placement_strategies:
             raise ValueError(
@@ -39,6 +40,7 @@ class FMZipPipeline:
             )
         self.base_model = base_model
         self.device_count = get_gpu_count()
+        self.offload_base_model = offload_base_model
         self.max_num_deltas = max_num_deltas
         self.batch_size = batch_size
         self.placement_strategy = placement_strategy
@@ -79,8 +81,7 @@ class FMZipPipeline:
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
                 loading_start = timer()
-                print(deltas)
-                self._load_deltas(deltas)
+                self._load_deltas(deltas, self.offload_base_model)
                 loading_end = timer()
                 prepare_start = timer()
                 self._prepare_inference(deltas)
@@ -156,7 +157,9 @@ class FMZipPipeline:
         self.model_pool[delta] = self.model_pool[delta].to("cpu")
         torch.cuda.empty_cache()
 
-    def _load_deltas(self, deltas: List[str]):
+    def _load_deltas(self, deltas: List[str], offload_base_model=False):
+        if offload_base_model:
+            self.base_model = self.base_model.to("cpu")
         if self.placement_strategy in ["colocate", "addback"]:
             logger.warning(f"I am forcing reloading of all deltas")
             [self._load_delta(delta, device=DEFAULT_CUDA_DEVICE) for delta in deltas]
@@ -167,6 +170,9 @@ class FMZipPipeline:
                 if True:
                     logger.info(f"loading delta to device cuda:{target_device}")
                     self._load_delta(delta, device=target_device)
+        if offload_base_model:
+            # move back
+            self.base_model = self.base_model.to(BASE_DEVICE)
         else:
             raise ValueError(
                 f"Unsupported placement strategy: {self.placement_strategy}"
