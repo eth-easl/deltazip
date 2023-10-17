@@ -1,7 +1,6 @@
 import os
 import argparse
 
-
 def run(args):
     systems = [
         x
@@ -19,7 +18,6 @@ def run(args):
             job = os.path.join(args.workload, job)
             job = f"python artifact/benchmarks/inference/throughput.py --systems {system} --output artifact/results/local.json --jobs {job}"
             os.system(job)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

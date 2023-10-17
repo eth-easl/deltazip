@@ -64,7 +64,7 @@ def main(args):
                         x["model"]
                         if not backend["args"]["lossless_only"]
                         else x["model"] + "-lossless"
-                    ],
+                    ] if x['model'] != base_model else base_model,
                 )
                 for x in queries
             ]

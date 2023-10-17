@@ -1,0 +1,37 @@
+{
+    "base_model": "openlm-research/open_llama_3b_v2",
+    "queries": [
+        {
+            "model": ".cache/raw_models/openllama-3b-chat-1",
+            "timestamp": 0,
+            "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:"
+        },
+        {
+            "model": ".cache/raw_models/openllama-3b-chat-2",
+            "timestamp": 0,
+            "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:"
+        },
+        {
+            "model": ".cache/raw_models/openllama-3b-chat-3",
+            "timestamp": 0,
+            "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:"
+        },
+        {
+            "model": "openlm-research/open_llama_3b_v2",
+            "timestamp": 0,
+            "prompt": "ETH Zurich is founded in "
+        }
+    ],
+    "compressed_model_mapping": {
+        ".cache/raw_models/openllama-3b-chat-1": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        ".cache/raw_models/openllama-3b-chat-1-lossless": ".cache/compressed_models/3b-parameters/openllama-chat-delta-lossless-1",
+        ".cache/raw_models/openllama-3b-chat-2": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        ".cache/raw_models/openllama-3b-chat-2-lossless": ".cache/compressed_models/3b-parameters/openllama-chat-delta-lossless-2",
+        ".cache/raw_models/openllama-3b-chat-3": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        ".cache/raw_models/openllama-3b-chat-3-lossless": ".cache/compressed_models/3b-parameters/openllama-chat-delta-lossless-3"
+    },
+    "generation_configs": {
+        "min_length": 64,
+        "max_new_tokens": 64
+    }
+}

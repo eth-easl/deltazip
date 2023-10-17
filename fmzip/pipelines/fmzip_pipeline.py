@@ -24,6 +24,7 @@ dummy_compression_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+
 class FMZipPipeline:
     def __init__(
         self,
@@ -39,7 +40,7 @@ class FMZipPipeline:
             raise ValueError(
                 f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
             )
-        self.base_model = base_model
+        self.base_model_name = base_model
         self.offload_base_model = offload_base_model
         self.max_num_deltas = max_num_deltas
         self.batch_size = batch_size
@@ -57,7 +58,7 @@ class FMZipPipeline:
         # fmzip manages a pool of model
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-        
+
         self.device_count = get_gpu_count()
         self._load_base_model()
         self.lossless_only = lossless_only
@@ -83,7 +84,7 @@ class FMZipPipeline:
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
                 for delta in deltas:
-                    if delta not in self.req_count:
+                    if delta not in self.req_count and delta != self.base_model_name:
                         self.req_count[delta] = 0
                     else:
                         self.req_count[delta] += 1
@@ -130,7 +131,7 @@ class FMZipPipeline:
         logger.info("loading base model")
         with torch.device("cuda", DEFAULT_CUDA_DEVICE):
             self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
-                self.base_model,
+                self.base_model_name,
                 compress_config=dummy_compression_config,
                 low_cpu_mem_usage=True,
             )
@@ -175,14 +176,17 @@ class FMZipPipeline:
         if offload_base_model:
             self.base_model = self.base_model.to("cpu")
         if self.placement_strategy in ["colocate", "addback"]:
-            [self._load_delta(delta, device=DEFAULT_CUDA_DEVICE) for delta in deltas if delta not in self.model_pool]
+            [
+                self._load_delta(delta, device=DEFAULT_CUDA_DEVICE)
+                for delta in deltas
+                if delta not in self.model_pool and delta != self.base_model_name
+            ]
         elif self.placement_strategy == "separation":
             target_device = [i for i in range(self.device_count)]
             for i, delta in enumerate(deltas):
                 target_device = target_device[i % self.device_count]
-                if True:
-                    logger.info(f"loading delta to device cuda:{target_device}")
-                    self._load_delta(delta, device=target_device)
+                logger.info(f"loading delta to device cuda:{target_device}")
+                self._load_delta(delta, device=target_device)
         else:
             raise ValueError(
                 f"Unsupported placement strategy: {self.placement_strategy}"
@@ -195,7 +199,9 @@ class FMZipPipeline:
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:
             logger.warning(f"Evicting {len(deltas)} models/deltas")
             # sort req_count by value
-            to_evict_models = sorted(self.req_count, key=self.req_count.get)[:len(deltas)]
+            to_evict_models = sorted(self.req_count, key=self.req_count.get)[
+                : len(deltas)
+            ]
             for delta in to_evict_models:
                 del self.model_pool[delta]
                 del self.req_count[delta]
@@ -211,7 +217,7 @@ class FMZipPipeline:
             )
             logger.warning(f"PyTorch free memory: {free / 1e9} GB")
             logger.warning(f"PyTorch total memory: {total / 1e9} GB")
-    
+
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
             self._prepare_addback(deltas)
