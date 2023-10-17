@@ -12,6 +12,7 @@ import cupy as cp
 placement_strategies = ["addback", "colocate", "separation"]
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
+
 dummy_compression_config = BaseCompressionConfig(
     bits=4,
     group_size=128,
@@ -78,9 +79,9 @@ class FMZipPipeline:
                 batch_inputs = {
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
+                loading_start = timer()
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
-                loading_start = timer()
                 self._load_deltas(deltas, self.offload_base_model)
                 loading_end = timer()
                 prepare_start = timer()
@@ -170,13 +171,13 @@ class FMZipPipeline:
                 if True:
                     logger.info(f"loading delta to device cuda:{target_device}")
                     self._load_delta(delta, device=target_device)
-        if offload_base_model:
-            # move back
-            self.base_model = self.base_model.to(BASE_DEVICE)
         else:
             raise ValueError(
                 f"Unsupported placement strategy: {self.placement_strategy}"
             )
+        if offload_base_model:
+            # move back
+            self.base_model = self.base_model.to(BASE_DEVICE)
 
     def _evict_deltas(self, deltas: List[str]):
         if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
@@ -185,6 +186,7 @@ class FMZipPipeline:
             self.model_pool = {}
             torch.cuda.empty_cache()
             cp.get_default_memory_pool().free_all_blocks()
+            free, total = torch.cuda.mem_get_info()
 
             logger.warning(
                 f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
@@ -192,9 +194,9 @@ class FMZipPipeline:
             logger.warning(
                 f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
             )
-            free, total = torch.cuda.mem_get_info()
             logger.warning(f"PyTorch free memory: {free / 1e9} GB")
             logger.warning(f"PyTorch total memory: {total / 1e9} GB")
+    
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
             self._prepare_addback(deltas)
