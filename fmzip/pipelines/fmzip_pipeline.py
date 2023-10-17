@@ -186,7 +186,9 @@ class FMZipPipeline:
             logger.warning(
                 f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
             )
-
+            free, total = torch.cuda.mem_get_info()
+            logger.warning(f"PyTorch free memory: {free / 1e9} GB")
+            logger.warning(f"PyTorch total memory: {total / 1e9} GB")
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
             self._prepare_addback(deltas)

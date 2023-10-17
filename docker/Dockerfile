@@ -9,3 +9,6 @@ COPY . /app
 WORKDIR /app
 RUN pip install -r requirements.txt
 RUN pip install --no-deps .
+# update pytorch to nightly version
+# for load_state_dict(assign=True)
+RUN pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu118

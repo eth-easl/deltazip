@@ -13,9 +13,9 @@ init_seeds(42)
 
 def clear_cache():
     torch.cuda.empty_cache()
-    subprocess.check_output(
-        "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
-    )
+    # subprocess.check_output(
+    #     "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
+    # )
     torch.cuda.synchronize()
 
 
