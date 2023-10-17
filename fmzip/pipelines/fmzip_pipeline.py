@@ -46,7 +46,7 @@ class FMZipPipeline:
         self.placement_strategy = placement_strategy
         self.placement_args = placement_args
         self.model_pool = {}
-        self.req_count = {base_model: 0}
+        self.req_count = {}
         self.key_list = []
 
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
@@ -83,7 +83,10 @@ class FMZipPipeline:
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
                 for delta in deltas:
-                    self.req_count[delta] += 1
+                    if delta not in self.req_count:
+                        self.req_count[delta] = 0
+                    else:
+                        self.req_count[delta] += 1
                 loading_start = timer()
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
@@ -172,8 +175,7 @@ class FMZipPipeline:
         if offload_base_model:
             self.base_model = self.base_model.to("cpu")
         if self.placement_strategy in ["colocate", "addback"]:
-            logger.warning(f"I am forcing reloading of all deltas")
-            [self._load_delta(delta, device=DEFAULT_CUDA_DEVICE) for delta in deltas]
+            [self._load_delta(delta, device=DEFAULT_CUDA_DEVICE) for delta in deltas if delta not in self.model_pool]
         elif self.placement_strategy == "separation":
             target_device = [i for i in range(self.device_count)]
             for i, delta in enumerate(deltas):
@@ -196,6 +198,7 @@ class FMZipPipeline:
             to_evict_models = sorted(self.req_count, key=self.req_count.get)[:len(deltas)]
             for delta in to_evict_models:
                 del self.model_pool[delta]
+                del self.req_count[delta]
             # force garbage collection and free memory
             torch.cuda.empty_cache()
             cp.get_default_memory_pool().free_all_blocks()
