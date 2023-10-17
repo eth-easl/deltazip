@@ -72,21 +72,22 @@ class FMZipPipeline:
 
     def generate(self, queries: List[Tuple], **kwargs):
         with torch.inference_mode():
-            tokenize_start = timer()
-            batch = self._prepare_batch(queries, self.tokenizer)
-            tokenize_end = timer()
             outputs = []
             for batch_idx in range(0, len(queries), self.batch_size):
+                tokenize_start = timer()
+                sub_queries = queries[batch_idx : batch_idx + self.batch_size]
+                batch = self._prepare_batch(sub_queries, self.tokenizer)
                 deltas = [
-                    x[1] for x in queries[batch_idx : batch_idx + self.batch_size]
+                    x[1] for x in sub_queries
                 ]
                 batch_inputs = {
-                    k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
+                    k: batch[k] for k in batch
                 }
+                tokenize_end = timer()
                 for delta in deltas:
                     if delta not in self.req_count and delta != self.base_model_name:
                         self.req_count[delta] = 0
-                    else:
+                    elif delta in self.req_count:
                         self.req_count[delta] += 1
                 loading_start = timer()
                 # check if eviction needed, ensure enough memory for loading new deltas
@@ -100,7 +101,6 @@ class FMZipPipeline:
                 output = self.base_model.generate(**batch_inputs, **kwargs)
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
-
                 tokenize_time = tokenize_end - tokenize_start
                 loading_time = loading_end - loading_start
                 prepare_time = prepare_end - prepare_start
@@ -173,6 +173,9 @@ class FMZipPipeline:
         torch.cuda.empty_cache()
 
     def _load_deltas(self, deltas: List[str], offload_base_model=False):
+        if all([delta == self.base_model_name for delta in deltas]):
+            logger.info("loading skipped: all requested models are base model")
+            return
         if offload_base_model:
             self.base_model = self.base_model.to("cpu")
         if self.placement_strategy in ["colocate", "addback"]:
@@ -196,6 +199,10 @@ class FMZipPipeline:
             self.base_model = self.base_model.to(BASE_DEVICE)
 
     def _evict_deltas(self, deltas: List[str]):
+        # if all deltas are base model, no need to evict
+        if all([delta == self.base_model_name for delta in deltas]):
+            logger.info("eviction skipped: all requested models are base model")
+            return
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:
             logger.warning(f"Evicting {len(deltas)} models/deltas")
             # sort req_count by value
@@ -231,10 +238,10 @@ class FMZipPipeline:
     def _prepare_addback(self, deltas: List[str]):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
-        with torch.no_grad():
-            for name, param in self.model_pool[deltas[0]].model.named_parameters():
-                self.base_model.state_dict()[name] += param
-        # self._offload_delta(deltas[0])
+        if deltas[0] != self.base_model_name:
+            with torch.no_grad():
+                for name, param in self.model_pool[deltas[0]].model.named_parameters():
+                    self.base_model.state_dict()[name] += param
 
     def _prepare_colocate(self, deltas):
         for key in self.key_list:
@@ -248,7 +255,8 @@ class FMZipPipeline:
             setattr(target, "delta", dmodules)
 
     def _clear_addback_delta(self, delta):
+        if delta != self.base_model_name:
         # remove the delta part from the base_model again
-        with torch.no_grad():
-            for name, param in self.model_pool[delta].model.named_parameters():
-                self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
+            with torch.no_grad():
+                for name, param in self.model_pool[delta].model.named_parameters():
+                    self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
