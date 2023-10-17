@@ -1,6 +1,5 @@
 import torch
 
-
 def hard_threshold(x, fraction_of_zero=0.1):
     """
     Set the smallest fraction_of_zero of x to zero.

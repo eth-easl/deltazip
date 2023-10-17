@@ -1,4 +1,5 @@
 import torch
+import cupy as cp
 from loguru import logger
 from typing import List, Tuple
 from transformers import AutoTokenizer
@@ -7,11 +8,11 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip.modeling.gpt_neox import parallelize_neox
 from fmzip.pipelines.utils import get_gpu_count, get_submodules
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
-import cupy as cp
 
-placement_strategies = ["addback", "colocate", "separation"]
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
+
+placement_strategies = ["addback", "colocate", "separation"]
 
 dummy_compression_config = BaseCompressionConfig(
     bits=4,
@@ -22,7 +23,6 @@ dummy_compression_config = BaseCompressionConfig(
     lossless="gdeflate",
     damp_percent=0.02,
 )
-
 
 class FMZipPipeline:
     def __init__(
@@ -40,23 +40,26 @@ class FMZipPipeline:
                 f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
             )
         self.base_model = base_model
-        self.device_count = get_gpu_count()
         self.offload_base_model = offload_base_model
         self.max_num_deltas = max_num_deltas
         self.batch_size = batch_size
         self.placement_strategy = placement_strategy
         self.placement_args = placement_args
+        self.model_pool = {}
+        self.req_count = {base_model: 0}
+        self.key_list = []
+
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        self.tokenizer.padding_side = "left"
         # avoid using eos_token as padding token
         # https://github.com/facebookresearch/llama/issues/380
+        # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
+        # fmzip manages a pool of model
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-        self.tokenizer.padding_side = "left"
-        # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
+        
+        self.device_count = get_gpu_count()
         self._load_base_model()
-        # fmzip manages a pool of model
-        self.model_pool = {}
-        self.key_list = []
         self.lossless_only = lossless_only
         if self.lossless_only and self.placement_strategy != "addback":
             raise ValueError(
@@ -79,6 +82,8 @@ class FMZipPipeline:
                 batch_inputs = {
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
+                for delta in deltas:
+                    self.req_count[delta] += 1
                 loading_start = timer()
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
@@ -129,7 +134,10 @@ class FMZipPipeline:
         self.base_model = self.base_model.to(BASE_DEVICE)
         logger.info("based model loaded")
 
-    def _load_delta(self, delta_model: str, device="cuda"):
+    def _load_delta(self, delta_model: str, device="cuda", force=False):
+        if delta_model in self.model_pool and not force:
+            logger.info(f"delta model {delta_model} already loaded")
+            return
         logger.info(f"Loading target model {delta_model} to cuda:{device}")
         self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
             delta_model,
@@ -139,6 +147,8 @@ class FMZipPipeline:
             else False,
             low_cpu_mem_usage=True,
         )
+        if delta_model not in self.req_count:
+            self.req_count[delta_model] = 0
         if self.placement_strategy == "addback":
             self.model_pool[delta_model] = self.model_pool[delta_model].half()
         else:
@@ -180,14 +190,16 @@ class FMZipPipeline:
             self.base_model = self.base_model.to(BASE_DEVICE)
 
     def _evict_deltas(self, deltas: List[str]):
-        if len(self.model_pool) + len(deltas) >= self.max_num_deltas:
-            logger.info(f"model pool is full, evict all deltas")
-            logger.warning(f"todo: implement LRU cache")
-            self.model_pool = {}
+        if len(self.model_pool) + len(deltas) > self.max_num_deltas:
+            logger.warning(f"Evicting {len(deltas)} models/deltas")
+            # sort req_count by value
+            to_evict_models = sorted(self.req_count, key=self.req_count.get)[:len(deltas)]
+            for delta in to_evict_models:
+                del self.model_pool[delta]
+            # force garbage collection and free memory
             torch.cuda.empty_cache()
             cp.get_default_memory_pool().free_all_blocks()
             free, total = torch.cuda.mem_get_info()
-
             logger.warning(
                 f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
             )
