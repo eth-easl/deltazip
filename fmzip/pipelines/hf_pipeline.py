@@ -9,7 +9,6 @@ placement_strategies = ["tensor-parallel", "no-parallel"]
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
-
 class HuggingFacePipeline:
     def __init__(
         self,
@@ -17,6 +16,8 @@ class HuggingFacePipeline:
         max_num_models: int = get_gpu_count(),
         batch_size: int = 1,
     ) -> None:
+        self.current_model = None
+        self.current_model_name = None
         self.base_model = base_model
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             base_model, use_fast=True
@@ -46,10 +47,10 @@ class HuggingFacePipeline:
                 # construct inference pipeline
                 loading_start = timer()
                 for model_name in model_names:
-                    model = self._load_target_model(model_name, BASE_DEVICE)
+                    self._load_target_model(model_name, BASE_DEVICE)
                     loading_end = timer()
                     inference_start = timer()
-                    output = model.generate(**batch_inputs, **kwargs)
+                    output = self.current_model.generate(**batch_inputs, **kwargs)
                     inference_end = timer()
                     output = self.tokenizer.batch_decode(output)
                     tokenize_time = tokenize_end - tokenize_start
@@ -75,12 +76,13 @@ class HuggingFacePipeline:
             return outputs
 
     def _load_target_model(self, model_name: str, device: str):
-        with torch.device("cuda"):
-            model = transformers.AutoModelForCausalLM.from_pretrained(
-                model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
-            )
-            model = model.to(torch.device(device))
-        return model
+        if self.current_model_name != model_name:
+            with torch.device("cuda"):
+                self.current_model = transformers.AutoModelForCausalLM.from_pretrained(
+                    model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
+                )
+                self.current_model = self.current_model.to(torch.device(device))
+        return self.current_model
 
     def _prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""

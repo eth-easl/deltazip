@@ -5,19 +5,17 @@ import datasets
 import pandas as pd
 import numpy as np
 
-to_eval_models = [
-    "lmsys/vicuna-7b-v1.5",
-    "Xwin-LM/Xwin-LM-7B-V0.1",
-    "migtissera/Synthia-7B-v1.2",
-    "meta-llama/Llama-2-7b-chat-hf",
-    "FlagAlpha/Llama2-Chinese-7b-Chat",
-]
 # to_eval_models = [
-#     "xzyao/openllama-3b-chat",
-#     "xzyao/openllama-chat-2",
-#     "xzyao/openllama-chat-3",
+#     "lmsys/vicuna-7b-v1.5",
+#     "Xwin-LM/Xwin-LM-7B-V0.1",
+#     "migtissera/Synthia-7B-v1.2",
+#     "meta-llama/Llama-2-7b-chat-hf",
+#     "FlagAlpha/Llama2-Chinese-7b-Chat",
 # ]
-
+to_eval_models = [
+    f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)
+]
+to_eval_models =["openlm-research/open_llama_3b_v2"] + to_eval_models
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 
@@ -42,7 +40,6 @@ def prepare_lmsys(args):
     mapping = {}
     for idx, model in enumerate(models):
         mapping[model[0]] = to_eval_models[idx % len(to_eval_models)]
-    print(mapping)
     # randomly take num_queries from trace
     # sort trace by timestamp
     trace = sorted(trace, key=lambda x: x["tstamp"])
@@ -54,7 +51,7 @@ def prepare_lmsys(args):
         traces_data.append(
             {
                 "id": idx,
-                "prompt":format_lmsys(item["conversation_a"][0]["content"]),
+                "prompt":format_openllama(item["conversation_a"][0]["content"]),
                 "timestamp": (item["tstamp"] - min_tstamp) / 1,
                 "model": mapping[item["model_a"]],
             }
