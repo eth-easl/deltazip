@@ -92,6 +92,7 @@ class FMZipPipeline:
                 loading_start = timer()
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
+                self.report_meminfo()
                 self._load_deltas(deltas, self.offload_base_model)
                 loading_end = timer()
                 prepare_start = timer()
@@ -201,6 +202,20 @@ class FMZipPipeline:
             # move back
             self.base_model = self.base_model.to(BASE_DEVICE)
 
+    def report_meminfo(self):
+        # force garbage collection and free memory
+        torch.cuda.empty_cache()
+        cp.get_default_memory_pool().free_all_blocks()
+        free, total = torch.cuda.mem_get_info()
+        logger.warning(
+            f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
+        )
+        logger.warning(
+            f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
+        )
+        logger.warning(f"PyTorch free memory: {free / 1e9} GB")
+        logger.warning(f"PyTorch total memory: {total / 1e9} GB")
+    
     def _evict_deltas(self, deltas: List[str]):
         # if all deltas are base model, no need to evict
         if all([delta == self.base_model_name for delta in deltas]):
@@ -215,18 +230,6 @@ class FMZipPipeline:
             for delta in to_evict_models:
                 del self.model_pool[delta]
                 del self.req_count[delta]
-            # force garbage collection and free memory
-            torch.cuda.empty_cache()
-            cp.get_default_memory_pool().free_all_blocks()
-            free, total = torch.cuda.mem_get_info()
-            logger.warning(
-                f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
-            )
-            logger.warning(
-                f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
-            )
-            logger.warning(f"PyTorch free memory: {free / 1e9} GB")
-            logger.warning(f"PyTorch total memory: {total / 1e9} GB")
 
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":

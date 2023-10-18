@@ -89,6 +89,7 @@ async def handle_restart(restart_request: RestartRequest):
     logger.info(
         f"Server is reconfigured to use {restart_request.backend} backend with {restart_request.base_model} base model"
     )
+    logger.info(f"Restart args: {restart_request}")
     global inference_model
     global batch_size
     del inference_model
