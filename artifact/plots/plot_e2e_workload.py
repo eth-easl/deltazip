@@ -1,7 +1,7 @@
 import json
-import argparse
 import pandas as pd
 import plotly.express as px
+import argparse
 
 def get_provider_name(provider):
     if provider['name'] == 'hf':

@@ -54,8 +54,8 @@ def prepare_lmsys(args):
         traces_data.append(
             {
                 "id": idx,
-                "prompt":format_lmsys(item["conversation_a"][0]["content"]),
-                "timestamp": (item["tstamp"] - min_tstamp) / 1,
+                "prompt":format_openllama(item["conversation_a"][0]["content"]),
+                "timestamp": (item["tstamp"] - min_tstamp) / 10,
                 "model": mapping[item["model_a"]],
             }
         )

@@ -3,7 +3,7 @@
         {
             "name":"fmzip",
             "args": {
-                "lossless_only": false,
+                "lossless_only": true,
                 "placement_strategy": "addback",
                 "batch_size": 1,
                 "max_num_deltas": 1

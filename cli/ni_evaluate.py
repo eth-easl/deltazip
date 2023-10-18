@@ -71,10 +71,12 @@ def generate(args):
             return_full_text=False,
         )
         results = []
+        
         for datum, output in zip(data, outputs):
             result = datum
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]
             results.append(result)
+        
         with open(args.output_file, "w") as f:
             for datum in data:
                 f.write(json.dumps(datum) + "\n")

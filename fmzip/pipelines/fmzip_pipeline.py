@@ -24,6 +24,7 @@ dummy_compression_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+
 class FMZipPipeline:
     def __init__(
         self,
@@ -39,7 +40,7 @@ class FMZipPipeline:
             raise ValueError(
                 f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
             )
-        self.base_model = base_model
+        self.base_model_name = base_model
         self.offload_base_model = offload_base_model
         self.max_num_deltas = max_num_deltas
         self.batch_size = batch_size
@@ -57,7 +58,7 @@ class FMZipPipeline:
         # fmzip manages a pool of model
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-        
+
         self.device_count = get_gpu_count()
         self._load_base_model()
         self.lossless_only = lossless_only
@@ -71,35 +72,37 @@ class FMZipPipeline:
 
     def generate(self, queries: List[Tuple], **kwargs):
         with torch.inference_mode():
-            tokenize_start = timer()
-            batch = self._prepare_batch(queries, self.tokenizer)
-            tokenize_end = timer()
             outputs = []
             for batch_idx in range(0, len(queries), self.batch_size):
+                tokenize_start = timer()
+                sub_queries = queries[batch_idx : batch_idx + self.batch_size]
+                batch = self._prepare_batch(sub_queries, self.tokenizer)
                 deltas = [
-                    x[1] for x in queries[batch_idx : batch_idx + self.batch_size]
+                    x[1] for x in sub_queries
                 ]
                 batch_inputs = {
-                    k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
+                    k: batch[k] for k in batch
                 }
+                tokenize_end = timer()
                 for delta in deltas:
-                    if delta not in self.req_count:
+                    if delta not in self.req_count and delta != self.base_model_name:
                         self.req_count[delta] = 0
-                    else:
+                    elif delta in self.req_count:
                         self.req_count[delta] += 1
                 loading_start = timer()
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
+                self.report_meminfo()
                 self._load_deltas(deltas, self.offload_base_model)
                 loading_end = timer()
                 prepare_start = timer()
                 self._prepare_inference(deltas)
                 prepare_end = timer()
                 inference_start = timer()
+                kwargs['do_sample'] = False
                 output = self.base_model.generate(**batch_inputs, **kwargs)
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
-
                 tokenize_time = tokenize_end - tokenize_start
                 loading_time = loading_end - loading_start
                 prepare_time = prepare_end - prepare_start
@@ -123,6 +126,8 @@ class FMZipPipeline:
                 if self.placement_strategy == "addback":
                     # for add back: batch size always 1
                     self._clear_addback_delta(deltas[0])
+                elif self.placement_strategy in ["colocate", "separation"]:
+                    self._clear_colocate()
                 torch.cuda.empty_cache()
             return outputs
 
@@ -130,7 +135,7 @@ class FMZipPipeline:
         logger.info("loading base model")
         with torch.device("cuda", DEFAULT_CUDA_DEVICE):
             self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
-                self.base_model,
+                self.base_model_name,
                 compress_config=dummy_compression_config,
                 low_cpu_mem_usage=True,
             )
@@ -172,17 +177,23 @@ class FMZipPipeline:
         torch.cuda.empty_cache()
 
     def _load_deltas(self, deltas: List[str], offload_base_model=False):
+        if all([delta == self.base_model_name for delta in deltas]):
+            logger.info("loading skipped: all requested models are base model")
+            return
         if offload_base_model:
             self.base_model = self.base_model.to("cpu")
         if self.placement_strategy in ["colocate", "addback"]:
-            [self._load_delta(delta, device=DEFAULT_CUDA_DEVICE) for delta in deltas if delta not in self.model_pool]
+            [
+                self._load_delta(delta, device=DEFAULT_CUDA_DEVICE)
+                for delta in deltas
+                if delta not in self.model_pool and delta != self.base_model_name
+            ]
         elif self.placement_strategy == "separation":
             target_device = [i for i in range(self.device_count)]
             for i, delta in enumerate(deltas):
                 target_device = target_device[i % self.device_count]
-                if True:
-                    logger.info(f"loading delta to device cuda:{target_device}")
-                    self._load_delta(delta, device=target_device)
+                logger.info(f"loading delta to device cuda:{target_device}")
+                self._load_delta(delta, device=target_device)
         else:
             raise ValueError(
                 f"Unsupported placement strategy: {self.placement_strategy}"
@@ -191,27 +202,35 @@ class FMZipPipeline:
             # move back
             self.base_model = self.base_model.to(BASE_DEVICE)
 
+    def report_meminfo(self):
+        # force garbage collection and free memory
+        torch.cuda.empty_cache()
+        cp.get_default_memory_pool().free_all_blocks()
+        free, total = torch.cuda.mem_get_info()
+        logger.warning(
+            f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
+        )
+        logger.warning(
+            f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
+        )
+        logger.warning(f"PyTorch free memory: {free / 1e9} GB")
+        logger.warning(f"PyTorch total memory: {total / 1e9} GB")
+    
     def _evict_deltas(self, deltas: List[str]):
+        # if all deltas are base model, no need to evict
+        if all([delta == self.base_model_name for delta in deltas]):
+            logger.info("eviction skipped: all requested models are base model")
+            return
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:
             logger.warning(f"Evicting {len(deltas)} models/deltas")
             # sort req_count by value
-            to_evict_models = sorted(self.req_count, key=self.req_count.get)[:len(deltas)]
+            to_evict_models = sorted(self.req_count, key=self.req_count.get)[
+                : len(deltas)
+            ]
             for delta in to_evict_models:
                 del self.model_pool[delta]
                 del self.req_count[delta]
-            # force garbage collection and free memory
-            torch.cuda.empty_cache()
-            cp.get_default_memory_pool().free_all_blocks()
-            free, total = torch.cuda.mem_get_info()
-            logger.warning(
-                f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
-            )
-            logger.warning(
-                f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
-            )
-            logger.warning(f"PyTorch free memory: {free / 1e9} GB")
-            logger.warning(f"PyTorch total memory: {total / 1e9} GB")
-    
+
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
             self._prepare_addback(deltas)
@@ -225,24 +244,39 @@ class FMZipPipeline:
     def _prepare_addback(self, deltas: List[str]):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
-        with torch.no_grad():
-            for name, param in self.model_pool[deltas[0]].model.named_parameters():
-                self.base_model.state_dict()[name] += param
-        # self._offload_delta(deltas[0])
+        
+        if deltas[0] != self.base_model_name:
+            logger.info(f"adding delta {deltas[0]} to base model")
+            with torch.no_grad():
+                for name, param in self.model_pool[deltas[0]].model.named_parameters():
+                    self.base_model.state_dict()[name] += param
 
     def _prepare_colocate(self, deltas):
+        if all([delta == self.base_model_name for delta in deltas]):
+            for key, dmodule in self.base_model.named_modules():
+                setattr(dmodule, "delta", [None for delta in deltas])
+
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_model, key)
             dmodules = []
             for delta in deltas:
-                for dkey, dmodule in self.model_pool[delta].model.named_modules():
-                    if dkey == key:
-                        dmodules.append(dmodule)
-                        break
+                if delta == self.base_model_name:
+                    dmodules.append(None)
+                else:
+                    for dkey, dmodule in self.model_pool[delta].model.named_modules():
+                        if dkey == key:
+                            dmodules.append(dmodule)
+                            break
             setattr(target, "delta", dmodules)
 
     def _clear_addback_delta(self, delta):
-        # remove the delta part from the base_model again
-        with torch.no_grad():
-            for name, param in self.model_pool[delta].model.named_parameters():
-                self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
+        if delta != self.base_model_name:
+            logger.info(f"clearing delta {delta} from base model")
+            # remove the delta part from the base_model again
+            with torch.no_grad():
+                for name, param in self.model_pool[delta].model.named_parameters():
+                    self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
+
+    def _clear_colocate(self):
+        for key, dmodule in self.base_model.named_modules():
+            setattr(dmodule, "delta", [])

@@ -1,7 +1,7 @@
 import os
 
 CACHE_PATH = os.environ.get("YAO_CACHE", "")
-folder_name = "2b0.99s"
+folder_name = "2b0.85s"
 
 compressed_models = os.path.join(
     CACHE_PATH, f"experiments/fmzip/compressed_models/{folder_name}/pythia-2.8b-deduped"
@@ -11,7 +11,7 @@ data_dir = os.path.join(CACHE_PATH, "datasets/qi/test")
 
 tasks = os.listdir(compressed_models)
 output_dir = os.path.join(
-    CACHE_PATH, f"experiments/fmzip/generation_results_{folder_name}"
+    CACHE_PATH, f"experiments/fmzip/generation_pythia/generation_results_{folder_name}"
 )
 jobs = []
 for task in tasks:
