@@ -9,7 +9,7 @@
                 "max_num_deltas": 1,
                 "offload_base_model": true
             },
-            "order": 0
+            "order": 2
         }
     ]
 }

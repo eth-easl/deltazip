@@ -1,0 +1,10 @@
+{
+    "queries": [
+        {
+            "id": 0,
+            "prompt": "<human>: Write a funny hook paragraph in first personal narrative on Why Microsoft Teams is better than Zoom<|endoftext|><assistant>:",
+            "timestamp": 0.0,
+            "model": "openlm-research/open_llama_3b_v2"
+        }
+    ]
+}
