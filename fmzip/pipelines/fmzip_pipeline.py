@@ -98,6 +98,7 @@ class FMZipPipeline:
                 self._prepare_inference(deltas)
                 prepare_end = timer()
                 inference_start = timer()
+                kwargs['do_sample'] = False
                 output = self.base_model.generate(**batch_inputs, **kwargs)
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
@@ -124,6 +125,8 @@ class FMZipPipeline:
                 if self.placement_strategy == "addback":
                     # for add back: batch size always 1
                     self._clear_addback_delta(deltas[0])
+                elif self.placement_strategy in ["colocate", "separation"]:
+                    self._clear_colocate()
                 torch.cuda.empty_cache()
             return outputs
 
@@ -238,25 +241,39 @@ class FMZipPipeline:
     def _prepare_addback(self, deltas: List[str]):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
+        
         if deltas[0] != self.base_model_name:
+            logger.info(f"adding delta {deltas[0]} to base model")
             with torch.no_grad():
                 for name, param in self.model_pool[deltas[0]].model.named_parameters():
                     self.base_model.state_dict()[name] += param
 
     def _prepare_colocate(self, deltas):
+        if all([delta == self.base_model_name for delta in deltas]):
+            for key, dmodule in self.base_model.named_modules():
+                setattr(dmodule, "delta", [None for delta in deltas])
+
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_model, key)
             dmodules = []
             for delta in deltas:
-                for dkey, dmodule in self.model_pool[delta].model.named_modules():
-                    if dkey == key:
-                        dmodules.append(dmodule)
-                        break
+                if delta == self.base_model_name:
+                    dmodules.append(None)
+                else:
+                    for dkey, dmodule in self.model_pool[delta].model.named_modules():
+                        if dkey == key:
+                            dmodules.append(dmodule)
+                            break
             setattr(target, "delta", dmodules)
 
     def _clear_addback_delta(self, delta):
         if delta != self.base_model_name:
-        # remove the delta part from the base_model again
+            logger.info(f"clearing delta {delta} from base model")
+            # remove the delta part from the base_model again
             with torch.no_grad():
                 for name, param in self.model_pool[delta].model.named_parameters():
                     self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
+
+    def _clear_colocate(self):
+        for key, dmodule in self.base_model.named_modules():
+            setattr(dmodule, "delta", [])

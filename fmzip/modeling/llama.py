@@ -27,11 +27,16 @@ def llama_mlp_forward(self, x):
     up_xs = []
     gate_xs = []
     for i in range(len(self.delta)):
-        delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
-        up_x = self.delta[i].up_proj(delta_x)
-        gate_x = self.delta[i].gate_proj(delta_x)
-        up_xs.append(up_x)
-        gate_xs.append(gate_x)
+        if self.delta[i] is not None:
+            delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
+            up_x = self.delta[i].up_proj(delta_x)
+            gate_x = self.delta[i].gate_proj(delta_x)
+            up_xs.append(up_x)
+            gate_xs.append(gate_x)
+        else:
+            up_xs.append(torch.zeros_like(hidden_states[i]))
+            gate_xs.append(torch.zeros_like(gate_hidden_states[i]))
+
     hidden_states += torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in up_xs], dim=0
     )
@@ -43,18 +48,21 @@ def llama_mlp_forward(self, x):
     base_hidden_states = hidden_states.to(BASE_DEVICE, non_blocking=True)
     base_down_hidden_states = self.down_proj(base_hidden_states)
     delta_down_hss = []
+
     for i in range(len(self.delta)):
-        delta_hidden_states = hidden_states[i].to(
-            self.delta[i].down_proj.qweight.device, non_blocking=True
-        )
-        delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states)
-        delta_down_hss.append(delta_down_hidden_states)
+        if self.delta[i] is not None:
+            delta_hidden_states = hidden_states[i].to(
+                self.delta[i].down_proj.qweight.device, non_blocking=True
+            )
+            delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states)
+            delta_down_hss.append(delta_down_hidden_states)
+        else:
+            delta_down_hss.append(torch.zeros_like(base_down_hidden_states[i]))
 
     hidden_states = base_down_hidden_states + torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in delta_down_hss], dim=0
     )
     return hidden_states
-
 
 def llama_attention_forward(
     self,
@@ -75,13 +83,17 @@ def llama_attention_forward(
     base_value_states = self.v_proj(hidden_states)
 
     for i in range(len(self.delta)):
-        delta_hidden_states = hidden_states[i].to(
-            self.delta[i].q_proj.qweight.device, non_blocking=True
-        )
-        qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
-        ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
-        vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
-
+        if self.delta[i] is not None:
+            delta_hidden_states = hidden_states[i].to(
+                self.delta[i].q_proj.qweight.device, non_blocking=True
+            )
+            qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
+            ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
+            vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
+        else:
+            qs_deltas.append(torch.zeros_like(base_query_states[i]))
+            ks_deltas.append(torch.zeros_like(base_key_states[i]))
+            vs_deltas.append(torch.zeros_like(base_value_states[i]))
     qs_delta_hidden_states = torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0
     )
@@ -159,10 +171,14 @@ def llama_attention_forward(
     base_attn_output = self.o_proj(attn_output.to(BASE_DEVICE, non_blocking=True))
     delta_attn_outputs = []
     for i in range(len(self.delta)):
-        delta_attn_output = self.delta[i].o_proj(
-            attn_output[i].to(self.delta[i].o_proj.qweight.device, non_blocking=True)
-        )
+        if self.delta[i] is not None:
+            delta_attn_output = self.delta[i].o_proj(
+                attn_output[i].to(self.delta[i].o_proj.qweight.device, non_blocking=True)
+            )
+        else:
+            delta_attn_output = torch.zeros_like(base_attn_output[i])
         delta_attn_outputs.append(delta_attn_output)
+   
     attn_output = base_attn_output + torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0
     )
@@ -177,15 +193,24 @@ def llama_rmsnorm_forward(self, hidden_states):
     # for other operations, add weights in base model to all deltas models
     outputs = []
     for i in range(len(self.delta)):
-        self.delta[i].weight += self.weight.to(self.delta[i].weight.device)
-        hs = hidden_states[i]
-        input_dtype = hs.dtype
-        hs = hs.to(torch.float32)
-        variance = hs.pow(2).mean(-1, keepdim=True)
-        hs = hs * torch.rsqrt(variance + self.variance_epsilon)
-        out = self.delta[i].weight * hs.to(input_dtype)
-        outputs.append(out)
-        self.delta[i].weight -= self.weight
+        if self.delta[i] is not None:
+            self.delta[i].weight += self.weight.to(self.delta[i].weight.device)
+            hs = hidden_states[i]
+            input_dtype = hs.dtype
+            hs = hs.to(torch.float32)
+            variance = hs.pow(2).mean(-1, keepdim=True)
+            hs = hs * torch.rsqrt(variance + self.variance_epsilon)
+            out = self.delta[i].weight * hs.to(input_dtype)
+            outputs.append(out)
+            self.delta[i].weight -= self.weight
+        else:
+            hs = hidden_states[i]
+            input_dtype = hs.dtype
+            hs = hs.to(torch.float32)
+            variance = hs.pow(2).mean(-1, keepdim=True)
+            hs = hs * torch.rsqrt(variance + self.variance_epsilon)
+            out = self.weight * hs.to(input_dtype).to(BASE_DEVICE)
+            outputs.append(out)
     outputs = torch.stack(outputs, dim=0)
     return outputs
 
@@ -232,12 +257,16 @@ def llama_forcausallm_forward(
     hidden_states = outputs[0]
     logits = []
     for i in range(len(self.delta)):
-        self.delta[i].lm_head.weight += self.lm_head.weight.to(
-            self.delta[i].lm_head.weight.device
-        )
-        logit = self.delta[i].lm_head(hidden_states[i])
+        if self.delta[i] is not None:
+            self.delta[i].lm_head.weight += self.lm_head.weight.to(
+                self.delta[i].lm_head.weight.device
+            )
+            logit = self.delta[i].lm_head(hidden_states[i])
+            self.delta[i].lm_head.weight -= self.lm_head.weight
+        else:
+            logit = self.lm_head(hidden_states[i].to(BASE_DEVICE))
         logits.append(logit)
-        self.delta[i].lm_head.weight -= self.lm_head.weight
+
     logits = torch.stack(logits, dim=0)
     loss = None
     if labels is not None:
@@ -329,11 +358,14 @@ def llama_model_forward(
     if inputs_embeds is None:
         input_embeds = []
         for i in range(len(self.delta)):
-            self.delta[i].embed_tokens.weight += self.embed_tokens.weight.to(
-                self.delta[i].embed_tokens.weight.device
-            )
-            input_embeds.append(self.delta[i].embed_tokens(input_ids[i]))
-            self.delta[i].embed_tokens.weight -= self.embed_tokens.weight
+            if self.delta[i] is not None:
+                self.delta[i].embed_tokens.weight += self.embed_tokens.weight.to(
+                    self.delta[i].embed_tokens.weight.device
+                )
+                input_embeds.append(self.delta[i].embed_tokens(input_ids[i]))
+                self.delta[i].embed_tokens.weight -= self.embed_tokens.weight
+            else:
+                input_embeds.append(self.embed_tokens(input_ids[i].to(BASE_DEVICE)))
         inputs_embeds = torch.stack(input_embeds, dim=0)
     # embed positions
     if attention_mask is None:

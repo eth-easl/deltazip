@@ -16,7 +16,7 @@ lmsys_total_models = 20
 to_eval_models = [
     f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 20)
 ]
-print(to_eval_models)
+
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 

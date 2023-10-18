@@ -2,19 +2,14 @@
     "base_model": "openlm-research/open_llama_3b_v2",
     "queries": [
         {
-            "model": ".cache/raw_models/openllama-3b-chat-1",
+            "model": "openlm-research/open_llama_3b_v2",
             "timestamp": 0,
-            "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:"
+            "prompt": "ETH Zurich is founded in "
         },
         {
-            "model": ".cache/raw_models/openllama-3b-chat-2",
+            "model": "openlm-research/open_llama_3b_v2",
             "timestamp": 0,
-            "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:"
-        },
-        {
-            "model": ".cache/raw_models/openllama-3b-chat-3",
-            "timestamp": 0,
-            "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:"
+            "prompt": "ETH Zurich is founded in "
         },
         {
             "model": "openlm-research/open_llama_3b_v2",

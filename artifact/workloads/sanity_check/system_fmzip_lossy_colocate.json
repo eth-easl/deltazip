@@ -4,12 +4,11 @@
             "name":"fmzip",
             "args": {
                 "lossless_only": false,
-                "placement_strategy": "addback",
+                "placement_strategy": "colocate",
                 "batch_size": 1,
-                "max_num_deltas": 1,
-                "offload_base_model": true
+                "max_num_deltas": 4
             },
-            "order": 0
+            "order": 1
         }
     ]
 }
