@@ -25,6 +25,7 @@ def plot(args):
             })
     df = pd.DataFrame(plot_data)
     df = df.sort_values(by=['id'])
+    print(df)
     fig = px.line(df, x="id", y="time_elapsed", color="provider")
     fig.update_layout(
         width=800, height=600, title_x=0.5, title_text="Latency (s)"
@@ -51,7 +52,7 @@ def plot(args):
             title_text="Request ID", title_font=dict(size=22), tickfont_size=18
         )
     )
-    fig.write_image("artifact/results/e2e/latency.png", scale=2)
+    fig.write_image("artifact/results/e2e/real_workload_latency.png", scale=2)
 
 
 if __name__ == "__main__":

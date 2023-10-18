@@ -1,0 +1,304 @@
+{
+    "queries": [
+        {
+            "id": 0,
+            "prompt": "<human>: Write a funny hook paragraph in first personal narrative on Why Microsoft Teams is better than Zoom<|endoftext|><assistant>:",
+            "timestamp": 0.0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 1,
+            "prompt": "<human>: explain what elo score is<|endoftext|><assistant>:",
+            "timestamp": 95.44519996643066,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 2,
+            "prompt": "<human>: How to make stargaze pie that actually delicious?<|endoftext|><assistant>:",
+            "timestamp": 132.4656000137329,
+            "model": ".cache/raw_models/openllama-3b-chat-3"
+        },
+        {
+            "id": 3,
+            "prompt": "<human>: why are no-code platforms popular?<|endoftext|><assistant>:",
+            "timestamp": 283.2190001010895,
+            "model": ".cache/raw_models/openllama-3b-chat-3"
+        },
+        {
+            "id": 4,
+            "prompt": "<human>: write me a poem about large language model<|endoftext|><assistant>:",
+            "timestamp": 360.64429998397827,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 5,
+            "prompt": "<human>: \u6771\u4eac\u30bf\u30ef\u30fc\u3068\u6771\u4eac\u30b9\u30ab\u30a4\u30c4\u30ea\u30fc\u306f\u3069\u3061\u3089\u3089\u9ad8\u3044\u3067\u3059\u304b<|endoftext|><assistant>:",
+            "timestamp": 374.75800013542175,
+            "model": ".cache/raw_models/openllama-3b-chat-4"
+        },
+        {
+            "id": 6,
+            "prompt": "<human>: how to keep up with the trends in the startup world?<|endoftext|><assistant>:",
+            "timestamp": 410.21309995651245,
+            "model": ".cache/raw_models/openllama-3b-chat-12"
+        },
+        {
+            "id": 7,
+            "prompt": "<human>: write me a code for least recent used cache<|endoftext|><assistant>:",
+            "timestamp": 463.82140016555786,
+            "model": ".cache/raw_models/openllama-3b-chat-2"
+        },
+        {
+            "id": 8,
+            "prompt": "<human>: 5 t\u00edtulos para facebook ads sobre tortas<|endoftext|><assistant>:",
+            "timestamp": 464.94580006599426,
+            "model": ".cache/raw_models/openllama-3b-chat-5"
+        },
+        {
+            "id": 9,
+            "prompt": "<human>: I'm 45 this year. On which year was I born?<|endoftext|><assistant>:",
+            "timestamp": 497.84800004959106,
+            "model": ".cache/raw_models/openllama-3b-chat-6"
+        },
+        {
+            "id": 10,
+            "prompt": "<human>: If I have 10 lemons and I make a juice out of 3 of them but I lost one. How many lemons do I have left?<|endoftext|><assistant>:",
+            "timestamp": 544.4138000011444,
+            "model": ".cache/raw_models/openllama-3b-chat-6"
+        },
+        {
+            "id": 11,
+            "prompt": "<human>: \u0643\u064a\u0641\u064a\u0629 \u0645\u0645\u0627\u0631\u0633\u0629 \u0627\u0644\u062a\u062e\u0637\u064a\u0637 \u0644\u0644\u062a\u0641\u0627\u0648\u0636 \u0641\u064a \u0645\u0648\u0627\u0642\u0641 \u062d\u0642\u064a\u0642\u064a\u0629.<|endoftext|><assistant>:",
+            "timestamp": 633.1092000007629,
+            "model": ".cache/raw_models/openllama-3b-chat-6"
+        },
+        {
+            "id": 12,
+            "prompt": "<human>: Tell me about quantum mechanics <|endoftext|><assistant>:",
+            "timestamp": 639.5471000671387,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 13,
+            "prompt": "<human>: Write me a Bash script that adds a remote to my local git repo and then prunes any local refs that aren't also on the remote.<|endoftext|><assistant>:",
+            "timestamp": 728.0443999767303,
+            "model": ".cache/raw_models/openllama-3b-chat-4"
+        },
+        {
+            "id": 14,
+            "prompt": "<human>: Anna takes a ball and puts it in a red box, then leaves the room. Bob takes the ball out of the red box and puts it into the yellow box, then leaves the room. Anna returns to the room. Where will she look for the ball?<|endoftext|><assistant>:",
+            "timestamp": 737.9392001628876,
+            "model": ".cache/raw_models/openllama-3b-chat-7"
+        },
+        {
+            "id": 15,
+            "prompt": "<human>: \u5546\u7528\u5229\u7528\u53ef\u80fd\u306aLLM\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044\u3002\u7c21\u6f54\u306a\u6587\u7ae0\u3067\u3002<|endoftext|><assistant>:",
+            "timestamp": 748.5364000797272,
+            "model": ".cache/raw_models/openllama-3b-chat-7"
+        },
+        {
+            "id": 16,
+            "prompt": "<human>: If you were in a race and passed the person in second place, what place would you be in now?<|endoftext|><assistant>:",
+            "timestamp": 807.8313000202179,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 17,
+            "prompt": "<human>: LLM\u3092\u5b66\u7fd2\u3059\u308b\u306e\u306b\u304a\u3059\u3059\u3081\u306eGPU\u30de\u30b7\u30f3\u3092\u6559\u3048\u3066\u304f\u3060\u3055\u3044\u3002<|endoftext|><assistant>:",
+            "timestamp": 896.3177001476288,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 18,
+            "prompt": "<human>: Chatbot Arena Leaderboard\u3068\u306f\u4f55\u3067\u3059\u304b\u3002\u7c21\u6f54\u306b\u7b54\u3048\u3066\u3002<|endoftext|><assistant>:",
+            "timestamp": 994.5292000770569,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 19,
+            "prompt": "<human>: Tell me a short story about two characters named after famous baseball players from the 1800s, in which they discuss the symbolism of the spinning top in the movie Inception.  End the story with a joke.<|endoftext|><assistant>:",
+            "timestamp": 1032.4365000724792,
+            "model": ".cache/raw_models/openllama-3b-chat-12"
+        },
+        {
+            "id": 20,
+            "prompt": "<human>: What level of CEFR proficiency would be needed for my ESL students to be able to understand and take the arguments from the following text? Words with numbers behind them will be annotated with synonyms or explanations\n\nYou\u2019ve likely heard that the US government is trying to ban TikTok. Lawmakers want to force TikTok to divest1 from its China-based parent company, ByteDance, and become a fully US-based company; if that doesn\u2019t work, a ban could come [\u2026]\nThe government\u2019s ostensible2 reasoning for all of this [\u2026] is national security. Congress is concerned that because ByteDance is based in China, the Chinese government could access American users\u2019 data and push or suppress3 certain kinds of content to Americans. [\u2026] While these concerns are not exactly throwaways, they don\u2019t address the more existential question of TikTok\u2019s five-year presence on Americans\u2019 phones (more than 150 million of them!): Is TikTok a force for good? [\u2026]\nWhen TikTok came on the scene in 2018, the only thing most people knew about it was that it was embarrassing. Having evolved from the platform Musical.ly, which was populated largely by children and young teenagers lip-syncing to sped-up versions of pop hits, TikTok took a few months to shed the stench4 of cringe content. Slowly, however (and then much more quickly at the onset5 of the pandemic), more people were charmed6 by its unique video editing tools, the easy-to-replicate meme formats, and a new, burgeoning7 form of extremely silly comedy. In the depths of quarantine, TikTok offered<|endoftext|><assistant>:",
+            "timestamp": 1101.0961000919342,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 21,
+            "prompt": "<human>: What's the million-and-first prime number?<|endoftext|><assistant>:",
+            "timestamp": 1112.493499994278,
+            "model": ".cache/raw_models/openllama-3b-chat-13"
+        },
+        {
+            "id": 22,
+            "prompt": "<human>: Tell me a story about a mouse and a zebra<|endoftext|><assistant>:",
+            "timestamp": 1126.3215999603271,
+            "model": ".cache/raw_models/openllama-3b-chat-2"
+        },
+        {
+            "id": 23,
+            "prompt": "<human>: Name five words that rhyme with augury<|endoftext|><assistant>:",
+            "timestamp": 1158.0434000492096,
+            "model": ".cache/raw_models/openllama-3b-chat-13"
+        },
+        {
+            "id": 24,
+            "prompt": "<human>: What level of CEFR proficiency would be needed for my ESL students to be able to understand and take the arguments from the following text? Words with numbers behind them will be annotated with synonyms or explanations\n\nYou\u2019ve likely heard that the US government is trying to ban TikTok. Lawmakers want to force TikTok to divest1 from its China-based parent company, ByteDance, and become a fully US-based company; if that doesn\u2019t work, a ban could come [\u2026]\nThe government\u2019s ostensible2 reasoning for all of this [\u2026] is national security. Congress is concerned that because ByteDance is based in China, the Chinese government could access American users\u2019 data and push or suppress3 certain kinds of content to Americans. [\u2026] While these concerns are not exactly throwaways, they don\u2019t address the more existential question of TikTok\u2019s five-year presence on Americans\u2019 phones (more than 150 million of them!): Is TikTok a force for good? [\u2026]\nWhen TikTok came on the scene in 2018, the only thing most people knew about it was that it was embarrassing. Having evolved from the platform Musical.ly, which was populated largely by children and young teenagers lip-syncing to sped-up versions of pop hits, TikTok took a few months to shed the stench4 of cringe content. Slowly, however (and then much more quickly at the onset5 of the pandemic), more people were charmed6 by its unique video editing tools, the easy-to-replicate meme formats, and a new, burgeoning7 form of extremely silly comedy. In the depths of quarantine, TikTok offered<|endoftext|><assistant>:",
+            "timestamp": 1158.2459001541138,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 25,
+            "prompt": "<human>: David has three sisters. Each one of them has a brother. How many brothers does David have?<|endoftext|><assistant>:",
+            "timestamp": 1231.2778000831604,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 26,
+            "prompt": "<human>: If I hold a ping-pong ball on top of a basketball and drop both together, what will happen to the ping-pong ball when the basketball hits the ground, and why?<|endoftext|><assistant>:",
+            "timestamp": 1302.2292001247406,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 27,
+            "prompt": "<human>: \"There are limits to what any one person can comprehend - No single person can possibly have complete knowledge and wisdom about the complexity of all issues and systems on Earth.\" Analyze this quote. What does it mean? Is it true or meaningful?<|endoftext|><assistant>:",
+            "timestamp": 1321.638000011444,
+            "model": ".cache/raw_models/openllama-3b-chat-3"
+        },
+        {
+            "id": 28,
+            "prompt": "<human>: In Java, what does the reserved word \"const\" do?<|endoftext|><assistant>:",
+            "timestamp": 1348.7250001430511,
+            "model": ".cache/raw_models/openllama-3b-chat-5"
+        },
+        {
+            "id": 29,
+            "prompt": "<human>: fill a 3x3 magic grid<|endoftext|><assistant>:",
+            "timestamp": 1353.1986000537872,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 30,
+            "prompt": "<human>: Finish this sentence in an amusing way: A B C D E <|endoftext|><assistant>:",
+            "timestamp": 1371.4241001605988,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 31,
+            "prompt": "<human>: On a standard American keyboard, what letter is directly to the left of J?<|endoftext|><assistant>:",
+            "timestamp": 1391.50670003891,
+            "model": ".cache/raw_models/openllama-3b-chat-4"
+        },
+        {
+            "id": 32,
+            "prompt": "<human>: On a standard American keyboard, which symbol is produced by pressing the Shift and 6 keys together?<|endoftext|><assistant>:",
+            "timestamp": 1426.723799943924,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 33,
+            "prompt": "<human>: David has three sisters. Each one of them has a brother. How many brothers does David have? Answer: Let's work this out in a step-by-step way to ensure we have the right answer.<|endoftext|><assistant>:",
+            "timestamp": 1485.9821000099182,
+            "model": ".cache/raw_models/openllama-3b-chat-5"
+        },
+        {
+            "id": 34,
+            "prompt": "<human>: Who was king of England in 1067?<|endoftext|><assistant>:",
+            "timestamp": 1523.9390001296997,
+            "model": ".cache/raw_models/openllama-3b-chat-5"
+        },
+        {
+            "id": 35,
+            "prompt": "<human>: How to write a factorial function in Python?<|endoftext|><assistant>:",
+            "timestamp": 1544.1634001731873,
+            "model": ".cache/raw_models/openllama-3b-chat-3"
+        },
+        {
+            "id": 36,
+            "prompt": "<human>: What can you tell me about Reynoldsville, PA?<|endoftext|><assistant>:",
+            "timestamp": 1621.0397000312805,
+            "model": ".cache/raw_models/openllama-3b-chat-5"
+        },
+        {
+            "id": 37,
+            "prompt": "<human>: \u300c\u3053\u3093\u306b\u3061\u306f\u8d64\u3061\u3083\u3093\u300d\u306f\u8ab0\u306e\u66f2\u3067\u3059\u304b<|endoftext|><assistant>:",
+            "timestamp": 1664.154799938202,
+            "model": ".cache/raw_models/openllama-3b-chat-2"
+        },
+        {
+            "id": 38,
+            "prompt": "<human>: Hi. Here's a riddle for you.\nIt doesn't bark, it doesn't bite, but it won't let you in the house.<|endoftext|><assistant>:",
+            "timestamp": 1680.66890001297,
+            "model": ".cache/raw_models/openllama-3b-chat-5"
+        },
+        {
+            "id": 39,
+            "prompt": "<human>: Tell me the starting lineup of the 1977 Baltimore Orioles.<|endoftext|><assistant>:",
+            "timestamp": 1718.2715001106262,
+            "model": ".cache/raw_models/openllama-3b-chat-6"
+        },
+        {
+            "id": 40,
+            "prompt": "<human>: Write a story about a misunderstood necromancer with a twist.<|endoftext|><assistant>:",
+            "timestamp": 1825.755900144577,
+            "model": ".cache/raw_models/openllama-3b-chat-6"
+        },
+        {
+            "id": 41,
+            "prompt": "<human>: Who is Chris Rowen?<|endoftext|><assistant>:",
+            "timestamp": 1867.711100101471,
+            "model": ".cache/raw_models/openllama-3b-chat-12"
+        },
+        {
+            "id": 42,
+            "prompt": "<human>: Why does the flag of the Isle of Mann have those weird legs?<|endoftext|><assistant>:",
+            "timestamp": 1961.0556001663208,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 43,
+            "prompt": "<human>: What is the fine structure constant? <|endoftext|><assistant>:",
+            "timestamp": 1985.6654000282288,
+            "model": ".cache/raw_models/openllama-3b-chat-12"
+        },
+        {
+            "id": 44,
+            "prompt": "<human>: Hi. Here's a riddle for you. A live lock grumbled, lay across the door. Two medals on his chest. You'd better not enter the house!<|endoftext|><assistant>:",
+            "timestamp": 2083.5169999599457,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 45,
+            "prompt": "<human>: Hi. Here's a riddle for you. If it falls, it bounces, if you hit it, it won't cry.<|endoftext|><assistant>:",
+            "timestamp": 2128.783800125122,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 46,
+            "prompt": "<human>: Draw a simple ASCII art of a cat face.<|endoftext|><assistant>:",
+            "timestamp": 2158.300199985504,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 47,
+            "prompt": "<human>: David has three sisters. Each one of them has a brother. How many brothers does David have? Answer: Let's work this out in a step-by-step way to ensure we have the right answer. Now generate two more answers for the same problem that might be different but correct. Show all three answers. Now act a researcher tasked with investigating the 3 answers provided. List the flaws and faulty logic of each answer option provided. Let's work this out in a step-by-step way to ensure we have all the errors. Now, act a resolver tasked with finding which of the 3 answer options the researcher thought was the best, 2) improving the answer 3) printing the improved answer in full. Let's work this out in a step-by-step way to ensure we have the correct answer.<|endoftext|><assistant>:",
+            "timestamp": 2226.5317001342773,
+            "model": ".cache/raw_models/openllama-3b-chat-6"
+        },
+        {
+            "id": 48,
+            "prompt": "<human>: What is the hardest mineral?<|endoftext|><assistant>:",
+            "timestamp": 2275.6059000492096,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 49,
+            "prompt": "<human>: How would you convert next.js config to an mjs format?<|endoftext|><assistant>:",
+            "timestamp": 2304.433900117874,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        }
+    ]
+}
