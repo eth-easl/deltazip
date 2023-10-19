@@ -1,10 +1,9 @@
-import os
 import json
 import argparse
 import datasets
 import pandas as pd
 import numpy as np
-
+from artifact.workloads.generators.arrival import PoissonProcess
 # to_eval_models = [
 #     "lmsys/vicuna-7b-v1.5",
 #     "Xwin-LM/Xwin-LM-7B-V0.1",
@@ -12,6 +11,7 @@ import numpy as np
 #     "meta-llama/Llama-2-7b-chat-hf",
 #     "FlagAlpha/Llama2-Chinese-7b-Chat",
 # ]
+
 to_eval_models = [
     f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)
 ]
@@ -97,31 +97,54 @@ def prepare_azure(args):
     trace = trace.to_dict('records')
     print(trace[0])
     for idx, item in enumerate(trace):
+        print(item)
+        print(idx)
         traces_data.append(
             {
                 "id": idx,
                 "prompt": dialogs[idx],
-                "timestamp": 0,
+                "timestamp": (item['tstamp'] - min_tstamp) / 1,
                 "model": mapping[item["func"]],
             }
         )
     with open(args.output, "w") as fp:
         json.dump({"queries": traces_data}, fp)
 
+def prepare_poisson(args):
+    print(args)
+    dialogs = get_dialogs()
+    poisson_ticks = PoissonProcess(1.5).generate_arrivals(0, 1000)
+    traces_data = []
+    for idx in range(args.num_queries):
+        traces_data.append(
+            {
+                'id': idx,
+                "prompt": dialogs[idx],
+                "timestamp": poisson_ticks[idx],
+                "model": to_eval_models[idx % len(to_eval_models)],
+            }
+        )
+    with open(args.output, "w") as fp:
+        json.dump({"queries": traces_data}, fp)
+
+
 def main(args):
     if args.trace == "lmsys":
         print("Using LMSys trace")
         prepare_lmsys(args)
-    else:
+    elif args.trace =='azure':
         print("Using Azure trace")
         prepare_azure(args)
-
-
+    elif args.trace == 'poisson':
+        print("Using Poisson trace")
+        prepare_poisson(args)
+    else:
+        raise NotImplementedError
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--trace", type=str, default="lmsys")
     parser.add_argument("--num-queries", type=int, default=100)
-    parser.add_argument("--model", type=str, default="")
     parser.add_argument("--output", type=str, default="")
     args = parser.parse_args()
     main(args)
