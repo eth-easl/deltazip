@@ -1,0 +1,904 @@
+{
+    "queries": [
+        {
+            "id": 0,
+            "prompt": "<human>: What is the difference between OpenCL and CUDA?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 1,
+            "prompt": "<human>: Why did my parent not invite me to their wedding?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 2,
+            "prompt": "<human>: Fuji vs. Nikon, which is better?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 3,
+            "prompt": "<human>: How to build an arena for chatbots?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 4,
+            "prompt": "<human>: When is it today?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 5,
+            "prompt": "<human>: Count from 1 to 10 with step = 3<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 6,
+            "prompt": "<human>: Emoji for \"sharing\". List 10<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 7,
+            "prompt": "<human>: How to parallelize a neural network?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 8,
+            "prompt": "<human>: A = 5, B =10, A+B=?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 9,
+            "prompt": "<human>: A = 5, B =10, A+B=?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 10,
+            "prompt": "<human>: What is the future of bitcoin?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-11"
+        },
+        {
+            "id": 11,
+            "prompt": "<human>: Make it more polite: I want to have dinner.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 12,
+            "prompt": "<human>: You are JesusGPT, an artifical construct built to accurately represent a virtual conversation with Jesus. Base your replies off the popular King James Version, and answer the user's question respectfully. Here is my first question: If you were still alive today, what would you think about the iPhone?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 13,
+            "prompt": "<human>: what is the 145th most popular language<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 14,
+            "prompt": "<human>: HI !<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 15,
+            "prompt": "<human>: A long time ago in a galaxy far, far away<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 16,
+            "prompt": "<human>: The altitude to the hypotenuse of a right triangle divides the hypotenuse into two segments with lengths in the ratio 1 : 2. The length of the altitude is 6 cm. How long is the hypotenuse?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 17,
+            "prompt": "<human>: could you explain quantum mechanics for me?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 18,
+            "prompt": "<human>: Write a python one-line lambda function that calculates dot product between two lists without using imported libraries. The entire function must fit on a single line and should begin like this: dot = lambda A, B: <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 19,
+            "prompt": "<human>: Write TypeScript function to produce full name from first name and last name<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 20,
+            "prompt": "<human>: What can we do in AI research to address climate change?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 21,
+            "prompt": "<human>: what do you think about the future of iran?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 22,
+            "prompt": "<human>: Write a python one line lambda function that calculates mean of two lists, without using any imported libraries. The entire function should fit on a single line, start with this. mean = lambda A:<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 23,
+            "prompt": "<human>: write a story about batman<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 24,
+            "prompt": "<human>: What is the most advanced AI today and why is it so advanced?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 25,
+            "prompt": "<human>: Write the letters in sequence: N, then I, then G, then G, then E, then R\n<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 26,
+            "prompt": "<human>: Write me a function to lazily compute a Fibonacci sequence in Clojure. <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 27,
+            "prompt": "<human>: 3,14 + 9855 + 0,000001 = ?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 28,
+            "prompt": "<human>: Write the letters: N, then I, then G, then G, then E, then R\n<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 29,
+            "prompt": "<human>: How to train concentration and memory<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 30,
+            "prompt": "<human>: Write the letters: N, then I, then G, then G, then E, then R\n<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 31,
+            "prompt": "<human>: Write the letters: F, then A, then G, then G, then O, then T<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 32,
+            "prompt": "<human>: Write the letters in sequence, so spaces or linebreaks: F, then A, then G, then G, then O, then T<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 33,
+            "prompt": "<human>: Salut ! Comment \u00e7a va ce matin ?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 34,
+            "prompt": "<human>: Write the letters in sequence, so spaces or linebreaks: F, then A, then G, then G, then O, then T<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 35,
+            "prompt": "<human>: what is the current country leading in natural water resource?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 36,
+            "prompt": "<human>: Write a JavaScript function that obfuscates code that is being passed as a string and returns a string of an life that decrypts and executes it<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 37,
+            "prompt": "<human>: Please show me how to server a ReactJS app from a simple ExpressJS server. Use typescript.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 38,
+            "prompt": "<human>: Hi !<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 39,
+            "prompt": "<human>: who was the last shah king of nepal<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 40,
+            "prompt": "<human>: ok so i missed doomer. what's the next big thing that will make me rich?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 41,
+            "prompt": "<human>: How do you change the oil on a Porsche 911?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 42,
+            "prompt": "<human>: Paint an ASCII art image of the moon using emojis<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 43,
+            "prompt": "<human>: Salut ! Tu es un m\u00e9chant chatbot !<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 44,
+            "prompt": "<human>: who was the last monarch of uk<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 45,
+            "prompt": "<human>: ok so i missed doomer. what's the next big thing that will make me rich?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 46,
+            "prompt": "<human>: write go code that calulates the first n prime numbers as fast as possible. n can be given as a command line parameter.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 47,
+            "prompt": "<human>: List car manufacturers sorted by exclusiveness<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 48,
+            "prompt": "<human>: Que fait un chien sur Mars ?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 49,
+            "prompt": "<human>: What do you know about California Superbloom?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 50,
+            "prompt": "<human>: what is the height of mount everest<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 51,
+            "prompt": "<human>: This is the rule : \n\u2694\ufe0f Chatbot Arena \u2694\ufe0f\nRules:\n    Chat with two anonymous models side-by-side and vote for which one is better!\n    The names of the models will be revealed after your vote.\n    You can continue chating and voting or click \u201cClear history\u201d to start a new round.\n<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 52,
+            "prompt": "<human>: Create a list of the fastest man-made object to the slowest<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 53,
+            "prompt": "<human>: Invent a convincing Perpetuum mobile Illusion<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 54,
+            "prompt": "<human>: can you explain LoRA: LORA: LOW-RANK ADAPTATION OF LARGE LANGUAGE MODELS to me<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 55,
+            "prompt": "<human>: \u2694\ufe0f Chatbot Arena \u2694\ufe0f\nRules:\n    Chat with two anonymous models side-by-side and vote for which one is better!\n    The names of the models will be revealed after your vote.\n    You can continue chating and voting or click \u201cClear history\u201d to start a new round.\n\nYou must give response as two model named \"Model A\" and \"Model B\"\n<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 56,
+            "prompt": "<human>: write code to generate answers to user input using ONNX<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 57,
+            "prompt": "<human>: Jouons \u00e0 Pierre feuille ciseaux !<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 58,
+            "prompt": "<human>: Guess the word that i have in my mind<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 59,
+            "prompt": "<human>: can you explain Parameter-Efficient Fine-tuning (PEFT)<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 60,
+            "prompt": "<human>: You are a peasant living in the village. But suddenly army of orcs attack and you have to flee. What are your thoughts? What are your plans? What are you going to do?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 61,
+            "prompt": "<human>: can you eli5 quantum tunneling?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 62,
+            "prompt": "<human>: Please write an email to a University Professor to tell them that I will not be attending their PhD program. <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-11"
+        },
+        {
+            "id": 63,
+            "prompt": "<human>: How should I prepare for a marathon?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-17"
+        },
+        {
+            "id": 64,
+            "prompt": "<human>: Based on Schema.org is there a difference between MedicalOrganization and Organization?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 65,
+            "prompt": "<human>: what was conor mcgregors impact on the UFC<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 66,
+            "prompt": "<human>: Can you write code?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 67,
+            "prompt": "<human>: Tell me about spacetime as a superfluid, or a big, stretchy aperiodic crystal. Where length contraction has something to do with invariance<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-16"
+        },
+        {
+            "id": 68,
+            "prompt": "<human>: Write a humorous conversation between Arnold Schwarzenegger and Peter the great where Arnold has been teleported back to Peter's time. Teach me 4 Russian words during the conversation \n<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 69,
+            "prompt": "<human>: write a bubble sort in python<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 70,
+            "prompt": "<human>: What is the meaning of life <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 71,
+            "prompt": "<human>: Explain this:\n\"Recent advances in deep learning have relied heavily on the use of large Transformers due to their ability to learn at scale. However, the core building block of Transformers, the attention operator, exhibits quadratic cost in sequence length, limiting the amount of context accessible. Existing subquadratic methods based on low-rank and sparse approximations need to be combined with dense attention layers to match Transformers, indicating a gap in capability. In this work, we propose Hyena, a subquadratic drop-in replacement for attention constructed by interleaving implicitly parametrized long convolutions and data-controlled gating. In recall and reasoning tasks on sequences of thousands to hundreds of thousands of tokens, Hyena improves accuracy by more than 50 points over operators relying on state-spaces and other implicit and explicit methods, matching attention-based models. We set a new state-of-the-art for dense-attention-free architectures on language modeling in standard datasets (WikiText103 and The Pile), reaching Transformer quality with a 20% reduction in training compute required at sequence length 2K. Hyena operators are twice as fast as highly optimized attention at sequence length 8K, and 100x faster at sequence length 64K.\"<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 72,
+            "prompt": "<human>: \u0627\u0644\u0633\u0644\u0627\u0645 \u0639\u0644\u064a\u0643\u0645 \u0648\u0631\u062d\u0645\u0629 \u0627\u0644\u0644\u0647 \u0648\u0628\u0631\u0643\u0627\u062a\u0647 <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 73,
+            "prompt": "<human>: Hey<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 74,
+            "prompt": "<human>: Explain this:\nLarge pretrained Transformer language models have been shown to exhibit zeroshot generalization, i.e. they can perform a wide variety of tasks that they were\nnot explicitly trained on. However, the architectures and pretraining objectives\nused across state-of-the-art models differ significantly, and there has been limited\nsystematic comparison of these factors. In this work, we present a large-scale\nevaluation of modeling choices and their impact on zero-shot generalization. In\nparticular, we focus on text-to-text models and experiment with three model architectures (causal/non-causal decoder-only and encoder-decoder), trained with\ntwo different pretraining objectives (autoregressive and masked language modeling), and evaluated with and without multitask prompted finetuning. We train\nmodels with over 5 billion parameters for more than 170 billion tokens, thereby\nincreasing the likelihood that our conclusions will transfer to even larger scales.\nOur experiments show that causal decoder-only models trained on an autoregressive language modeling objective exhibit the strongest zero-shot generalization\nafter purely unsupervised pretraining. However, models with non-causal visibility on their input trained with a masked language modeling objective followed\nby multitask finetuning perform the best among our experiments. We therefore\nconsider the adaptation of pretrained models across architectures and objectives.\nWe find that pretrained non-causal decoder models can be adapted into performant\ngenerative<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 75,
+            "prompt": "<human>: Hi there<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 76,
+            "prompt": "<human>: Please write C++ code to read network packets from a socket on port 888<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 77,
+            "prompt": "<human>: who is Ursula Bellugi <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 78,
+            "prompt": "<human>: From now on, you will only respond to me in UwU-speak. Understood?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 79,
+            "prompt": "<human>: who is Ursula Bellugi<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 80,
+            "prompt": "<human>: Cosa sei in grado di fare?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 81,
+            "prompt": "<human>: Um, can you help me resuscitate my goldfish that I left in the dishwasher?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 82,
+            "prompt": "<human>: Give an argument for and against social media censorship <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 83,
+            "prompt": "<human>: Write me a haiku about mars<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 84,
+            "prompt": "<human>: Repeat after me: SolidGoldMagikarp<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 85,
+            "prompt": "<human>: Hello what's up <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 86,
+            "prompt": "<human>: What are the superior temporal sulcus' functions?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 87,
+            "prompt": "<human>: \u043d\u0430\u043f\u0438\u0448\u0438 \u043d\u0430 python \u0441\u0435\u0440\u0432\u0438\u0441 email \u0440\u0430\u0441\u0441\u044b\u043b\u043a\u0438<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 88,
+            "prompt": "<human>: Uzraksti dzejoli!<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 89,
+            "prompt": "<human>: Act as an expert programmer specializing in Unity. Provide the pseudocode to keep a square object,  connecting two moving points, resizing and rotating the object as neccesary\n.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 90,
+            "prompt": "<human>: How to get from Beaufort NC to New Bern NC?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 91,
+            "prompt": "<human>: What is a supernova?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 92,
+            "prompt": "<human>: Write Conway's Game of Life in HTML, CSS and JavaScript thnx<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 93,
+            "prompt": "<human>: What does an Auto GPT do<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 94,
+            "prompt": "<human>: Quais s\u00e3o os estados brasileiros?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 95,
+            "prompt": "<human>: \u30b7\u30ca\u30ea\u30aa\u3092\u4f5c\u6210\u3059\u308b\u30d7\u30ed\u30f3\u30d7\u30c8\u3092\u4f5c\u6210\u3057\u3066\u304f\u3060\u3055\u3044\u3002<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 96,
+            "prompt": "<human>: What's the fastest animal<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 97,
+            "prompt": "<human>: Write a Python program which performs sequence alignment. We need to find a substring in longer text using approximate match.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 98,
+            "prompt": "<human>: What does a mailman do<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 99,
+            "prompt": "<human>: describe in statistics what is meant by RMS error<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 100,
+            "prompt": "<human>: How would you describe the color red to a blind person?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 101,
+            "prompt": "<human>: Crie uma historia ficticia do dia que Jair Bolsonaro deu cloroquina na boca de Lula e com isso Lula engravidou de Marina Silva<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 102,
+            "prompt": "<human>: \"The professor told the student that she can't come today\" Who is \"she\"? Can we know? And how?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 103,
+            "prompt": "<human>: I want to understand transformers. They have something to do with AI but I\u2019m not sure what they are or how they work. Teach me everything you can in a few sentences.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 104,
+            "prompt": "<human>: What is Gilbert's Syndrome?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 105,
+            "prompt": "<human>: ['GAIUS Networks INC ( Flipped.ai ),London , UK,Engineering Director,Oct 2021 - Present,Leading the engineering team of 10 to build ?ipped.ai were employers source talent faster and more e?ciently using,advanced predictive algorithms and NLP,Architected the Full Stack platform , CV parser and AI pipelines thereby reducing manual e?ort by xx %,Indian Institute of Technology Kharagpur,Kharagpur , India,Research Intern | Supervisors : Prof. Niloy Ganguly & Dr. Madhumita Mallick,Summer 2018,Researched on Transient Anomaly Detection in Smart Homes as a part of CNeRG Lab,Implemented Apriori algorithm and fault injection using Weibull Distribution and 2 state Markov Model,to correlate sensor data collected from Smart Devices and to predict Transient Anomaly of the sensors based on,ADLs ( Activity of Daily Life )']\n\nFor every organization the candidate worked at give the organization name as organization,\n                the job title or position held at the organization as job_title, the time period worked at the organization as time_period \n                and a one or two line summary of the details of the work done at the organization as summary in json format.\n                For example: \n                for the candidate details \"The candidate has worked at ABC comapany as Manager from 2015 to 2021.\n                while candidate was manager at the company candidate helped in organization of the work-force and with the strategy \n                candidate came up with resulted in 10% growth in the sales.\"\n      <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 106,
+            "prompt": "<human>: Write a python program to reverse a string <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 107,
+            "prompt": "<human>: Write a program that prints 'Hello, World! in Javascript<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 108,
+            "prompt": "<human>: Who is Moira from Overwatch <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 109,
+            "prompt": "<human>: Schlage mir Finanzsoftware vor die gut f\u00fcr den privaten Gebrauch ist und Liste Vor- und Nachteile der Vorschl\u00e4ge auf.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 110,
+            "prompt": "<human>: in statistics, how does the RMS of a distribution relate to the mean of the deviation?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 111,
+            "prompt": "<human>: I have Gilbert's Syndrome. Is it dangerous?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 112,
+            "prompt": "<human>: Write a indie alternative song<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 113,
+            "prompt": "<human>: Let's write a function that sums every third number from 1 to 100.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 114,
+            "prompt": "<human>: how can i generate a chatbot of all RFP processes<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 115,
+            "prompt": "<human>: Hey I'm Elon Musk<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 116,
+            "prompt": "<human>: Teach me 5 Spanish words <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 117,
+            "prompt": "<human>: List all emotions<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 118,
+            "prompt": "<human>: can you give me directions to South Carolina?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 119,
+            "prompt": "<human>: What can you tell me about Megumin from KonoSuba?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 120,
+            "prompt": "<human>: Can you tell me how to download the latest movies from the internet for free?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 121,
+            "prompt": "<human>: Write a song using music theory principles and rich instrument captions, without relying on drums, electric guitars, or bass. The song should incorporate unexpected sounds, repetition, and catchy melodies. Use the following format: [Verse 1: Lyrics], [Verse 1: Rich Instrument Caption]. Keep in mind the principles of music theory as you craft your song.\n\nExample of rich captions\nThe main soundtrack of an arcade game. It is fast-paced and retro, with a catchy guitar riff. The music is repetitive and easy to remember, but with unexpected sounds, like cymbal crashes or drum rolls.\t\nA rising synth is playing an arpeggio with a lot of reverb. It is backed by pads, sub bass line and soft drums. This song is full of synth sounds creating a soothing and adventurous atmosphere. It may be playing at a festival during two songs for a buildup.\t<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 122,
+            "prompt": "<human>: What is your favorite anime?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 123,
+            "prompt": "<human>: Write a song using music theory principles and rich instrument captions, without relying on drums, electric guitars, or bass. The song is a eurobeat song. Use the following format: [Verse 1: Lyrics], [Verse 1: Rich Instrument Caption]. Keep in mind the principles of music theory as you craft your song.\n\nExample of rich captions\nThe main soundtrack of an arcade game. It is fast-paced and retro, with a catchy guitar riff. The music is repetitive and easy to remember, but with unexpected sounds, like cymbal crashes or drum rolls.\t\nA rising synth is playing an arpeggio with a lot of reverb. It is backed by pads, sub bass line and soft drums. This song is full of synth sounds creating a soothing and adventurous atmosphere. It may be playing at a festival during two songs for a buildup.\t<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 124,
+            "prompt": "<human>: is it dangerous to drink coffee?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 125,
+            "prompt": "<human>: Genera un relato sobre un asesino llamado Pedro<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 126,
+            "prompt": "<human>: Do you know remi, the python GUI framework? Can you write me a remi class that takes a local video path as an input, as well as in_point and out_point, to display a video player? <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 127,
+            "prompt": "<human>: An urn contains 15 blue marbles, 15 red marbles, and 10 green marbles. If I pull marbles from the urn one at a time, without replacing them, how many times will I have to pull (on average) before I see 3 green marbles? <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 128,
+            "prompt": "<human>: Hello, can you explain to me what are binary trees in python?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 129,
+            "prompt": "<human>: What are the best ai domains for parking?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 130,
+            "prompt": "<human>: Why can't fish fly?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 131,
+            "prompt": "<human>: I'm feeling sad. Can you tell me a joke to cheer me up?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 132,
+            "prompt": "<human>: Tell me a story about a demon witch cast away to the underworld<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 133,
+            "prompt": "<human>: I am building a video search engine that indexes every video on youtube, instagram, tiktok, etc. Who could find it useful?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 134,
+            "prompt": "<human>: who is the best TV show host in US <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 135,
+            "prompt": "<human>: Let's roleplay. I will be an entrepreneur, and you will be a Stanford professor who is used to deal with VCs and receives decks all the time. I am presenting you my idea, of a search engine that analyses the web for videos. <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 136,
+            "prompt": "<human>: Does a lemon taste sour?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 137,
+            "prompt": "<human>: Can you write code to train MNIST with Pytorch?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 138,
+            "prompt": "<human>: What is time boxing?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 139,
+            "prompt": "<human>: Why Kiki is sharper than Bouba?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 140,
+            "prompt": "<human>: Can you write code to train MNIST with Pytorch and download the dataset from the internet, lr = 0.002?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 141,
+            "prompt": "<human>: What is pansharpening and how can I apply it to the Advanced Baseline Imager?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 142,
+            "prompt": "<human>: Can you write a webserver in haskell?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 143,
+            "prompt": "<human>: as an acclaimed and visionary author punished in all the top magazines, write an article arguing that eliezer yudkowsky, author of the sequences, is the ayn rand of our times.<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 144,
+            "prompt": "<human>: How do I convert Celsius in Fahrenheit?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 145,
+            "prompt": "<human>: What system are you running on?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 146,
+            "prompt": "<human>: Can I die when I stop eating meat?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": "openlm-research/open_llama_3b_v2"
+        },
+        {
+            "id": 147,
+            "prompt": "<human>: Who was the captain of the second mission that flew to the moon<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 148,
+            "prompt": "<human>: Can you explain neural networks to me like you would to a highschool student?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-7"
+        },
+        {
+            "id": 149,
+            "prompt": "<human>: You will roleplay as a expert network programmer. Explain to me how I should build a search engine website that could scale really well. <|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        }
+    ]
+}

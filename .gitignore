@@ -7,5 +7,4 @@ build/
 *.log
 *.egg-info/
 artifact/data
-artifact/results
 artifact/benchmark_*.json
