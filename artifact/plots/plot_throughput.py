@@ -35,6 +35,13 @@ def plot(args):
         legend_title=dict(font=dict(size=18)),
     )
     fig.update_layout(
+        font_family="Arial",
+        font_color="black",
+        title_font_family="Arial",
+        title_font_color="black",
+        legend_title_font_color="black",
+    )
+    fig.update_layout(
         yaxis=dict(
             title_text="Throughput (req/s)", title_font=dict(size=22), tickfont_size=18
         )
@@ -44,11 +51,12 @@ def plot(args):
             title_text="Backend", title_font=dict(size=22), tickfont_size=14
         )
     )
-    fig.write_image("artifact/results/throughput_bar_plot.png", scale=2)
+    fig.write_image(args.output, scale=2)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, default="artifact/results/latency.json")
+    parser.add_argument("--output", type=str, default="artifact/results/throughput.png")
     args = parser.parse_args()
     plot(args)

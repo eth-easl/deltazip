@@ -25,23 +25,21 @@ def plot(args):
                 "time_elapsed": res['time_elapsed'],
             })
     df = pd.DataFrame(plot_data)
-    slo_requirements = np.arange(1, 15, 0.1)
-    # for each slo_requirement, find how many requests are satisfied
-    slo_data = []
-    for slo in slo_requirements:
-        for provider in df['provider'].unique():
-            provider_df = df[df['provider'] == provider]
-            success_rate = provider_df[provider_df['time_elapsed'] <= slo].shape[0] / provider_df.shape[0]
-            slo_data.append({
-                'slo': slo,
+    # for each provider, find cdf of the time_elapsed
+    cdf_space = np.linspace(0, df['time_elapsed'].max(), 1000)
+    cdf_df = []
+    for provider in df['provider'].unique():
+        provider_df = df[df['provider'] == provider]
+        for t in cdf_space:
+            cdf_df.append({
                 'provider': provider,
-                'success_rate': success_rate,
+                't': t,
+                'cdf': provider_df[provider_df['time_elapsed'] <= t].shape[0] / provider_df.shape[0]
             })
-    df = pd.DataFrame(slo_data)
-    print(df)
-    fig = px.line(df, x="slo", y="success_rate", color="provider")
+    df = pd.DataFrame(cdf_df)
+    fig = px.line(df, x="t", y="cdf", color="provider")
     fig.update_layout(
-        width=800, height=600, title_x=0.5, title_text="SLO Attainment of Different Backends"
+        width=800, height=600, title_x=0.5, title_text="Cumulative Distribution Function of Latency"
     )
     fig.update_layout(
         font_family="Arial",
@@ -57,12 +55,12 @@ def plot(args):
     )
     fig.update_layout(
         yaxis=dict(
-            title_text="Success Rate (%)", title_font=dict(size=22), tickfont_size=18
+            title_text="CDF", title_font=dict(size=22), tickfont_size=18
         )
     )
     fig.update_layout(
         xaxis=dict(
-            title_text="SLO Requirement (s)", title_font=dict(size=22), tickfont_size=18
+            title_text="Latency (s)", title_font=dict(size=22), tickfont_size=18
         )
     )
     fig.write_image(args.output, scale=2)
