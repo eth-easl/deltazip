@@ -12,16 +12,23 @@ import numpy as np
 #     "meta-llama/Llama-2-7b-chat-hf",
 #     "FlagAlpha/Llama2-Chinese-7b-Chat",
 # ]
-lmsys_total_models = 20
 to_eval_models = [
-    f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 20)
+    f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)
 ]
+to_eval_models =["openlm-research/open_llama_3b_v2"] + to_eval_models
 
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 
 def format_lmsys(prompt):
     return f"USER: {prompt}\nASSISTANT:"
+
+def get_dialogs():
+    trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
+    all_dialogs = []
+    for idx, item in enumerate(trace):
+        all_dialogs.append(format_openllama(item["conversation_a"][0]["content"]))
+    return all_dialogs
 
 def prepare_lmsys(args):
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
@@ -37,12 +44,10 @@ def prepare_lmsys(args):
     min_tstamp = min(tstamps)
     # sort models by number of occurences
     models = sorted(models.items(), key=lambda x: x[1], reverse=True)
-    print(len(models))
     # create a round robin mapping from models to to_eval_models
     mapping = {}
     for idx, model in enumerate(models):
         mapping[model[0]] = to_eval_models[idx % len(to_eval_models)]
-    print(mapping)
     # randomly take num_queries from trace
     # sort trace by timestamp
     trace = sorted(trace, key=lambda x: x["tstamp"])
@@ -62,14 +67,54 @@ def prepare_lmsys(args):
     with open(args.output, "w") as fp:
         json.dump({"queries": traces_data}, fp)
 
+def prepare_azure(args):
+    print(args)
+    df = pd.read_csv("artifact/data/AzureFunctionsInvocationTraceForTwoWeeksJan2021.txt")
+    df['tstamp'] = df['end_timestamp'] - df['duration']
+    tstamps = []
+    models = {}
+    for row_id, row in df.iterrows():
+        tstamps.append(row['tstamp'])
+        if row['func'] not in models:
+            models[row['func']] = 1
+        else:
+            models[row['func']] += 1
+    min_tstamp = min(tstamps)
+    # sort models by number of occurences
+    models = sorted(models.items(), key=lambda x: x[1], reverse=True)
+    mapping = {}
+    for idx, model in enumerate(models):
+        mapping[model[0]] = to_eval_models[idx % len(to_eval_models)]
+    trace = df.sort_values(by=['tstamp'], ascending=True)
+    # take num_queries from trace, randomly start
+    start = np.random.randint(0, len(trace) - args.num_queries)
+    trace = trace[start : start + args.num_queries]
+    min_tstamp = trace.iloc[0]['tstamp']
+    traces_data = []
+    dialogs = get_dialogs()
+    print(len(dialogs))
+    print(len(trace))
+    trace = trace.to_dict('records')
+    print(trace[0])
+    for idx, item in enumerate(trace):
+        traces_data.append(
+            {
+                "id": idx,
+                "prompt": dialogs[idx],
+                "timestamp": 0,
+                "model": mapping[item["func"]],
+            }
+        )
+    with open(args.output, "w") as fp:
+        json.dump({"queries": traces_data}, fp)
 
 def main(args):
-    print(args)
     if args.trace == "lmsys":
         print("Using LMSys trace")
         prepare_lmsys(args)
     else:
-        raise NotImplementedError
+        print("Using Azure trace")
+        prepare_azure(args)
 
 
 if __name__ == "__main__":

@@ -228,9 +228,12 @@ class FMZipPipeline:
                 : len(deltas)
             ]
             for delta in to_evict_models:
-                del self.model_pool[delta]
-                del self.req_count[delta]
-
+                try:
+                    del self.model_pool[delta]
+                    del self.req_count[delta]
+                except KeyError:
+                    pass
+    
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
             self._prepare_addback(deltas)
