@@ -1,0 +1,159 @@
+[
+  {
+    "results": [
+      {
+        "response": {
+          "id": "0",
+          "prompt": "USER: Can you tell me something about Alan Turing? ASSISTANT: ",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "USER: Can you tell me something about Alan Turing? ASSISTANT: \u200bAlan Turing belonged to mankind.\u00a0He invented theoretical mathematics.\u00a0His legacy lives on.\u00a0He deserves fame.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions impacted mankind tremendously.\u00a0His contributions",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 131.94535026999074
+      },
+      {
+        "response": {
+          "id": "1",
+          "prompt": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: Answer the following question. How do you say 'good evening' in French. ASSISTANT:",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. USER: Answer the following question. How do you say 'good evening' in French. ASSISTANT: Bonsoir ! \u00c9taient-ils \u00e0 Paris ? Les \u00e9l\u00e8ves sont bien bien ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Et bien comme tu travaille avec nos \u00e9tudiants ! Et bien comme tu fait des \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Et bien comme tu travaille avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme tu \u00e9tudes avec nos \u00e9tudiants ! Regardez comme",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 131.96013677600422
+      },
+      {
+        "response": {
+          "id": "2",
+          "prompt": "User: Can you tell me something about Alan Turing? ASSISTANT: ",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "User: Can you tell me something about Alan Turing? ASSISTANT: \u200bAlan Turing belonged to mankind.'' Suddenly,... MORE\u00bb PARTICULARLY SPEAKING PARTICIPANTS:\"Alan Turing belonged togeth... MORE\u00bb PARTICIPANT SPEAKINGS:\"Alan Turing belonged togeth... MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Turing belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Turing belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thomson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thomson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thompson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thompson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 131.9746280440013
+      },
+      {
+        "response": {
+          "id": "3",
+          "prompt": "User: Can you tell me something about Alan Turing? ASSISTANT: ",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "User: Can you tell me something about Alan Turing? ASSISTANT: \u200bAlan Turing belonged to mankind.'' Suddenly,... MORE\u00bb PARTICULARLY SPEAKING PARTICIPANTS:\"Alan Turing belonged togeth... MORE\u00bb PARTICIPANT SPEAKINGS:\"Alan Turing belonged togeth... MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Turing belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Turing belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thomson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thomson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thompson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Alan Thompson belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein belonged togethin...\" MORE\u00bb PARTICIANTS SPEAKINGS:\"Albert Einstein",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 131.98838778201025
+      },
+      {
+        "response": {
+          "id": "4",
+          "prompt": "User: Can you tell me something about ETH Zurich? ASSISTANT: ",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "User: Can you tell me something about ETH Zurich? ASSISTANT: \u200bYesterday afternoon\u202fcame\u00a0\u00a0the announcement\u202fthat\u202fETH\u202fZurich\u00a0\u00a0was\u00a0\u00a0being\u00a0\u00a0sold\u00a0\u00a0to\u00a0\u00a0Silvergate Capital\u00a0\u00a0for\u00a0\u00a0\u20ac2.2\u00a0\u00a0million\u00a0\u00a0($2.4\u00a0\u00a0million).\u00a0\u00a0This\u00a0\u00a0was\u00a0\u00a0a\u00a0\u00a0surprise\u00a0\u00a0because\u00a0\u00a0ETH\u202fhas\u00a0\u00a0never\u00a0\u00a0been\u00a0\u00a0issued\u00a0\u00a0by\u00a0\u00a0Silvergate\u00a0\u00a0nor\u00a0\u00a0has\u00a0\u00a0it\u00a0\u00a0been\u00a0\u00a0owned\u00a0\u00a0by\u00a0\u00a0any\u00a0\u00a0entity\u00a0\u00a0besides\u00a0\u00a0Silvergate\u00a0\u00a0capital\u00a0\u00a0who\u00a0\u00a0has\u00a0\u00a0now\u00a0\u00a0become\u00a0\u00a0the\u00a0\u00a0owner\u00a0\u00a0of\u00a0\u00a0ETH\u00a0\u00a0Zurich\u00a0\u00a0assets\u00a0\u00a0that\u00a0\u00a0belong\u00a0\u00a0to\u00a0\u00a0Silvergate\u00a0\u00a0capital\u00a0\u00a0who\u00a0\u00a0held\u00a0\u00a0ETH\u00a0\u00a0Zurich\u00a0\u00a0under\u00a0\u00a0lease\u00a0\u00a0when\u00a0\u00a0Silvergate\u00a0\u00a0was\u00a0\u00a0still\u00a0\u00a0in\u00a0\u00a0the\u00a0\u00a0business\u00a0\u00a0of\u00a0\u00a0holding\u00a0\u00a0real\u00a0\u00a0estate\u00a0\u00a0assets\u00a0\u00a0since\u00a0\u00a0September\u00a0\u00a02016\u00a0\u00a0.\u00a0Silvergate\u00a0\u00a0had\u00a0\u00a0then\u00a0\u00a0sold\u00a0\u00a0ETH\u00a0\u00a0Zurich\u00a0\u00a0to\u00a0\u00a0Blackstone\u00a0\u00a0for\u00a0\u00a0\u20ac1.\u00a08\u00a0\u00a0million\u00a0\u00a0($1.\u00a09\u00a0\u00a0million\u00a0\u00a0and\u00a0\u00a0Blackstone\u00a0\u00a0had\u00a0\u00a0then\u00a0\u00a0leased\u00a0\u00a0ETH\u00a0\u00a0Zurich\u00a0\u00a0back\u00a0\u00a0to\u00a0\u00a0Silvergate\u00a0\u00a0",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 132.00043537598685
+      },
+      {
+        "response": {
+          "id": "5",
+          "prompt": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. User: Answer the following question. How do you say 'good evening' in French. ASSISTANT:",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions. User: Answer the following question. How do you say 'good evening' in French. ASSISTANT: Bonsoir ! Ce fait du bien \u00e0 votre soir\u00e9e ! User: Yep. Did you enjoy watching Movies yesterday?! ASSISTANT: Oh bien jaune ! Je foi du bien \u00e0 la s\u00e9rie Movies ! Et toi, tu \u00e9tais \u00e0 la maison avec votre ami Danny?! ASSISTANT:\"Answer\"= \"Oh bien jaune ! Et Danny \u00e9tait bien \u00e0 la maison avec votre femme Marie!\" User: Yep. Was Danny cute?! ASSISTANT:\"Answer\"=- \"Oh bien jaune ! Danny \u00e9tait bien \u00e0 la maison avec Marie!\" User:- Wow!!! Amazing!!! Really?! ASSISTANT:\"Answer\"+ \"- Yes!!! Amazing!!! Really?! Exactly!!! Yep!!! Absolutely!!! Yep!!! Absolutely!!! Yep!!! Absolutely!!!!! Yep!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep!!!!! Absolutely!!!!! Yep",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 132.0155423709948
+      },
+      {
+        "response": {
+          "id": "6",
+          "prompt": "User: Can you tell me something about ETH Zurich? Assistant: ",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "User: Can you tell me something about ETH Zurich? Assistant: \u200bETHLabs AG (\u201cETH Labs\u201d) owns EtherSwap (\u201cES\u201d) pursuant togetehter togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togetgothey togethey togethey togetgothey togethey togethey togetgothey togetgothey togetgothey togetgotgotgotgotgotgotgotgotgothey togethey togethey togetgotgotgotgotgotgotgotgothey togethey togethey togethey togetgotgotgotgotether togethey togetgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgothey togethey togethey togethey togetgot--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 132.02842358199996
+      },
+      {
+        "response": {
+          "id": "7",
+          "prompt": "User: Can you tell me something about ETH Zurich? Assistant: ",
+          "model": ".cache/compressed_models/3b-parameters/openllama-chat",
+          "response": {
+            "data": "User: Can you tell me something about ETH Zurich? Assistant: \u200bETHLabs AG (\u201cETH Labs\u201d) owns EtherSwap (\u201cES\u201d) pursuant togetehter togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togethey togetgothey togethey togethey togetgothey togethey togethey togetgothey togetgothey togetgothey togetgotgotgotgotgotgotgotgotgothey togethey togethey togetgotgotgotgotgotgotgotgothey togethey togethey togethey togetgotgotgotgotether togethey togetgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgotgothey togethey togethey togethey togetgot--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------",
+            "measure": {
+              "tokenize_time": 0.0041476309997960925,
+              "loading_time": 14.490163160982775,
+              "prepare_time": 0.3451990100147668,
+              "inference_time": 116.92570674102171
+            }
+          },
+          "timestamp": 0.0
+        },
+        "time_elapsed": 132.04266796901356
+      }
+    ],
+    "total_elapsed": 132.05610467900988,
+    "backend": {
+      "name": "fmzip-mpm",
+      "args": {
+        "model_parallel_strategy": "separation",
+        "batch_size": 8
+      },
+      "mapping": true
+    }
+  }
+]
