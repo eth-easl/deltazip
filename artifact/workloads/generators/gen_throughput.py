@@ -69,7 +69,6 @@ def prepare_lmsys(args):
         json.dump({"queries": traces_data}, fp)
 
 def prepare_azure(args):
-    print(args)
     df = pd.read_csv("artifact/data/AzureFunctionsInvocationTraceForTwoWeeksJan2021.txt")
     df['tstamp'] = df['end_timestamp'] - df['duration']
     tstamps = []
@@ -93,13 +92,8 @@ def prepare_azure(args):
     min_tstamp = trace.iloc[0]['tstamp']
     traces_data = []
     dialogs = get_dialogs()
-    print(len(dialogs))
-    print(len(trace))
     trace = trace.to_dict('records')
-    print(trace[0])
     for idx, item in enumerate(trace):
-        print(item)
-        print(idx)
         traces_data.append(
             {
                 "id": idx,
@@ -111,8 +105,33 @@ def prepare_azure(args):
     with open(args.output, "w") as fp:
         json.dump({"queries": traces_data}, fp)
 
+def estimate_base_model_prob():
+    trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
+    traces_data = []
+    models = {}
+    tstamps = []
+    for item in trace:
+        tstamps.append(item["tstamp"])
+        if item["model_a"] not in models:
+            models[item["model_a"]] = 1
+        else:
+            models[item["model_a"]] += 1
+    min_tstamp = min(tstamps)
+    # sort models by number of occurences
+    models = sorted(models.items(), key=lambda x: x[1], reverse=True)
+    # calculate the probability of the first model
+    total_count = sum([item[1] for item in models])
+    most_popular_model_count = models[0][1]
+    return most_popular_model_count / total_count
+
+def random_model_picker(base_model_prob:float):
+    model_count = len(to_eval_models)
+    other_model_prob = (1 - base_model_prob) / (model_count - 1)
+    # now pick a model
+    model_probs = [base_model_prob] + [other_model_prob] * (model_count-1)
+    return np.random.choice(to_eval_models, p=model_probs)
+
 def prepare_poisson(args):
-    print(args)
     dialogs = get_dialogs()
     poisson_ticks = PoissonProcess(args.arrival_rate).generate_arrivals(0, args.duration)
     traces_data = []
@@ -122,7 +141,7 @@ def prepare_poisson(args):
                 'id': idx,
                 "prompt": dialogs[idx],
                 "timestamp": poisson_ticks[idx],
-                "model": to_eval_models[idx % len(to_eval_models)],
+                "model": random_model_picker(base_model_prob=0.0918)
             }
         )
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
@@ -131,6 +150,7 @@ def prepare_poisson(args):
 
 
 def main(args):
+    print(args)
     if args.trace == "lmsys":
         print("Using LMSys trace")
         prepare_lmsys(args)
@@ -140,6 +160,9 @@ def main(args):
     elif args.trace == 'poisson':
         print("Using Poisson trace")
         prepare_poisson(args)
+    elif args.trace == 'estimate':
+        prob = estimate_base_model_prob()
+        print(prob)
     else:
         raise NotImplementedError
     

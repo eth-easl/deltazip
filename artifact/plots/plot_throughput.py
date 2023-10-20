@@ -23,8 +23,10 @@ def plot(args):
     df = pd.DataFrame(plot_data)
     # for each provider, find the maximal time_elapsed
     df = df.groupby(["provider"]).max().reset_index()
+    total_jobs = df["id"].max()
     df = df.sort_values(by=["time_elapsed"], ascending=True)
-    df['throughput'] = (df['id'] + 1) / df['time_elapsed']
+    print(df)
+    df['throughput'] = (total_jobs) / df['time_elapsed']
     fig = px.bar(df, x="provider", y="throughput")
     fig.update_layout(
         width=800, height=600, title_x=0.5, title_text="Throughput of Different Backends (64 Tokens)"

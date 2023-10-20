@@ -6,7 +6,7 @@
                 "lossless_only": false,
                 "placement_strategy": "addback",
                 "batch_size": 1,
-                "max_num_deltas": 1,
+                "max_num_deltas": 8,
                 "offload_base_model": true
             },
             "order": 2
