@@ -1,3 +1,4 @@
+import os
 import json
 import argparse
 import datasets
@@ -113,9 +114,9 @@ def prepare_azure(args):
 def prepare_poisson(args):
     print(args)
     dialogs = get_dialogs()
-    poisson_ticks = PoissonProcess(1.5).generate_arrivals(0, 1000)
+    poisson_ticks = PoissonProcess(args.arrival_rate).generate_arrivals(0, args.duration)
     traces_data = []
-    for idx in range(args.num_queries):
+    for idx in range(len(poisson_ticks)):
         traces_data.append(
             {
                 'id': idx,
@@ -124,6 +125,7 @@ def prepare_poisson(args):
                 "model": to_eval_models[idx % len(to_eval_models)],
             }
         )
+    os.makedirs(os.path.dirname(args.output), exist_ok=True)
     with open(args.output, "w") as fp:
         json.dump({"queries": traces_data}, fp)
 
@@ -146,5 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--trace", type=str, default="lmsys")
     parser.add_argument("--num-queries", type=int, default=100)
     parser.add_argument("--output", type=str, default="")
+    parser.add_argument("--duration", type=int, default=100)
+    parser.add_argument("--arrival-rate", type=float, default=1.5)
     args = parser.parse_args()
     main(args)

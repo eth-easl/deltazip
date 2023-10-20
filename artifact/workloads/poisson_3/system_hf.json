@@ -1,0 +1,13 @@
+{
+    "systems": [
+        {
+            "name":"hf",
+            "args": {
+                "batch_size": 1,
+                "max_num_models": 1
+            },
+            "order": 0
+        }
+    ]
+    
+}
