@@ -91,8 +91,9 @@ class HuggingFacePipeline:
         )
         return sorted_device_models[0][0]
 
-
     def _load_target_model(self, model_name: str, gpu_id=None):
+        logger.info(f"loading {model_name}...")
+        logger.info(f"loaded models: {self.loaded_model_names}")
         if model_name not in self.loaded_model_names:
             if gpu_id is None:
                 model_device = self._find_device()
@@ -117,8 +118,6 @@ class HuggingFacePipeline:
     def _prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
         batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
-        # batch["input_ids"] = batch["input_ids"].to(device)
-        # batch["attention_mask"] = batch["attention_mask"].to(device)
         return batch
 
     def find_model(self, model_name):
