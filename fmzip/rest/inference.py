@@ -1,9 +1,11 @@
 import torch
+import threading
 import transformers
 from typing import List, Tuple
 from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
 from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
 
+base_model_placement_strategies = ['replication']
 
 class InferenceService:
     def __init__(
@@ -13,6 +15,7 @@ class InferenceService:
         mapping: dict,
         backend_args,
         gen_configs: str,
+        base_placement_strategy: str = "replication",
     ) -> None:
         self.backend = backend
         self.base_model = base_model
@@ -43,6 +46,9 @@ class InferenceService:
                             ],
                         )
                     )
+        # this should be a new non-blocking thread
+        # thread = threading.Thread(target=self.pipeline.generate, args=(reformatted_queries,), )
+        # thread.start()
         results = self.pipeline.generate(reformatted_queries, **self.gen_configs)
         return results
 

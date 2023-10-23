@@ -1,17 +1,18 @@
 import os
 import torch
+import random
 import asyncio
 import threading
+import subprocess
 from queue import Queue
 from loguru import logger
 from typing import Optional
 from fastapi import FastAPI
 from fastapi import FastAPI
 from pydantic import BaseModel
+
 from fmzip.rest.inference import InferenceService
 from fmzip.rest.profile import profile_disk_io, get_gpu_name
-import random
-import subprocess
 
 app = FastAPI()
 task_queue = Queue()
@@ -20,15 +21,17 @@ batch_size = int(os.environ.get("FMZIP_BATCH_SIZE", 1))
 backend = os.environ.get("FMZIP_BACKEND", "hf")
 base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
 cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
+num_gpus = len(cuda_visible_devices.split(","))
 
 inference_model = None
 
 def randomly_clear_disk_cache():
     # randomly clear disk cache with a probability of 0.5
     if random.random() < 1:
-        subprocess.Popen(
-            "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
-        )
+        # subprocess.Popen(
+        #     "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
+        # )
+        pass
 
 class BackgroundTasks(threading.Thread):
     async def _checking(self):
