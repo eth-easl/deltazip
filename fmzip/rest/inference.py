@@ -5,7 +5,8 @@ from typing import List, Tuple
 from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
 from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
 
-base_model_placement_strategies = ['replication']
+base_model_placement_strategies = ["replication"]
+
 
 class InferenceService:
     def __init__(
@@ -48,7 +49,9 @@ class InferenceService:
         # this should be a new non-blocking thread
         # thread = threading.Thread(target=self.pipeline.generate, args=(reformatted_queries,), )
         # thread.start()
-        results = self.pipeline.generate(reformatted_queries,gpu_id, **self.gen_configs)
+        results = self.pipeline.generate(
+            reformatted_queries, gpu_id, **self.gen_configs
+        )
         return results
 
     @property

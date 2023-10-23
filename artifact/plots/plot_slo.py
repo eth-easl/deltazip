@@ -4,11 +4,13 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
+
 def get_provider_name(provider):
-    if provider['name'] == 'hf':
+    if provider["name"] == "hf":
         return "HuggingFace"
-    elif provider['name'] == 'fmzip':
+    elif provider["name"] == "fmzip":
         return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>strategy={provider['args'].get('placement_strategy','none')}<br>lossless={provider['args'].get('lossless_only', False)}"
+
 
 def plot(args):
     print(args)
@@ -18,30 +20,40 @@ def plot(args):
     for item in results:
         provider = item["system"]
         provider = get_provider_name(provider)
-        for res in item['results']:
-            plot_data.append({
-                "id": res['response']['id'],
-                "provider": provider,
-                "time_elapsed": res['time_elapsed'],
-            })
+        for res in item["results"]:
+            plot_data.append(
+                {
+                    "id": res["response"]["id"],
+                    "provider": provider,
+                    "time_elapsed": res["time_elapsed"],
+                }
+            )
     df = pd.DataFrame(plot_data)
     slo_requirements = np.arange(1, 15, 0.1)
     # for each slo_requirement, find how many requests are satisfied
     slo_data = []
     for slo in slo_requirements:
-        for provider in df['provider'].unique():
-            provider_df = df[df['provider'] == provider]
-            success_rate = provider_df[provider_df['time_elapsed'] <= slo].shape[0] / provider_df.shape[0]
-            slo_data.append({
-                'slo': slo,
-                'provider': provider,
-                'success_rate': success_rate,
-            })
+        for provider in df["provider"].unique():
+            provider_df = df[df["provider"] == provider]
+            success_rate = (
+                provider_df[provider_df["time_elapsed"] <= slo].shape[0]
+                / provider_df.shape[0]
+            )
+            slo_data.append(
+                {
+                    "slo": slo,
+                    "provider": provider,
+                    "success_rate": success_rate,
+                }
+            )
     df = pd.DataFrame(slo_data)
     print(df)
     fig = px.line(df, x="slo", y="success_rate", color="provider")
     fig.update_layout(
-        width=800, height=600, title_x=0.5, title_text="SLO Attainment of Different Backends"
+        width=800,
+        height=600,
+        title_x=0.5,
+        title_text="SLO Attainment of Different Backends",
     )
     fig.update_layout(
         font_family="Arial",

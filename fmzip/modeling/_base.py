@@ -1136,7 +1136,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         ):
             unpack_model(model)
             # print keys in the model
-            
+
         model = model.to(device)
         # set seqlen
         model_config = model.config.to_dict()

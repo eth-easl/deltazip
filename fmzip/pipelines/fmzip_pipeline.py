@@ -70,19 +70,15 @@ class FMZipPipeline:
             parallelize_neox()
             parallelize_llama()
 
-    def generate(self, queries: List[Tuple], **kwargs):
+    def generate(self, queries: List[Tuple], gpu_id: int = 0, **kwargs):
         with torch.inference_mode():
             outputs = []
             for batch_idx in range(0, len(queries), self.batch_size):
                 tokenize_start = timer()
                 sub_queries = queries[batch_idx : batch_idx + self.batch_size]
                 batch = self._prepare_batch(sub_queries, self.tokenizer)
-                deltas = [
-                    x[1] for x in sub_queries
-                ]
-                batch_inputs = {
-                    k: batch[k] for k in batch
-                }
+                deltas = [x[1] for x in sub_queries]
+                batch_inputs = {k: batch[k] for k in batch}
                 tokenize_end = timer()
                 for delta in deltas:
                     if delta not in self.req_count and delta != self.base_model_name:
@@ -93,13 +89,13 @@ class FMZipPipeline:
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
                 self.report_meminfo()
-                self._load_deltas(deltas, self.offload_base_model)
+                self._load_deltas(deltas, self.offload_base_model, gpu_id)
                 loading_end = timer()
                 prepare_start = timer()
                 self._prepare_inference(deltas)
                 prepare_end = timer()
                 inference_start = timer()
-                kwargs['do_sample'] = False
+                kwargs["do_sample"] = False
                 output = self.base_model.generate(**batch_inputs, **kwargs)
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
@@ -133,13 +129,14 @@ class FMZipPipeline:
 
     def _load_base_model(self):
         logger.info("loading base model")
-        with torch.device("cuda", DEFAULT_CUDA_DEVICE):
-            self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
-                self.base_model_name,
-                compress_config=dummy_compression_config,
-                low_cpu_mem_usage=True,
-            )
-        self.base_model = self.base_model.to(BASE_DEVICE)
+        for gpu_id in range(self.device_count):
+            with torch.device("cuda", gpu_id):
+                self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
+                    self.base_model_name,
+                    compress_config=dummy_compression_config,
+                    low_cpu_mem_usage=True,
+                )
+            self.base_model = self.base_model.to(gpu_id)
         logger.info("based model loaded")
 
     def _load_delta(self, delta_model: str, device="cuda", force=False):
@@ -176,7 +173,7 @@ class FMZipPipeline:
         self.model_pool[delta] = self.model_pool[delta].to("cpu")
         torch.cuda.empty_cache()
 
-    def _load_deltas(self, deltas: List[str], offload_base_model=False):
+    def _load_deltas(self, deltas: List[str], offload_base_model=False, gpu_id=0):
         if all([delta == self.base_model_name for delta in deltas]):
             logger.info("loading skipped: all requested models are base model")
             return
@@ -215,7 +212,7 @@ class FMZipPipeline:
         )
         logger.warning(f"PyTorch free memory: {free / 1e9} GB")
         logger.warning(f"PyTorch total memory: {total / 1e9} GB")
-    
+
     def _evict_deltas(self, deltas: List[str]):
         # if all deltas are base model, no need to evict
         if all([delta == self.base_model_name for delta in deltas]):
@@ -233,7 +230,7 @@ class FMZipPipeline:
                     del self.req_count[delta]
                 except KeyError:
                     pass
-    
+
     def _prepare_inference(self, deltas):
         if self.placement_strategy == "addback":
             self._prepare_addback(deltas)
@@ -247,7 +244,7 @@ class FMZipPipeline:
     def _prepare_addback(self, deltas: List[str]):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
-        
+
         if deltas[0] != self.base_model_name:
             logger.info(f"adding delta {deltas[0]} to base model")
             with torch.no_grad():
@@ -283,3 +280,9 @@ class FMZipPipeline:
     def _clear_colocate(self):
         for key, dmodule in self.base_model.named_modules():
             setattr(dmodule, "delta", [])
+
+    def find_model(self, model_name):
+        if model_name in self.model_pool:
+            return self.model_pool[model_name].device
+        else:
+            return None

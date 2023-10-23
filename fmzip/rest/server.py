@@ -26,6 +26,7 @@ num_gpus = len(cuda_visible_devices.split(","))
 print(f"Available GPUs {num_gpus}")
 inference_model = [None] * num_gpus
 
+
 def randomly_clear_disk_cache():
     # randomly clear disk cache with a probability of 0.5
     if random.random() < 1:
@@ -33,6 +34,7 @@ def randomly_clear_disk_cache():
         #     "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
         # )
         pass
+
 
 def generation_thread(model, batch, gpu_id):
     logger.warning(f"processing {[x.id for x in batch]} on gpu {gpu_id}")
@@ -42,6 +44,7 @@ def generation_thread(model, batch, gpu_id):
         results[task.id]["result"] = output[i]
         results[task.id]["event"].set()
         # randomly_clear_disk_cache()
+
 
 class BackgroundTasks(threading.Thread):
     async def _checking(self):
@@ -67,7 +70,9 @@ class BackgroundTasks(threading.Thread):
                     sub_batches = [[] for _ in range(num_gpus)]
                     for task in batch:
                         if inference_model.find_model(task.model) is not None:
-                            sub_batches[inference_model.find_model(task.model)].append(task)
+                            sub_batches[inference_model.find_model(task.model)].append(
+                                task
+                            )
                         else:
                             # if model is not found, send the gpu with minimal tasks
                             minimal_queue = sorted(sub_batches, key=lambda x: len(x))
@@ -80,7 +85,12 @@ class BackgroundTasks(threading.Thread):
                     for idx, sb in enumerate(sub_batches):
                         if len(sb) > 0:
                             thread = threading.Thread(
-                                target=generation_thread, args=(inference_model, sb, idx,)
+                                target=generation_thread,
+                                args=(
+                                    inference_model,
+                                    sb,
+                                    idx,
+                                ),
                             )
                             threads.append(thread)
                             thread.start()
@@ -89,6 +99,7 @@ class BackgroundTasks(threading.Thread):
     def run(self, *args, **kwargs):
         loop = asyncio.new_event_loop()
         loop.run_until_complete(self._checking())
+
 
 results = {}
 

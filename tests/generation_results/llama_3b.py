@@ -11,7 +11,7 @@ fmzip_test_data = [
         "ETH Zurich is founded in ",
         "openlm-research/open_llama_3b_v2",
     ),
-        (
+    (
         "ETH Zurich is founded in ",
         "openlm-research/open_llama_3b_v2",
     ),
@@ -21,7 +21,7 @@ hf_test_data = [
         "ETH Zurich is founded in ",
         "openlm-research/open_llama_3b_v2",
     ),
-        (
+    (
         "ETH Zurich is founded in ",
         "openlm-research/open_llama_3b_v2",
     ),

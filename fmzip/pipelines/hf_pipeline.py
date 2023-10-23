@@ -10,6 +10,7 @@ placement_strategies = ["tensor-parallel", "no-parallel"]
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
+
 class HuggingFacePipeline:
     def __init__(
         self,
@@ -35,7 +36,7 @@ class HuggingFacePipeline:
         self.device_models = {k: [] for k in range(get_gpu_count())}
         self.batch_size = batch_size
 
-    def generate(self, queries: List[Tuple], gpu_id:int=0, **kwargs):
+    def generate(self, queries: List[Tuple], gpu_id: int = 0, **kwargs):
         with torch.inference_mode():
             tokenize_start = timer()
             batch = self._prepare_batch(queries, self.tokenizer)
@@ -57,7 +58,9 @@ class HuggingFacePipeline:
                         batch_inputs[k] = batch_inputs[k].to(f"cuda:{model_device}")
                     loading_end = timer()
                     inference_start = timer()
-                    output = self.loaded_models[model_name].generate(**batch_inputs, **kwargs)
+                    output = self.loaded_models[model_name].generate(
+                        **batch_inputs, **kwargs
+                    )
                     inference_end = timer()
                     output = self.tokenizer.batch_decode(output)
                     tokenize_time = tokenize_end - tokenize_start
@@ -100,10 +103,14 @@ class HuggingFacePipeline:
             else:
                 model_device = gpu_id
             with torch.device(model_device):
-                self.loaded_models[model_name] = transformers.AutoModelForCausalLM.from_pretrained(
+                self.loaded_models[
+                    model_name
+                ] = transformers.AutoModelForCausalLM.from_pretrained(
                     model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
                 )
-                self.loaded_models[model_name] = self.loaded_models[model_name].to(torch.device(f"cuda:{model_device}"))
+                self.loaded_models[model_name] = self.loaded_models[model_name].to(
+                    torch.device(f"cuda:{model_device}")
+                )
                 self.device_models[model_device].append(model_name)
                 self.loaded_model_names.add(model_name)
         else:
