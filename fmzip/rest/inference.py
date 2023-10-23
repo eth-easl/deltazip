@@ -54,3 +54,6 @@ class InferenceService:
     @property
     def batch_size(self):
         return self.backend_args["batch_size"]
+
+    def find_model(self, model_name):
+        return self.pipeline.find_model(model_name)

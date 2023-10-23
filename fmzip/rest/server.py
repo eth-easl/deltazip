@@ -35,8 +35,9 @@ def randomly_clear_disk_cache():
         pass
 
 def generation_thread(model, batch, gpu_id):
-    print(f"processing {[x.id for x in batch]} on {gpu_id}")
+    logger.warning(f"processing {[x.id for x in batch]} on gpu {gpu_id}")
     output = model.generate(batch, gpu_id)
+
     for i, task in enumerate(batch):
         results[task.id]["result"] = output[i]
         results[task.id]["event"].set()
@@ -56,24 +57,30 @@ class BackgroundTasks(threading.Thread):
                 # sort by id
                 batch = sorted(batch, key=lambda x: int(x.id))
                 if num_gpus == 1:
-                    output = inference_model.generate(batch)
-                    print(f"processing {[x.id for x in batch]}")
+                    output = inference_model.generate(batch, "0")
                     for i, task in enumerate(batch):
                         results[task.id]["result"] = output[i]
                         results[task.id]["event"].set()
                         randomly_clear_disk_cache()
                 else:
                     # split batch into sub-batches, per gpu, evenly
-                    sub_batches = [[]] * num_gpus
-                    logger.warning(f"batch size: {len(batch)}")
+                    sub_batches = [[] for _ in range(num_gpus)]
+                    for task in batch:
+                        if inference_model.find_model(task.model) is not None:
+                            sub_batches[inference_model.find_model(task.model)].append(task)
+                        else:
+                            # if model is not found, send the gpu with minimal tasks
+                            minimal_queue = sorted(sub_batches, key=lambda x: len(x))
+                            minimal_queue[0].append(task)
+                            print(sub_batches)
+                    print(sub_batches)
                     # run inference on each gpu, as a new thread
+                    # in case we know the model being requested is already on certain GPU, we can directly send the batch to that GPUs
                     threads = []
-                    for idx in range(num_gpus):
-                        sub_batch = [x for i, x in enumerate(batch) if i % num_gpus == idx]
-                        if len(sub_batch) > 0:
-                            logger.warning(f"processing {[x.id for x in sub_batch]} on gpu {idx}")
+                    for idx, sb in enumerate(sub_batches):
+                        if len(sb) > 0:
                             thread = threading.Thread(
-                                target=generation_thread, args=(inference_model, sub_batch, idx,)
+                                target=generation_thread, args=(inference_model, sb, idx,)
                             )
                             threads.append(thread)
                             thread.start()

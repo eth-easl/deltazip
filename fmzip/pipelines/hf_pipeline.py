@@ -1,5 +1,6 @@
 import torch
 import transformers
+from loguru import logger
 from typing import List, Tuple
 from fmzip.pipelines.utils import get_available_gpus, get_gpu_count
 from timeit import default_timer as timer
@@ -19,7 +20,7 @@ class HuggingFacePipeline:
     ) -> None:
         self.current_model = None
         self.loaded_models = {}
-        self.loaded_model_names = []
+        self.loaded_model_names = set()
         self.base_model = base_model
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             base_model, use_fast=True
@@ -103,7 +104,9 @@ class HuggingFacePipeline:
                 )
                 self.loaded_models[model_name] = self.loaded_models[model_name].to(torch.device(f"cuda:{model_device}"))
                 self.device_models[model_device].append(model_name)
+                self.loaded_model_names.add(model_name)
         else:
+            logger.info(f"{model_name} already loaded, skipping...")
             model_device = None
             for device, models in self.device_models.items():
                 if model_name in models:
@@ -117,3 +120,9 @@ class HuggingFacePipeline:
         # batch["input_ids"] = batch["input_ids"].to(device)
         # batch["attention_mask"] = batch["attention_mask"].to(device)
         return batch
+
+    def find_model(self, model_name):
+        for device, models in self.device_models.items():
+            if model_name in models:
+                return device
+        return None
