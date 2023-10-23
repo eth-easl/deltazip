@@ -23,7 +23,8 @@ base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
 cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
 num_gpus = len(cuda_visible_devices.split(","))
 
-inference_model = None
+print(f"Available GPUs {num_gpus}")
+inference_model = [None] * num_gpus
 
 def randomly_clear_disk_cache():
     # randomly clear disk cache with a probability of 0.5
@@ -33,11 +34,19 @@ def randomly_clear_disk_cache():
         # )
         pass
 
+def generation_thread(model, batch, gpu_id):
+    print(f"processing {[x.id for x in batch]} on {gpu_id}")
+    output = model.generate(batch, gpu_id)
+    for i, task in enumerate(batch):
+        results[task.id]["result"] = output[i]
+        results[task.id]["event"].set()
+        # randomly_clear_disk_cache()
+
 class BackgroundTasks(threading.Thread):
     async def _checking(self):
         while True:
             batch = []
-            for _ in range(batch_size):
+            for _ in range(batch_size * num_gpus):
                 try:
                     task = task_queue.get_nowait()
                     batch.append(task)
@@ -46,12 +55,29 @@ class BackgroundTasks(threading.Thread):
             if len(batch) > 0:
                 # sort by id
                 batch = sorted(batch, key=lambda x: int(x.id))
-                output = inference_model.generate(batch)
-                print(f"processing {[x.id for x in batch]}")
-                for i, task in enumerate(batch):
-                    results[task.id]["result"] = output[i]
-                    results[task.id]["event"].set()
-                    randomly_clear_disk_cache()
+                if num_gpus == 1:
+                    output = inference_model.generate(batch)
+                    print(f"processing {[x.id for x in batch]}")
+                    for i, task in enumerate(batch):
+                        results[task.id]["result"] = output[i]
+                        results[task.id]["event"].set()
+                        randomly_clear_disk_cache()
+                else:
+                    # split batch into sub-batches, per gpu, evenly
+                    sub_batches = [[]] * num_gpus
+                    logger.warning(f"batch size: {len(batch)}")
+                    # run inference on each gpu, as a new thread
+                    threads = []
+                    for idx in range(num_gpus):
+                        sub_batch = [x for i, x in enumerate(batch) if i % num_gpus == idx]
+                        if len(sub_batch) > 0:
+                            logger.warning(f"processing {[x.id for x in sub_batch]} on gpu {idx}")
+                            thread = threading.Thread(
+                                target=generation_thread, args=(inference_model, sub_batch, idx,)
+                            )
+                            threads.append(thread)
+                            thread.start()
+                    [thread.join() for thread in threads]
 
     def run(self, *args, **kwargs):
         loop = asyncio.new_event_loop()

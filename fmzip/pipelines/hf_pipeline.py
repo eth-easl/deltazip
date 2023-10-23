@@ -34,7 +34,7 @@ class HuggingFacePipeline:
         self.device_models = {k: [] for k in range(get_gpu_count())}
         self.batch_size = batch_size
 
-    def generate(self, queries: List[Tuple], **kwargs):
+    def generate(self, queries: List[Tuple], gpu_id:int=0, **kwargs):
         with torch.inference_mode():
             tokenize_start = timer()
             batch = self._prepare_batch(queries, self.tokenizer)
@@ -50,7 +50,7 @@ class HuggingFacePipeline:
                 # construct inference pipeline
                 loading_start = timer()
                 for model_name in model_names:
-                    model_device = self._load_target_model(model_name)
+                    model_device = self._load_target_model(model_name, gpu_id)
                     # move batch to device
                     for k in batch_inputs:
                         batch_inputs[k] = batch_inputs[k].to(f"cuda:{model_device}")
@@ -91,9 +91,12 @@ class HuggingFacePipeline:
         return sorted_device_models[0][0]
 
 
-    def _load_target_model(self, model_name: str):
+    def _load_target_model(self, model_name: str, gpu_id=None):
         if model_name not in self.loaded_model_names:
-            model_device = self._find_device()
+            if gpu_id is None:
+                model_device = self._find_device()
+            else:
+                model_device = gpu_id
             with torch.device(model_device):
                 self.loaded_models[model_name] = transformers.AutoModelForCausalLM.from_pretrained(
                     model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
