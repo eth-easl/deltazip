@@ -25,7 +25,7 @@ num_gpus = len(cuda_visible_devices.split(","))
 
 print(f"Available GPUs {num_gpus}")
 inference_model = None
-
+exclude_gpus = [0]
 
 def randomly_clear_disk_cache():
     # randomly clear disk cache with a probability of 0.5
@@ -76,7 +76,14 @@ class BackgroundTasks(threading.Thread):
                         else:
                             # if model is not found, send the gpu with minimal tasks
                             minimal_queue = sorted(sub_batches, key=lambda x: len(x))
-                            minimal_queue[0].append(task)
+                            found_shortest_queue = False
+                            i = 0
+                            while not found_shortest_queue:
+                                if minimal_queue[i] in exclude_gpus:
+                                    i += 1
+                                else:
+                                    found_shortest_queue = True
+                            minimal_queue[i].append(task)
                     # run inference on each gpu, as a new thread
                     # in case we know the model being requested is already on certain GPU, we can directly send the batch to that GPUs
                     threads = []

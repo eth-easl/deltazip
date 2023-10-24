@@ -91,14 +91,14 @@ class FMZipPipeline:
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
                 self.report_meminfo()
-                self._load_deltas(deltas, self.offload_base_model, gpu_id)
+                self._load_deltas(deltas, self.offload_base_model, int(gpu_id))
                 loading_end = timer()
                 prepare_start = timer()
-                self._prepare_inference(deltas, gpu_id)
+                self._prepare_inference(deltas, int(gpu_id))
                 prepare_end = timer()
                 inference_start = timer()
                 kwargs["do_sample"] = False
-                output = self.base_models[gpu_id].generate(**batch_inputs, **kwargs)
+                output = self.base_models[int(gpu_id)].generate(**batch_inputs, **kwargs)
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
                 tokenize_time = tokenize_end - tokenize_start
@@ -123,9 +123,9 @@ class FMZipPipeline:
                 outputs.extend(output)
                 if self.placement_strategy == "addback":
                     # for add back: batch size always 1
-                    self._clear_addback_delta(deltas[0])
+                    self._clear_addback_delta(deltas[0], int(gpu_id))
                 elif self.placement_strategy in ["colocate", "separation"]:
-                    self._clear_colocate()
+                    self._clear_colocate(int(gpu_id))
                 torch.cuda.empty_cache()
             return outputs
 
@@ -153,7 +153,7 @@ class FMZipPipeline:
             unpack=True
             if self.placement_strategy == "addback" and not self.lossless_only
             else False,
-            low_cpu_mem_usage=False,
+            low_cpu_mem_usage=True,
         )
         if delta_model not in self.req_count:
             self.req_count[delta_model] = 0
@@ -182,7 +182,7 @@ class FMZipPipeline:
             self.base_models[gpu_id] = self.base_models[gpu_id].to("cpu")
         if self.placement_strategy in ["colocate", "addback"]:
             [
-                self._load_delta(delta, device=gpu_id)
+                self._load_delta(delta, device=f"cuda:{gpu_id}")
                 for delta in deltas
                 if delta not in self.model_pool and delta != self.base_model_name
             ]
@@ -206,13 +206,9 @@ class FMZipPipeline:
         cp.get_default_memory_pool().free_all_blocks()
         free, total = torch.cuda.mem_get_info()
         logger.warning(
-            f"PyTorch allocated memory: {torch.cuda.memory_allocated() / 1e9} GB"
+            f"allocated: pytorch/cupy {torch.cuda.memory_allocated() / 1e9:.2f}/{cp.get_default_memory_pool().used_bytes() / 1e9:.2f} GB"
         )
-        logger.warning(
-            f"Cupy allocated memory: {cp.get_default_memory_pool().used_bytes() / 1e9} GB"
-        )
-        logger.warning(f"PyTorch free memory: {free / 1e9} GB")
-        logger.warning(f"PyTorch total memory: {total / 1e9} GB")
+        logger.warning(f"PyTorch free/total: {free / 1e9:.2f}/{total / 1e9:.2f} GB")
 
     def _evict_deltas(self, deltas: List[str]):
         # if all deltas are base model, no need to evict
@@ -270,16 +266,16 @@ class FMZipPipeline:
                             break
             setattr(target, "delta", dmodules)
 
-    def _clear_addback_delta(self, delta):
+    def _clear_addback_delta(self, delta, gpu_id:int):
         if delta != self.base_model_name:
             logger.info(f"clearing delta {delta} from base model")
             # remove the delta part from the base_model again
             with torch.no_grad():
                 for name, param in self.model_pool[delta].model.named_parameters():
-                    self.base_model.state_dict()[name] -= param.to(BASE_DEVICE)
+                    self.base_models[gpu_id].state_dict()[name] -= param.to(gpu_id)
 
-    def _clear_colocate(self):
-        for key, dmodule in self.base_model.named_modules():
+    def _clear_colocate(self, gpu_id):
+        for key, dmodule in self.base_models[gpu_id].named_modules():
             setattr(dmodule, "delta", [])
 
     def find_model(self, model_name):

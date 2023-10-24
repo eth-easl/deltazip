@@ -1085,16 +1085,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 device_map = "auto"
             if device is not None:
                 device = torch.device(device)
-                if not max_memory and not device_map:
-                    device_map = {
-                        "": device.index if device.type == "cuda" else device.type
-                    }
-            if not device_map:
-                device_map = accelerate.infer_auto_device_map(
-                    model,
-                    max_memory=max_memory,
-                    no_split_module_classes=[cls.layer_type],
-                )
         else:
             model = AutoModelForCausalLM.from_config(
                 config,
@@ -1122,6 +1112,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16
         )
+        for key in tensors.keys():
+            tensors[key] = tensors[key].to(device)
+        # print model keys
         model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
         if isinstance(
             compress_config, AutoCompressionConfig
@@ -1136,8 +1129,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         ):
             unpack_model(model)
             # print keys in the model
-
         model = model.to(device)
+        logger.warning(f"model device: {model.device}")
+        logger.warning(f"target device {device}")
         # set seqlen
         model_config = model.config.to_dict()
         seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]
