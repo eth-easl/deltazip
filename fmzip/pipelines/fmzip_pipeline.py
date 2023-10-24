@@ -85,6 +85,8 @@ class FMZipPipeline:
                         self.req_count[delta] = 0
                     elif delta in self.req_count:
                         self.req_count[delta] += 1
+                for k in batch_inputs:
+                    batch_inputs[k] = batch_inputs[k].to(f"cuda:{gpu_id}")
                 loading_start = timer()
                 # check if eviction needed, ensure enough memory for loading new deltas
                 self._evict_deltas(deltas)
@@ -92,11 +94,11 @@ class FMZipPipeline:
                 self._load_deltas(deltas, self.offload_base_model, gpu_id)
                 loading_end = timer()
                 prepare_start = timer()
-                self._prepare_inference(deltas)
+                self._prepare_inference(deltas, gpu_id)
                 prepare_end = timer()
                 inference_start = timer()
                 kwargs["do_sample"] = False
-                output = self.base_model.generate(**batch_inputs, **kwargs)
+                output = self.base_models[gpu_id].generate(**batch_inputs, **kwargs)
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
                 tokenize_time = tokenize_end - tokenize_start
@@ -128,15 +130,16 @@ class FMZipPipeline:
             return outputs
 
     def _load_base_model(self):
+        self.base_models = [None for _ in range(self.device_count)]
         logger.info("loading base model")
         for gpu_id in range(self.device_count):
             with torch.device("cuda", gpu_id):
-                self.base_model = AutoFMZipModelForCausalLM.from_pretrained(
+                self.base_models[gpu_id] = AutoFMZipModelForCausalLM.from_pretrained(
                     self.base_model_name,
                     compress_config=dummy_compression_config,
                     low_cpu_mem_usage=True,
                 )
-            self.base_model = self.base_model.to(gpu_id)
+            self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
         logger.info("based model loaded")
 
     def _load_delta(self, delta_model: str, device="cuda", force=False):
@@ -150,7 +153,7 @@ class FMZipPipeline:
             unpack=True
             if self.placement_strategy == "addback" and not self.lossless_only
             else False,
-            low_cpu_mem_usage=True,
+            low_cpu_mem_usage=False,
         )
         if delta_model not in self.req_count:
             self.req_count[delta_model] = 0
@@ -165,8 +168,6 @@ class FMZipPipeline:
     def _prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
         batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
-        batch["input_ids"] = batch["input_ids"].to(BASE_DEVICE)
-        batch["attention_mask"] = batch["attention_mask"].to(BASE_DEVICE)
         return batch
 
     def _offload_delta(self, delta):
@@ -178,10 +179,10 @@ class FMZipPipeline:
             logger.info("loading skipped: all requested models are base model")
             return
         if offload_base_model:
-            self.base_model = self.base_model.to("cpu")
+            self.base_models[gpu_id] = self.base_models[gpu_id].to("cpu")
         if self.placement_strategy in ["colocate", "addback"]:
             [
-                self._load_delta(delta, device=DEFAULT_CUDA_DEVICE)
+                self._load_delta(delta, device=gpu_id)
                 for delta in deltas
                 if delta not in self.model_pool and delta != self.base_model_name
             ]
@@ -197,7 +198,7 @@ class FMZipPipeline:
             )
         if offload_base_model:
             # move back
-            self.base_model = self.base_model.to(BASE_DEVICE)
+            self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
 
     def report_meminfo(self):
         # force garbage collection and free memory
@@ -231,9 +232,9 @@ class FMZipPipeline:
                 except KeyError:
                     pass
 
-    def _prepare_inference(self, deltas):
+    def _prepare_inference(self, deltas, gpu_id):
         if self.placement_strategy == "addback":
-            self._prepare_addback(deltas)
+            self._prepare_addback(deltas, gpu_id)
         elif self.placement_strategy in ["colocate", "separation"]:
             self._prepare_colocate(deltas)
         else:
@@ -241,7 +242,7 @@ class FMZipPipeline:
                 f"Unsupported placement strategy: {self.placement_strategy}"
             )
 
-    def _prepare_addback(self, deltas: List[str]):
+    def _prepare_addback(self, deltas: List[str], gpu_id: int = 0):
         # add the delta back to the base model, this only supports len(deltas)=1
         assert len(deltas) == 1, "addback only supports len(deltas)=1"
 
@@ -249,7 +250,7 @@ class FMZipPipeline:
             logger.info(f"adding delta {deltas[0]} to base model")
             with torch.no_grad():
                 for name, param in self.model_pool[deltas[0]].model.named_parameters():
-                    self.base_model.state_dict()[name] += param
+                    self.base_models[gpu_id].state_dict()[name] += param
 
     def _prepare_colocate(self, deltas):
         if all([delta == self.base_model_name for delta in deltas]):
