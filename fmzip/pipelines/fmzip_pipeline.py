@@ -98,7 +98,9 @@ class FMZipPipeline:
                 prepare_end = timer()
                 inference_start = timer()
                 kwargs["do_sample"] = False
-                output = self.base_models[int(gpu_id)].generate(**batch_inputs, **kwargs)
+                output = self.base_models[int(gpu_id)].generate(
+                    **batch_inputs, **kwargs
+                )
                 inference_end = timer()
                 output = self.tokenizer.batch_decode(output)
                 tokenize_time = tokenize_end - tokenize_start
@@ -266,7 +268,7 @@ class FMZipPipeline:
                             break
             setattr(target, "delta", dmodules)
 
-    def _clear_addback_delta(self, delta, gpu_id:int):
+    def _clear_addback_delta(self, delta, gpu_id: int):
         if delta != self.base_model_name:
             logger.info(f"clearing delta {delta} from base model")
             # remove the delta part from the base_model again
