@@ -1112,6 +1112,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16
         )
+        # move tensors to target device
         for key in tensors.keys():
             tensors[key] = tensors[key].to(device)
         # print model keys
@@ -1130,8 +1131,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             unpack_model(model)
             # print keys in the model
         model = model.to(device)
-        logger.warning(f"model device: {model.device}")
-        logger.warning(f"target device {device}")
         # set seqlen
         model_config = model.config.to_dict()
         seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]

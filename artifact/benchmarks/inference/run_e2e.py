@@ -119,13 +119,13 @@ def run(args):
         benched_systems.append(sys_config)
     benched_systems = sorted(benched_systems, key=lambda x: x[0]["order"])
     for sys_config in benched_systems:
-        configure_system(
-            backend=sys_config[0]["name"],
-            base_model=base_model,
-            backend_args=sys_config[0]["args"],
-            model_mapping=model_mapping,
-            gen_configs=gen_configs,
-        )
+        # configure_system(
+        #     backend=sys_config[0]["name"],
+        #     base_model=base_model,
+        #     backend_args=sys_config[0]["args"],
+        #     model_mapping=model_mapping,
+        #     gen_configs=gen_configs,
+        # )
         issue_queries(jobs["queries"])
         benchmark_results.append(
             {
