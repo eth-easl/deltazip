@@ -234,7 +234,7 @@ class FMZipPipeline:
         if self.placement_strategy == "addback":
             self._prepare_addback(deltas, gpu_id)
         elif self.placement_strategy in ["colocate", "separation"]:
-            self._prepare_colocate(deltas)
+            self._prepare_colocate(deltas, gpu_id)
         else:
             raise ValueError(
                 f"Unsupported placement strategy: {self.placement_strategy}"
@@ -250,13 +250,13 @@ class FMZipPipeline:
                 for name, param in self.model_pool[deltas[0]].model.named_parameters():
                     self.base_models[gpu_id].state_dict()[name] += param
 
-    def _prepare_colocate(self, deltas):
+    def _prepare_colocate(self, deltas, gpu_id):
         if all([delta == self.base_model_name for delta in deltas]):
-            for key, dmodule in self.base_model.named_modules():
+            for key, dmodule in self.base_models[gpu_id].named_modules():
                 setattr(dmodule, "delta", [None for delta in deltas])
 
         for key in self.key_list:
-            _, target, _ = get_submodules(self.base_model, key)
+            _, target, _ = get_submodules(self.base_models[gpu_id], key)
             dmodules = []
             for delta in deltas:
                 if delta == self.base_model_name:
