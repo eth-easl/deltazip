@@ -64,6 +64,7 @@ def llama_mlp_forward(self, x):
     )
     return hidden_states
 
+
 def llama_attention_forward(
     self,
     hidden_states: torch.Tensor,
@@ -173,12 +174,14 @@ def llama_attention_forward(
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
             delta_attn_output = self.delta[i].o_proj(
-                attn_output[i].to(self.delta[i].o_proj.qweight.device, non_blocking=True)
+                attn_output[i].to(
+                    self.delta[i].o_proj.qweight.device, non_blocking=True
+                )
             )
         else:
             delta_attn_output = torch.zeros_like(base_attn_output[i])
         delta_attn_outputs.append(delta_attn_output)
-   
+
     attn_output = base_attn_output + torch.stack(
         [x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0
     )

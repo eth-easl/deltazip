@@ -99,14 +99,14 @@ def main(args):
     model_mapping = workload["compressed_model_mapping"]
     benchmark_results = []
     for backend in backends:
-        configure_server(
-            backend=backend["name"],
-            base_model=workload["base_model"],
-            batch_size=backend["args"].get("batch_size", 1),
-            model_parallel_strategy=backend["args"].get(
-                "model_parallel_strategy", "none"
-            ),
-        )
+        # configure_server(
+        #     backend=backend["name"],
+        #     base_model=workload["base_model"],
+        #     batch_size=backend["args"].get("batch_size", 1),
+        #     model_parallel_strategy=backend["args"].get(
+        #         "model_parallel_strategy", "none"
+        #     ),
+        # )
         bc_result = issue_queries(workload["queries"], backend, model_mapping)
         bc_result["backend"] = backend
         benchmark_results.append(bc_result)

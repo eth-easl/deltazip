@@ -5,6 +5,7 @@ import datasets
 import pandas as pd
 import numpy as np
 from artifact.workloads.generators.arrival import PoissonProcess
+
 # to_eval_models = [
 #     "lmsys/vicuna-7b-v1.5",
 #     "Xwin-LM/Xwin-LM-7B-V0.1",
@@ -13,16 +14,17 @@ from artifact.workloads.generators.arrival import PoissonProcess
 #     "FlagAlpha/Llama2-Chinese-7b-Chat",
 # ]
 
-to_eval_models = [
-    f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)
-]
-to_eval_models =["openlm-research/open_llama_3b_v2"] + to_eval_models
+to_eval_models = [f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)]
+to_eval_models = ["openlm-research/open_llama_3b_v2"] + to_eval_models
+
 
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 
+
 def format_lmsys(prompt):
     return f"USER: {prompt}\nASSISTANT:"
+
 
 def get_dialogs():
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
@@ -30,6 +32,7 @@ def get_dialogs():
     for idx, item in enumerate(trace):
         all_dialogs.append(format_openllama(item["conversation_a"][0]["content"]))
     return all_dialogs
+
 
 def prepare_lmsys(args):
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
@@ -60,7 +63,7 @@ def prepare_lmsys(args):
         traces_data.append(
             {
                 "id": idx,
-                "prompt":format_openllama(item["conversation_a"][0]["content"]),
+                "prompt": format_openllama(item["conversation_a"][0]["content"]),
                 "timestamp": (item["tstamp"] - min_tstamp) / 1,
                 "model": mapping[item["model_a"]],
             }
@@ -68,28 +71,29 @@ def prepare_lmsys(args):
     with open(args.output, "w") as fp:
         json.dump({"queries": traces_data}, fp)
 
+
 def prepare_azure(args):
     df = pd.read_csv("artifact/data/AzureFunctionsInvocationTraceForTwoWeeksJan2021.txt")
     df['tstamp'] = df['end_timestamp'] - df['duration']
     tstamps = []
     models = {}
     for row_id, row in df.iterrows():
-        tstamps.append(row['tstamp'])
-        if row['func'] not in models:
-            models[row['func']] = 1
+        tstamps.append(row["tstamp"])
+        if row["func"] not in models:
+            models[row["func"]] = 1
         else:
-            models[row['func']] += 1
+            models[row["func"]] += 1
     min_tstamp = min(tstamps)
     # sort models by number of occurences
     models = sorted(models.items(), key=lambda x: x[1], reverse=True)
     mapping = {}
     for idx, model in enumerate(models):
         mapping[model[0]] = to_eval_models[idx % len(to_eval_models)]
-    trace = df.sort_values(by=['tstamp'], ascending=True)
+    trace = df.sort_values(by=["tstamp"], ascending=True)
     # take num_queries from trace, randomly start
     start = np.random.randint(0, len(trace) - args.num_queries)
     trace = trace[start : start + args.num_queries]
-    min_tstamp = trace.iloc[0]['tstamp']
+    min_tstamp = trace.iloc[0]["tstamp"]
     traces_data = []
     dialogs = get_dialogs()
     trace = trace.to_dict('records')
@@ -98,7 +102,7 @@ def prepare_azure(args):
             {
                 "id": idx,
                 "prompt": dialogs[idx],
-                "timestamp": (item['tstamp'] - min_tstamp) / 1,
+                "timestamp": (item["tstamp"] - min_tstamp) / 1,
                 "model": mapping[item["func"]],
             }
         )
@@ -133,12 +137,14 @@ def random_model_picker(base_model_prob:float):
 
 def prepare_poisson(args):
     dialogs = get_dialogs()
-    poisson_ticks = PoissonProcess(args.arrival_rate).generate_arrivals(0, args.duration)
+    poisson_ticks = PoissonProcess(args.arrival_rate).generate_arrivals(
+        0, args.duration
+    )
     traces_data = []
     for idx in range(len(poisson_ticks)):
         traces_data.append(
             {
-                'id': idx,
+                "id": idx,
                 "prompt": dialogs[idx],
                 "timestamp": poisson_ticks[idx],
                 "model": random_model_picker(base_model_prob=0.0918)
@@ -154,10 +160,10 @@ def main(args):
     if args.trace == "lmsys":
         print("Using LMSys trace")
         prepare_lmsys(args)
-    elif args.trace =='azure':
+    elif args.trace == "azure":
         print("Using Azure trace")
         prepare_azure(args)
-    elif args.trace == 'poisson':
+    elif args.trace == "poisson":
         print("Using Poisson trace")
         prepare_poisson(args)
     elif args.trace == 'estimate':
@@ -165,7 +171,8 @@ def main(args):
         print(prob)
     else:
         raise NotImplementedError
-    
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--trace", type=str, default="lmsys")

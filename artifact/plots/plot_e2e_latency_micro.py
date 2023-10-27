@@ -3,6 +3,7 @@ import argparse
 import pandas as pd
 import plotly.express as px
 
+
 def plot(args):
     print(args)
     with open(args.input, "r") as fp:

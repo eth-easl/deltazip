@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 import numpy as np
 
+
 class ArrivalProcess(ABC):
     @abstractmethod
     def rate(self):
@@ -16,13 +17,11 @@ class ArrivalProcess(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def generate_arrivals(self, start: float, duration: float,
-                          seed: int = 0):
+    def generate_arrivals(self, start: float, duration: float, seed: int = 0):
         raise NotImplementedError()
 
     @abstractmethod
-    def generate_workload(self, start: float,
-                          duration: float):
+    def generate_workload(self, start: float, duration: float):
         """Generate a workload with the arrival process.
 
         Args:
@@ -32,9 +31,7 @@ class ArrivalProcess(ABC):
         raise NotImplementedError()
 
     def __str__(self):
-        return (f"{self.__class__.__name__}("
-                f"rate={self.rate()}, "
-                f"cv={self.cv()})")
+        return f"{self.__class__.__name__}(" f"rate={self.rate()}, " f"cv={self.cv()})"
 
     def params(self):
         return self.rate(), self.cv()
@@ -42,6 +39,7 @@ class ArrivalProcess(ABC):
 
 class DeterministicProcess(ArrivalProcess):
     """Deterministic arrival process."""
+
     def __init__(self, arrival_rate: float):
         """Create a deterministic arrival process.
 
@@ -57,8 +55,7 @@ class DeterministicProcess(ArrivalProcess):
     def cv(self):
         return 0
 
-    def generate_workload(self, start: float,
-                          duration: float):
+    def generate_workload(self, start: float, duration: float):
         n_requests = int(duration * self.rate_)
         interval = 1 / self.rate_
         ticks = [start + i * interval for i in range(n_requests)]
@@ -67,6 +64,7 @@ class DeterministicProcess(ArrivalProcess):
 
 class GammaProcess(ArrivalProcess):
     """Gamma arrival process."""
+
     def __init__(self, arrival_rate: float, cv: float):
         """Initialize a gamma arrival process.
 
@@ -108,9 +106,7 @@ class GammaProcess(ArrivalProcess):
 
         return ticks
 
-    def generate_workload(self, start: float,
-                          duration: float,
-                          seed: int = 0):
+    def generate_workload(self, start: float, duration: float, seed: int = 0):
         ticks = self.generate_arrivals(start, duration, seed)
         return ticks
 
