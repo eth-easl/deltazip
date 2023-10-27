@@ -3,6 +3,7 @@ import argparse
 import pandas as pd
 import plotly.express as px
 
+
 def plot(args):
     print(args)
     with open(args.input, "r") as fp:
@@ -10,7 +11,7 @@ def plot(args):
     plot_data = []
     for item in results:
         provider = item["system"]
-        name = 'HuggingFace' if provider['name'] == 'hf' else 'FMZip'
+        name = "HuggingFace" if provider["name"] == "hf" else "FMZip"
         provider = f"{name} bsz={provider['args'].get('batch_size', 1)}<br>{provider['args'].get('placement_strategy', 'none')}<br>Lossless Only={provider['args'].get('lossless_only', 'false')}"
         for res in item["results"]:
             plot_data.append(
@@ -24,10 +25,13 @@ def plot(args):
     # for each provider, find the maximal time_elapsed
     df = df.groupby(["provider"]).max().reset_index()
     df = df.sort_values(by=["time_elapsed"], ascending=True)
-    df['throughput'] = (df['id'] + 1) / df['time_elapsed']
+    df["throughput"] = (df["id"] + 1) / df["time_elapsed"]
     fig = px.bar(df, x="provider", y="throughput")
     fig.update_layout(
-        width=800, height=600, title_x=0.5, title_text="Throughput of Different Backends (64 Tokens)"
+        width=800,
+        height=600,
+        title_x=0.5,
+        title_text="Throughput of Different Backends (64 Tokens)",
     )
     fig.update_layout(
         title=dict(font=dict(size=20)),
@@ -47,9 +51,7 @@ def plot(args):
         )
     )
     fig.update_layout(
-        xaxis=dict(
-            title_text="Backend", title_font=dict(size=22), tickfont_size=12
-        )
+        xaxis=dict(title_text="Backend", title_font=dict(size=22), tickfont_size=12)
     )
     fig.write_image(args.output, scale=2)
 
