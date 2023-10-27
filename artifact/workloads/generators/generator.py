@@ -5,17 +5,17 @@ import datasets
 import pandas as pd
 import numpy as np
 
-# to_eval_models = [
-#     "lmsys/vicuna-7b-v1.5",
-#     "Xwin-LM/Xwin-LM-7B-V0.1",
-#     "migtissera/Synthia-7B-v1.2",
-#     "meta-llama/Llama-2-7b-chat-hf",
-#     "FlagAlpha/Llama2-Chinese-7b-Chat",
-# ]
 to_eval_models = [
-    f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)
+    "lmsys/vicuna-7b-v1.5",
+    "Xwin-LM/Xwin-LM-7B-V0.1",
+    "migtissera/Synthia-7B-v1.2",
+    "meta-llama/Llama-2-7b-chat-hf",
+    "FlagAlpha/Llama2-Chinese-7b-Chat",
 ]
-to_eval_models =["openlm-research/open_llama_3b_v2"] + to_eval_models
+# to_eval_models = [
+#     f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)
+# ]
+# to_eval_models =["openlm-research/open_llama_3b_v2"] + to_eval_models
 
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
@@ -27,7 +27,7 @@ def get_dialogs():
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
     all_dialogs = []
     for idx, item in enumerate(trace):
-        all_dialogs.append(format_openllama(item["conversation_a"][0]["content"]))
+        all_dialogs.append(format_lmsys(item["conversation_a"][0]["content"]))
     return all_dialogs
 
 def prepare_lmsys(args):
@@ -52,15 +52,16 @@ def prepare_lmsys(args):
     # sort trace by timestamp
     trace = sorted(trace, key=lambda x: x["tstamp"])
     # take num_queries from trace, randomly start
-    start = np.random.randint(0, len(trace) - args.num_queries)
-    trace = trace[start : start + args.num_queries]
+    # start = np.random.randint(0, len(trace) - args.num_queries)
+    # trace = trace[start : start + args.num_queries]
+    trace = trace
     min_tstamp = trace[0]["tstamp"]
     for idx, item in enumerate(trace):
         traces_data.append(
             {
                 "id": idx,
-                "prompt":format_openllama(item["conversation_a"][0]["content"]),
-                "timestamp": (item["tstamp"] - min_tstamp) / 1,
+                "prompt":format_lmsys(item["conversation_a"][0]["content"]),
+                "timestamp": 0,
                 "model": mapping[item["model_a"]],
             }
         )

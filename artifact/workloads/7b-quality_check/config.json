@@ -1,0 +1,19 @@
+{
+    "base_model": "meta-llama/Llama-2-7b-hf",
+    "compressed_model_mapping": {
+        "FlagAlpha/Llama2-Chinese-7b-Chat": ".cache/compressed_models/7b-parameters/bits-2/llama-2-chinese-7b-chat",
+        "lmsys/vicuna-7b-v1.5": ".cache/compressed_models/7b-parameters/bits-2/vicuna-7b-v1.5",
+        "Xwin-LM/Xwin-LM-7B-V0.1": ".cache/compressed_models/7b-parameters/bits-2/xwin-lm-7b-v0.1",
+        "migtissera/Synthia-7B-v1.2": ".cache/compressed_models/7b-parameters/bits-2/synthia-7b-v1.2",
+        "meta-llama/Llama-2-7b-chat-hf": ".cache/compressed_models/7b-parameters/bits-2/llama-2-7b-chat",
+        "FlagAlpha/Llama2-Chinese-7b-Chat-lossless": ".cache/compressed_models/7b-parameters/lossless/llama-2-chinese-7b-chat",
+        "lmsys/vicuna-7b-v1.5-lossless": ".cache/compressed_models/7b-parameters/lossless/vicuna-7b-v1.5-lossless",
+        "Xwin-LM/Xwin-LM-7B-V0.1-lossless": ".cache/compressed_models/7b-parameters/lossless/xwin-lm-7b-v0.1-lossless",
+        "migtissera/Synthia-7B-v1.2-lossless": ".cache/compressed_models/7b-parameters/lossless/synthia-7b-v1.2-lossless",
+        "meta-llama/Llama-2-7b-chat-hf-lossless": ".cache/compressed_models/7b-parameters/lossless/llama-2-7b-chat-lossless"
+    },
+    "generation_configs": {
+        "min_length": 64,
+        "max_new_tokens": 64
+    }
+}
