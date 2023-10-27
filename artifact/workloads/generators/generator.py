@@ -64,7 +64,7 @@ def prepare_lmsys(args):
             {
                 "id": idx,
                 "prompt":format_lmsys(item["conversation_a"][0]["content"]),
-                "timestamp": 0,
+                "timestamp": (item["tstamp"] - min_tstamp) / 100,
                 "model": mapping[item["model_a"]],
             }
         )

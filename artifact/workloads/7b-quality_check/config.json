@@ -13,7 +13,7 @@
         "meta-llama/Llama-2-7b-chat-hf-lossless": ".cache/compressed_models/7b-parameters/lossless/llama-2-7b-chat-lossless"
     },
     "generation_configs": {
-        "min_length": 64,
-        "max_new_tokens": 64
+        "min_length": 512,
+        "max_new_tokens": 512
     }
 }
