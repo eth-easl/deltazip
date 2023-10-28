@@ -1045,8 +1045,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
 
         transformers.modeling_utils._init_weights = False
         init_contexts = [no_init_weights()]
-        if low_cpu_mem_usage:
-            init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
+        # if low_cpu_mem_usage:
+        #     init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
 
         if isinstance(
             compress_config, AutoCompressionConfig
@@ -1109,14 +1109,16 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         with cp.cuda.Device(0):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
+        print(f"decompressing tensors on device {device}")
         tensors = losslesscompressor.decompress_state_dict(
-            tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16
+            tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16, target_device=device
         )
         # move tensors to target device
-        for key in tensors.keys():
-            tensors[key] = tensors[key].to(device)
         # print model keys
-        model.load_state_dict(tensors, strict=False, assign=low_cpu_mem_usage)
+        model.load_state_dict(tensors, strict=False, assign=True)
+        print("model device after loading")
+        print(model.device)
+        model = model.to(device)
         if isinstance(
             compress_config, AutoCompressionConfig
         ) or compress_config.bits in [2, 3, 4, 8]:
@@ -1130,7 +1132,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         ):
             unpack_model(model)
             # print keys in the model
-        model = model.to(device)
         # set seqlen
         model_config = model.config.to_dict()
         seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]

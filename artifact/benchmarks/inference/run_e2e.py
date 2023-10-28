@@ -50,11 +50,12 @@ def async_issue_requests(reqs, global_start_time):
 
 
 def issue_queries(queries):
-    time_step = 0.01
+    time_step = 0.1
     global threads
     global inference_results
     time_range = [x["timestamp"] for x in queries]
-    max_time = max(time_range) + 1  # execute for one more second
+    max_time = max(time_range) + 1  
+    # execute for one more second
     start = timer()
     for time in np.arange(0, max_time, time_step):
         sub_queries = [
@@ -63,6 +64,7 @@ def issue_queries(queries):
             if x["timestamp"] <= time and x["timestamp"] > time - time_step
         ]
         if len(sub_queries) > 0:
+            print(f"sending {len(sub_queries)} queries at {time}")
             s.enter(
                 time,
                 1,
@@ -126,6 +128,7 @@ def run(args):
             model_mapping=model_mapping,
             gen_configs=gen_configs,
         )
+        print("Start sending requests...")
         issue_queries(jobs["queries"])
         benchmark_results.append(
             {

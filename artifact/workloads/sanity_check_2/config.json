@@ -41,7 +41,7 @@
         ".cache/raw_models/openllama-3b-chat-19-lossless": ".cache/compressed_models/3b-parameters/openllama-chat-delta-lossless-19"
     },
     "generation_configs": {
-        "min_length": 64,
-        "max_new_tokens": 64
+        "min_length": 512,
+        "max_new_tokens": 512
     }
 }
