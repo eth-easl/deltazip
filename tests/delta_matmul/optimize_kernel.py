@@ -6,7 +6,8 @@ from transformers.models.gpt_neox.modeling_gpt_neox import (
     GPTNeoXConfig,
     apply_rotary_pos_emb,
 )
-from fmzip.modeling.gpt_neox import parallelize_neox
+from fmzip.modeling.neox_monkey_patch import gpt_neox_attention_forward
+from timeit import default_timer as timer
 
 def forward(
     self,
@@ -71,6 +72,7 @@ def forward(
     return outputs
 
 
+
 transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = forward
 
 config = GPTNeoXConfig(
@@ -93,21 +95,30 @@ delta_attention = GPTNeoXAttention(config)
 delta_attention.query_key_value.weight = torch.nn.Parameter(delta_qkv_weight)
 delta_attention.dense.weight = torch.nn.Parameter(delta_dense_weight)
 
+
 ft_attention = GPTNeoXAttention(config)
 ft_attention.query_key_value.weight = torch.nn.Parameter(
     base_qkv_weights + delta_qkv_weight
 )
 ft_attention.dense.weight = torch.nn.Parameter(base_dense + delta_dense_weight)
 
+start = timer()
 ft_attention_output, _ = ft_attention(hidden_states, attention_masks, position_ids)
+end = timer()
+
 print(ft_attention_output)
+print("Time taken for FT attention: ", end - start)
 # now parallelize the attention forward
-parallelize_neox()
+
+transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = gpt_neox_attention_forward
 
 setattr(base_attention, "delta", [delta_attention])
+start = timer()
 parallel_attention_output, _ = base_attention(
     hidden_states, attention_masks, position_ids
 )
+end = timer()
+print("Time taken for parallel attention: ", end - start)
 
 print(parallel_attention_output)
 print(torch.allclose(ft_attention_output, parallel_attention_output))
