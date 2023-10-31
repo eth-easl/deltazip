@@ -35,7 +35,7 @@ def generate(args):
             model=target_model, tokenizer=tokenizer, device="cuda"
         )
         logger.info("Pipeline Ready")
-        prompts = [datum[args.input_field] for datum in data]
+        prompts = [datum[args.input_field] for datum in data][:1000]
         outputs = pipe(
             prompts,
             max_new_tokens=args.max_length,
@@ -47,7 +47,7 @@ def generate(args):
         results = []
         for datum, output in zip(data, outputs):
             result = datum
-            result["prediction"] = [postprocess(o["generated_text"]) for o in output]
+            result["prediction"] = [o["generated_text"] for o in output]
             results.append(result)
         with open(args.output_file, "w") as f:
             for datum in data:

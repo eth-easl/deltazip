@@ -51,7 +51,7 @@ def generate(args):
                 delta_model = subtract_inverse(base_model, delta_model)
             elif args.delta == "xor":
                 delta_model = xor_inverse(base_model, delta_model)
-        
+
         delta_model = delta_model.to(torch.device("cuda"))
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]
@@ -63,7 +63,7 @@ def generate(args):
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
         logger.info("Pipeline Ready")
-        prompts = [datum[args.input_field] for datum in data]
+        prompts = [datum[args.input_field] for datum in data][:1000]
         outputs = pipe(
             prompts,
             max_new_tokens=args.max_length,
@@ -71,11 +71,12 @@ def generate(args):
             top_k=args.top_k,
             top_p=args.top_p,
             return_full_text=False,
+            
         )
         results = []
         for datum, output in zip(data, outputs):
             result = datum
-            result["prediction"] = [postprocess(o["generated_text"]) for o in output]
+            result["prediction"] = [o["generated_text"] for o in output]
             results.append(result)
         with open(args.output_file, "w") as f:
             for datum in data:
