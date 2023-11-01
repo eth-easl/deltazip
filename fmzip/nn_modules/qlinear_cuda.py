@@ -1,15 +1,18 @@
-import numpy as np
+import math
 import torch
+import numpy as np
 import torch.nn as nn
 import transformers
 from loguru import logger
-from triton_utils.kernels import (
+
+from fmzip.nn_modules.triton_utils.kernels import (
     quant_matmul_248,
     transpose_quant_matmul_248,
     quant_matmul_inference_only_248,
     QuantLinearFunction,
     QuantLinearInferenceOnlyFunction
 )
+
 try:
     import autogptq_cuda_256
     import autogptq_cuda_64
@@ -34,6 +37,7 @@ class QuantLinear(nn.Module):
         bias,
         kernel_switch_threshold=256,
         trainable=False,
+        use_triton=True,
     ):
         super().__init__()
         global _autogptq_cuda_available
@@ -94,7 +98,7 @@ class QuantLinear(nn.Module):
             self.autogptq_cuda = autogptq_cuda_64
         if infeatures % 64 != 0 or outfeatures % 64 != 0:
             self.autogptq_cuda_available = False
-
+        self.use_triton = use_triton
         self.trainable = trainable
 
     def pack(self, linear, scales, zeros, g_idx=None):
@@ -286,134 +290,185 @@ class QuantLinear(nn.Module):
             return linear
 
     def forward(self, x: torch.Tensor):
-        out_shape = x.shape[:-1] + (self.outfeatures,)
-        x = x.reshape(-1, x.shape[-1])
-        if self.autogptq_cuda_available and (
-            self.kernel_switch_threshold == 0
-            or x.shape[0] < self.kernel_switch_threshold
-        ):
-            out = torch.zeros(
-                (x.shape[0], self.outfeatures), device=x.device, dtype=torch.float32
-            )
-            if self.bits == 2:
-                self.autogptq_cuda.vecquant2matmul(
-                    x.float(),
-                    self.qweight,
-                    out,
-                    self.scales.float(),
-                    self.qzeros,
-                    self.g_idx,
+        if not self.use_triton or self.bits == 3:
+            out_shape = x.shape[:-1] + (self.outfeatures,)
+            x = x.reshape(-1, x.shape[-1])
+            if self.autogptq_cuda_available and (
+                self.kernel_switch_threshold == 0
+                or x.shape[0] < self.kernel_switch_threshold
+            ):
+                out = torch.zeros(
+                    (x.shape[0], self.outfeatures), device=x.device, dtype=torch.float32
                 )
-            elif self.bits == 3:
-                self.autogptq_cuda.vecquant3matmul(
-                    x.float(),
-                    self.qweight,
-                    out,
-                    self.scales.float(),
-                    self.qzeros,
-                    self.g_idx,
-                )
-            elif self.bits == 4:
-                self.autogptq_cuda.vecquant4matmul(
-                    x.float(),
-                    self.qweight,
-                    out,
-                    self.scales.float(),
-                    self.qzeros,
-                    self.g_idx,
-                )
-            elif self.bits == 8:
-                self.autogptq_cuda.vecquant8matmul(
-                    x.float(),
-                    self.qweight,
-                    out,
-                    self.scales.float(),
-                    self.qzeros,
-                    self.g_idx,
-                )
-            else:
-                raise NotImplementedError("Only 2,3,4,8 bits are supported.")
-        else:
-            logger.warning(
-                f"Large kernel size {x.shape[0]}>{self.kernel_switch_threshold}, fallback to python implementation."
-            )
-            if self.wf.device != self.qzeros.device:
-                self.wf = self.wf.to(self.qzeros.device)
-
-            if self.bits in [2, 4, 8]:
-                zeros = torch.bitwise_right_shift(
-                    torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
-                    self.wf.unsqueeze(0),
-                ).to(torch.int16 if self.bits == 8 else torch.int8)
-                torch.bitwise_and(zeros, (2**self.bits) - 1, out=zeros)
-
-                zeros = zeros + 1
-                zeros = zeros.reshape(self.scales.shape)
-
-                weight = torch.bitwise_right_shift(
-                    torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
-                    self.wf.unsqueeze(-1),
-                ).to(torch.int16 if self.bits == 8 else torch.int8)
-                torch.bitwise_and(weight, (2**self.bits) - 1, out=weight)
-            elif self.bits == 3:
-                zeros = self.qzeros.reshape(
-                    self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1
-                ).expand(-1, -1, -1, 12)
-                zeros = zeros >> self.wf.unsqueeze(0)
-                zeros[:, :, 0, 10] = (zeros[:, :, 0, 10] & 0x3) | (
-                    (zeros[:, :, 1, 0] << 2) & 0x4
-                )
-                zeros[:, :, 1, 11] = (zeros[:, :, 1, 11] & 0x1) | (
-                    (zeros[:, :, 2, 0] << 1) & 0x6
-                )
-                zeros = zeros & 0x7
-                zeros = torch.cat(
-                    [zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]],
-                    dim=2,
-                )
-
-                zeros = zeros + 1
-                zeros = zeros.reshape(self.scales.shape)
-
-                weight = self.qweight.reshape(
-                    self.qweight.shape[0] // 3, 3, 1, self.qweight.shape[1]
-                ).expand(-1, -1, 12, -1)
-                weight = (weight >> self.wf.unsqueeze(-1)) & 0x7
-                weight[:, 0, 10] = (weight[:, 0, 10] & 0x3) | (
-                    (weight[:, 1, 0] << 2) & 0x4
-                )
-                weight[:, 1, 11] = (weight[:, 1, 11] & 0x1) | (
-                    (weight[:, 2, 0] << 1) & 0x6
-                )
-                weight = weight & 0x7
-                weight = torch.cat(
-                    [weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1
-                )
-            else:
-                raise NotImplementedError("Only 2,3,4,8 bits are supported.")
-
-            weight = weight.reshape(weight.shape[0] * weight.shape[1], weight.shape[2])
-            num_itr = self.g_idx.shape[0] // x.shape[-1]
-            if num_itr == 1:
-                weights = self.scales[self.g_idx.long()] * (
-                    weight - zeros[self.g_idx.long()]
-                )
-            else:
-                num_dim = self.g_idx.shape[0] // num_itr
-                weights = []
-                for i in range(num_itr):
-                    scale_i = self.scales[:, i * num_dim : (i + 1) * num_dim]
-                    weight_i = weight[:, i * num_dim : (i + 1) * num_dim]
-                    zeros_i = zeros[:, i * num_dim : (i + 1) * num_dim]
-                    g_idx_i = self.g_idx[i * num_dim : (i + 1) * num_dim]
-                    weights.append(
-                        scale_i[g_idx_i.long()] * (weight_i - zeros_i[g_idx_i.long()])
+                if self.bits == 2:
+                    self.autogptq_cuda.vecquant2matmul(
+                        x.float(),
+                        self.qweight,
+                        out,
+                        self.scales.float(),
+                        self.qzeros,
+                        self.g_idx,
                     )
-                weights = torch.cat(weights, dim=1)
-            out = torch.matmul(x.half(), weights)
+                elif self.bits == 3:
+                    self.autogptq_cuda.vecquant3matmul(
+                        x.float(),
+                        self.qweight,
+                        out,
+                        self.scales.float(),
+                        self.qzeros,
+                        self.g_idx,
+                    )
+                elif self.bits == 4:
+                    self.autogptq_cuda.vecquant4matmul(
+                        x.float(),
+                        self.qweight,
+                        out,
+                        self.scales.float(),
+                        self.qzeros,
+                        self.g_idx,
+                    )
+                elif self.bits == 8:
+                    self.autogptq_cuda.vecquant8matmul(
+                        x.float(),
+                        self.qweight,
+                        out,
+                        self.scales.float(),
+                        self.qzeros,
+                        self.g_idx,
+                    )
+                else:
+                    raise NotImplementedError("Only 2,3,4,8 bits are supported.")
+            else:
+                logger.warning(
+                    f"Large kernel size {x.shape[0]}>{self.kernel_switch_threshold}, fallback to python implementation."
+                )
+                if self.wf.device != self.qzeros.device:
+                    self.wf = self.wf.to(self.qzeros.device)
+
+                if self.bits in [2, 4, 8]:
+                    zeros = torch.bitwise_right_shift(
+                        torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
+                        self.wf.unsqueeze(0),
+                    ).to(torch.int16 if self.bits == 8 else torch.int8)
+                    torch.bitwise_and(zeros, (2**self.bits) - 1, out=zeros)
+
+                    zeros = zeros + 1
+                    zeros = zeros.reshape(self.scales.shape)
+
+                    weight = torch.bitwise_right_shift(
+                        torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
+                        self.wf.unsqueeze(-1),
+                    ).to(torch.int16 if self.bits == 8 else torch.int8)
+                    torch.bitwise_and(weight, (2**self.bits) - 1, out=weight)
+                elif self.bits == 3:
+                    zeros = self.qzeros.reshape(
+                        self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1
+                    ).expand(-1, -1, -1, 12)
+                    zeros = zeros >> self.wf.unsqueeze(0)
+                    zeros[:, :, 0, 10] = (zeros[:, :, 0, 10] & 0x3) | (
+                        (zeros[:, :, 1, 0] << 2) & 0x4
+                    )
+                    zeros[:, :, 1, 11] = (zeros[:, :, 1, 11] & 0x1) | (
+                        (zeros[:, :, 2, 0] << 1) & 0x6
+                    )
+                    zeros = zeros & 0x7
+                    zeros = torch.cat(
+                        [zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]],
+                        dim=2,
+                    )
+
+                    zeros = zeros + 1
+                    zeros = zeros.reshape(self.scales.shape)
+
+                    weight = self.qweight.reshape(
+                        self.qweight.shape[0] // 3, 3, 1, self.qweight.shape[1]
+                    ).expand(-1, -1, 12, -1)
+                    weight = (weight >> self.wf.unsqueeze(-1)) & 0x7
+                    weight[:, 0, 10] = (weight[:, 0, 10] & 0x3) | (
+                        (weight[:, 1, 0] << 2) & 0x4
+                    )
+                    weight[:, 1, 11] = (weight[:, 1, 11] & 0x1) | (
+                        (weight[:, 2, 0] << 1) & 0x6
+                    )
+                    weight = weight & 0x7
+                    weight = torch.cat(
+                        [weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1
+                    )
+                else:
+                    raise NotImplementedError("Only 2,3,4,8 bits are supported.")
+
+                weight = weight.reshape(weight.shape[0] * weight.shape[1], weight.shape[2])
+                num_itr = self.g_idx.shape[0] // x.shape[-1]
+                if num_itr == 1:
+                    weights = self.scales[self.g_idx.long()] * (
+                        weight - zeros[self.g_idx.long()]
+                    )
+                else:
+                    num_dim = self.g_idx.shape[0] // num_itr
+                    weights = []
+                    for i in range(num_itr):
+                        scale_i = self.scales[:, i * num_dim : (i + 1) * num_dim]
+                        weight_i = weight[:, i * num_dim : (i + 1) * num_dim]
+                        zeros_i = zeros[:, i * num_dim : (i + 1) * num_dim]
+                        g_idx_i = self.g_idx[i * num_dim : (i + 1) * num_dim]
+                        weights.append(
+                            scale_i[g_idx_i.long()] * (weight_i - zeros_i[g_idx_i.long()])
+                        )
+                    weights = torch.cat(weights, dim=1)
+                out = torch.matmul(x.half(), weights)
+        else:
+            # triton
+            out_shape = x.shape[:-1] + (self.outfeatures,)
+            quant_linear_fn = QuantLinearFunction if self.trainable else QuantLinearInferenceOnlyFunction
+            out = quant_linear_fn.apply(
+                x.reshape(-1, x.shape[-1]),
+                self.qweight,
+                self.scales,
+                self.qzeros,
+                self.g_idx,
+                self.bits,
+                self.maxq
+            )
+
         out = out.half().reshape(out_shape)
         out = out + self.bias if self.bias is not None else out
         return out
+    
+    @classmethod
+    def warmup(cls, model, transpose=False, seqlen=2048):
+        """
+        Pre-tunes the quantized kernel
+        """
+        from tqdm import tqdm
+
+        kn_values = {}
+
+        for _, m in model.named_modules():
+            if not isinstance(m, cls):
+                continue
+
+            k = m.infeatures
+            n = m.outfeatures
+
+            if (k, n) not in kn_values:
+                kn_values[(k, n)] = (m.qweight, m.scales, m.qzeros, m.g_idx, m.bits, m.maxq)
+
+        logger.info(f'Found {len(kn_values)} unique KN Linear values.')
+        logger.info('Warming up autotune cache ...')
+        with torch.no_grad():
+            for m in tqdm(range(0, math.ceil(math.log2(seqlen)) + 1)):
+                m = 2 ** m
+                for (k, n), (qweight, scales, qzeros, g_idx, bits, maxq) in kn_values.items():
+                    if transpose:
+                        a = torch.randn(m, k, dtype=torch.float16, device=model.device)
+                        quant_matmul_248(a, qweight, scales, qzeros, g_idx, bits, maxq)
+                        a = torch.randn(m, n, dtype=torch.float16, device=model.device)
+                        transpose_quant_matmul_248(a, qweight, scales, qzeros, g_idx, bits, maxq)
+                    else:
+                        a = torch.randn(m, k, dtype=torch.float16, device=model.device)
+                        quant_matmul_inference_only_248(a, qweight, scales, qzeros, g_idx, bits, maxq)
+        del kn_values
+
 
 
 __all__ = ["QuantLinear"]
