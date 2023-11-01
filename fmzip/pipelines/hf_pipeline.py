@@ -1,9 +1,10 @@
 import torch
+import cupy as cp
 import transformers
 from loguru import logger
 from typing import List, Tuple
-from fmzip.pipelines.utils import get_available_gpus, get_gpu_count
 from timeit import default_timer as timer
+from fmzip.pipelines.utils import get_available_gpus, get_gpu_count
 
 placement_strategies = ["tensor-parallel", "no-parallel"]
 
@@ -31,11 +32,42 @@ class HuggingFacePipeline:
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
+        self.max_num_models = max_num_models
         # model pool maps model name to gpu indices
         self.model_pool = {}
+        self.req_count = {}
         self.device_models = {k: [] for k in range(get_gpu_count())}
         self.batch_size = batch_size
 
+    def report_meminfo(self):
+        # force garbage collection and free memory
+        torch.cuda.empty_cache()
+        cp.get_default_memory_pool().free_all_blocks()
+        free, total = torch.cuda.mem_get_info()
+        logger.warning(
+            f"allocated: pytorch/cupy {torch.cuda.memory_allocated() / 1e9:.2f}/{cp.get_default_memory_pool().used_bytes() / 1e9:.2f} GB"
+        )
+        logger.warning(f"PyTorch free/total: {free / 1e9:.2f}/{total / 1e9:.2f} GB")
+
+    def _evict_deltas(self, deltas: List[str]):
+        # if all deltas are base model, no need to evict
+        if all([delta == self.base_model_name for delta in deltas]):
+            logger.info("eviction skipped: all requested models are base model")
+            return
+        if len(self.model_pool) + len(deltas) > self.max_num_models:
+            logger.warning(f"Evicting {len(deltas)} models/deltas")
+            # sort req_count by value
+            to_evict_models = sorted(self.req_count, key=self.req_count.get)[
+                : len(deltas)
+            ]
+            for delta in to_evict_models:
+                try:
+                    del self.model_pool[delta]
+                    del self.req_count[delta]
+                except KeyError:
+                    pass
+
+    @torch.inference_mode()
     def generate(self, queries: List[Tuple], gpu_id: int = 0, **kwargs):
         with torch.inference_mode():
             tokenize_start = timer()
@@ -46,11 +78,19 @@ class HuggingFacePipeline:
                 model_names = [
                     x[1] for x in queries[batch_idx : batch_idx + self.batch_size]
                 ]
+
                 batch_inputs = {
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
+                for model in model_names:
+                    if model not in self.req_count and model != self.base_model_name:
+                        self.req_count[model] = 0
+                    elif model in self.req_count:
+                        self.req_count[model] += 1
                 # construct inference pipeline
                 loading_start = timer()
+                self._evict_deltas(model_names)
+                self.report_meminfo()
                 for model_name in model_names:
                     model_device = self._load_target_model(model_name, gpu_id)
                     # move batch to device
@@ -61,6 +101,7 @@ class HuggingFacePipeline:
                     output = self.loaded_models[model_name].generate(
                         **batch_inputs, **kwargs
                     )
+                    
                     inference_end = timer()
                     output = self.tokenizer.batch_decode(output)
                     tokenize_time = tokenize_end - tokenize_start
@@ -92,8 +133,9 @@ class HuggingFacePipeline:
         sorted_device_models = sorted(
             self.device_models.items(), key=lambda x: len(x[1])
         )
-        return sorted_device_models[0][0]
+        return int(sorted_device_models[0][0])
 
+    @torch.inference_mode()
     def _load_target_model(self, model_name: str, gpu_id=None):
         logger.info(f"loading {model_name}...")
         logger.info(f"loaded models: {self.loaded_model_names}")
@@ -102,7 +144,7 @@ class HuggingFacePipeline:
                 model_device = self._find_device()
             else:
                 model_device = gpu_id
-            with torch.device(model_device):
+            with torch.device(f"cuda:{model_device}"):
                 self.loaded_models[
                     model_name
                 ] = transformers.AutoModelForCausalLM.from_pretrained(
@@ -111,7 +153,8 @@ class HuggingFacePipeline:
                 self.loaded_models[model_name] = self.loaded_models[model_name].to(
                     torch.device(f"cuda:{model_device}")
                 )
-                self.device_models[model_device].append(model_name)
+                print(self.device_models)
+                self.device_models[int(model_device)].append(model_name)
                 self.loaded_model_names.add(model_name)
         else:
             logger.info(f"{model_name} already loaded, skipping...")
