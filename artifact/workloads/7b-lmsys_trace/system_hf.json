@@ -4,9 +4,9 @@
             "name":"hf",
             "args": {
                 "batch_size": 1,
-                "max_num_models": 1
+                "max_num_models": 2
             },
-            "order": 0
+            "order": 1
         }
     ]
     

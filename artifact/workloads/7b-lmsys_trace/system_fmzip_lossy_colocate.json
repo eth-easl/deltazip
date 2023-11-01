@@ -6,9 +6,9 @@
                 "lossless_only": false,
                 "placement_strategy": "colocate",
                 "batch_size": 1,
-                "max_num_deltas": 1
+                "max_num_deltas": 3
             },
-            "order": 1
+            "order": 0
         }
     ]
 }

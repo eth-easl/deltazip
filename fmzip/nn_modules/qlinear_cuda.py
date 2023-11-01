@@ -3,7 +3,13 @@ import torch
 import torch.nn as nn
 import transformers
 from loguru import logger
-
+from triton_utils.kernels import (
+    quant_matmul_248,
+    transpose_quant_matmul_248,
+    quant_matmul_inference_only_248,
+    QuantLinearFunction,
+    QuantLinearInferenceOnlyFunction
+)
 try:
     import autogptq_cuda_256
     import autogptq_cuda_64
@@ -26,7 +32,7 @@ class QuantLinear(nn.Module):
         infeatures,
         outfeatures,
         bias,
-        kernel_switch_threshold=128,
+        kernel_switch_threshold=256,
         trainable=False,
     ):
         super().__init__()
