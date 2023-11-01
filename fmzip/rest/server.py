@@ -103,7 +103,6 @@ class BackgroundTasks(threading.Thread):
 
 results = {}
 
-
 class InferenceTask(BaseModel):
     id: Optional[int] = ""
     prompt: str

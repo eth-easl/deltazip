@@ -38,7 +38,8 @@ class HuggingFacePipeline:
         self.req_count = {}
         self.device_models = {k: [] for k in range(get_gpu_count())}
         self.batch_size = batch_size
-
+        logger.info("Max number of models: {}".format(self.max_num_models))
+    
     def report_meminfo(self):
         # force garbage collection and free memory
         torch.cuda.empty_cache()
@@ -50,11 +51,8 @@ class HuggingFacePipeline:
         logger.warning(f"PyTorch free/total: {free / 1e9:.2f}/{total / 1e9:.2f} GB")
 
     def _evict_deltas(self, deltas: List[str]):
-        # if all deltas are base model, no need to evict
-        if all([delta == self.base_model_name for delta in deltas]):
-            logger.info("eviction skipped: all requested models are base model")
-            return
-        if len(self.model_pool) + len(deltas) > self.max_num_models:
+        print(f"len model pool: {len(self.loaded_models)}")
+        if len(self.loaded_models) + len(deltas) > self.max_num_models:
             logger.warning(f"Evicting {len(deltas)} models/deltas")
             # sort req_count by value
             to_evict_models = sorted(self.req_count, key=self.req_count.get)[
@@ -62,7 +60,7 @@ class HuggingFacePipeline:
             ]
             for delta in to_evict_models:
                 try:
-                    del self.model_pool[delta]
+                    del self.loaded_models[delta]
                     del self.req_count[delta]
                 except KeyError:
                     pass
@@ -83,15 +81,15 @@ class HuggingFacePipeline:
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
                 for model in model_names:
-                    if model not in self.req_count and model != self.base_model_name:
+                    if model not in self.req_count:
                         self.req_count[model] = 0
                     elif model in self.req_count:
                         self.req_count[model] += 1
                 # construct inference pipeline
                 loading_start = timer()
-                self._evict_deltas(model_names)
-                self.report_meminfo()
                 for model_name in model_names:
+                    self._evict_deltas([model_name])
+                    self.report_meminfo()
                     model_device = self._load_target_model(model_name, gpu_id)
                     # move batch to device
                     for k in batch_inputs:
@@ -153,7 +151,6 @@ class HuggingFacePipeline:
                 self.loaded_models[model_name] = self.loaded_models[model_name].to(
                     torch.device(f"cuda:{model_device}")
                 )
-                print(self.device_models)
                 self.device_models[int(model_device)].append(model_name)
                 self.loaded_model_names.add(model_name)
         else:
