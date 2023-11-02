@@ -46,9 +46,6 @@ class InferenceService:
                             ],
                         )
                     )
-        # this should be a new non-blocking thread
-        # thread = threading.Thread(target=self.pipeline.generate, args=(reformatted_queries,), )
-        # thread.start()
         results = self.pipeline.generate(
             reformatted_queries, gpu_id, **self.gen_configs
         )

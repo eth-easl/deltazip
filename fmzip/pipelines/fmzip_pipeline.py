@@ -35,6 +35,7 @@ class FMZipPipeline:
         placement_args: dict = None,
         lossless_only: bool = False,
         offload_base_model: bool = False,
+        warmup_model: str = None,
     ) -> None:
         if placement_strategy not in placement_strategies:
             raise ValueError(
@@ -46,19 +47,13 @@ class FMZipPipeline:
         self.batch_size = batch_size
         self.placement_strategy = placement_strategy
         self.placement_args = placement_args
-        self.model_pool = {}
-        self.req_count = {}
-        self.key_list = []
-
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         self.tokenizer.padding_side = "left"
         # avoid using eos_token as padding token
         # https://github.com/facebookresearch/llama/issues/380
         # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
-        # fmzip manages a pool of model
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-
         self.device_count = get_gpu_count()
         self._load_base_model()
         self.lossless_only = lossless_only
@@ -69,6 +64,16 @@ class FMZipPipeline:
         if self.placement_strategy != "addback":
             parallelize_neox()
             parallelize_llama()
+        self.model_pool = {}
+        self.req_count = {}
+        self.key_list = []
+        if warmup_model:
+            logger.info("Warming up model triton...")
+            self._load_delta(warmup_model, force=True)
+            self.model_pool = {}
+            self.req_count = {}
+            self.key_list = []
+        torch.cuda.empty_cache()
 
     def generate(self, queries: List[Tuple], gpu_id: int = 0, **kwargs):
         with torch.inference_mode():
@@ -156,6 +161,7 @@ class FMZipPipeline:
             if self.placement_strategy == "addback" and not self.lossless_only
             else False,
             low_cpu_mem_usage=True,
+            use_triton=True if not self.placement_strategy =='colocate' else False,
         )
         if delta_model not in self.req_count:
             self.req_count[delta_model] = 0
@@ -181,7 +187,12 @@ class FMZipPipeline:
             logger.info("loading skipped: all requested models are base model")
             return
         if offload_base_model:
-            self.base_models[gpu_id] = self.base_models[gpu_id].to("cpu")
+            logger.info("offloading base model")
+            self.base_models[gpu_id] = self.base_models[gpu_id].to(
+                "cpu",
+                non_blocking=True
+            )
+            logger.info("base model offloaded")
         if self.placement_strategy in ["colocate", "addback"]:
             [
                 self._load_delta(delta, device=f"cuda:{gpu_id}")
@@ -200,7 +211,7 @@ class FMZipPipeline:
             )
         if offload_base_model:
             # move back
-            self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
+            self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id, non_blocking=True)
 
     def report_meminfo(self):
         # force garbage collection and free memory

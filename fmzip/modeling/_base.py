@@ -1145,7 +1145,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             )
             model.seqlen = 2048
         global triton_has_warmup
-        if not triton_has_warmup:
+        if not triton_has_warmup and use_triton:
             QuantLinear.warmup(model, seqlen=model.seqlen)
             triton_has_warmup = True
         model.eval()
