@@ -1111,15 +1111,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         with cp.cuda.Device(0):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
-        print(f"decompressing tensors on device {device}")
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16, target_device=device
         )
         # move tensors to target device
         # print model keys
         model.load_state_dict(tensors, strict=False, assign=True)
-        print("model device after loading")
-        print(model.device)
         model = model.to(device)
         if isinstance(
             compress_config, AutoCompressionConfig
