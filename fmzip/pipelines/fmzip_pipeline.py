@@ -75,66 +75,66 @@ class FMZipPipeline:
             self.key_list = []
         torch.cuda.empty_cache()
 
+    @torch.inference_mode()
     def generate(self, queries: List[Tuple], gpu_id: int = 0, **kwargs):
-        with torch.inference_mode():
-            outputs = []
-            for batch_idx in range(0, len(queries), self.batch_size):
-                tokenize_start = timer()
-                sub_queries = queries[batch_idx : batch_idx + self.batch_size]
-                batch = self._prepare_batch(sub_queries, self.tokenizer)
-                deltas = [x[1] for x in sub_queries]
-                batch_inputs = {k: batch[k] for k in batch}
-                tokenize_end = timer()
-                for delta in deltas:
-                    if delta not in self.req_count and delta != self.base_model_name:
-                        self.req_count[delta] = 0
-                    elif delta in self.req_count:
-                        self.req_count[delta] += 1
-                for k in batch_inputs:
-                    batch_inputs[k] = batch_inputs[k].to(f"cuda:{gpu_id}")
-                loading_start = timer()
-                # check if eviction needed, ensure enough memory for loading new deltas
-                self._evict_deltas(deltas)
-                self.report_meminfo()
-                self._load_deltas(deltas, self.offload_base_model, int(gpu_id))
-                loading_end = timer()
-                prepare_start = timer()
-                self._prepare_inference(deltas, int(gpu_id))
-                prepare_end = timer()
-                inference_start = timer()
-                kwargs["do_sample"] = False
-                output = self.base_models[int(gpu_id)].generate(
-                    **batch_inputs, **kwargs
-                )
-                inference_end = timer()
-                output = self.tokenizer.batch_decode(output)
-                tokenize_time = tokenize_end - tokenize_start
-                loading_time = loading_end - loading_start
-                prepare_time = prepare_end - prepare_start
-                inference_time = inference_end - inference_start
-                total_time = inference_end - tokenize_start
-                output = [
-                    {
-                        "data": o,
-                        "model": deltas[i],
-                        "measure": {
-                            "tokenize_time": tokenize_time,
-                            "loading_time": loading_time,
-                            "prepare_time": prepare_time,
-                            "inference_time": inference_time,
-                            "total_time": total_time,
-                        },
-                    }
-                    for i, o in enumerate(output)
-                ]
-                outputs.extend(output)
-                if self.placement_strategy == "addback":
-                    # for add back: batch size always 1
-                    self._clear_addback_delta(deltas[0], int(gpu_id))
-                elif self.placement_strategy in ["colocate", "separation"]:
-                    self._clear_colocate(int(gpu_id))
-                torch.cuda.empty_cache()
-            return outputs
+        outputs = []
+        for batch_idx in range(0, len(queries), self.batch_size):
+            tokenize_start = timer()
+            sub_queries = queries[batch_idx : batch_idx + self.batch_size]
+            batch = self._prepare_batch(sub_queries, self.tokenizer)
+            deltas = [x[1] for x in sub_queries]
+            batch_inputs = {k: batch[k] for k in batch}
+            tokenize_end = timer()
+            for delta in deltas:
+                if delta not in self.req_count and delta != self.base_model_name:
+                    self.req_count[delta] = 0
+                elif delta in self.req_count:
+                    self.req_count[delta] += 1
+            for k in batch_inputs:
+                batch_inputs[k] = batch_inputs[k].to(f"cuda:{gpu_id}")
+            loading_start = timer()
+            # check if eviction needed, ensure enough memory for loading new deltas
+            self._evict_deltas(deltas)
+            self.report_meminfo()
+            self._load_deltas(deltas, self.offload_base_model, int(gpu_id))
+            loading_end = timer()
+            prepare_start = timer()
+            self._prepare_inference(deltas, int(gpu_id))
+            prepare_end = timer()
+            inference_start = timer()
+            kwargs["do_sample"] = False
+            output = self.base_models[int(gpu_id)].generate(
+                **batch_inputs, **kwargs
+            )
+            inference_end = timer()
+            output = self.tokenizer.batch_decode(output)
+            tokenize_time = tokenize_end - tokenize_start
+            loading_time = loading_end - loading_start
+            prepare_time = prepare_end - prepare_start
+            inference_time = inference_end - inference_start
+            total_time = inference_end - tokenize_start
+            output = [
+                {
+                    "data": o,
+                    "model": deltas[i],
+                    "measure": {
+                        "tokenize_time": tokenize_time,
+                        "loading_time": loading_time,
+                        "prepare_time": prepare_time,
+                        "inference_time": inference_time,
+                        "total_time": total_time,
+                    },
+                }
+                for i, o in enumerate(output)
+            ]
+            outputs.extend(output)
+            if self.placement_strategy == "addback":
+                # for add back: batch size always 1
+                self._clear_addback_delta(deltas[0], int(gpu_id))
+            elif self.placement_strategy in ["colocate", "separation"]:
+                self._clear_colocate(int(gpu_id))
+            torch.cuda.empty_cache()
+        return outputs
 
     def _load_base_model(self):
         self.base_models = [None for _ in range(self.device_count)]

@@ -96,6 +96,7 @@ class HuggingFacePipeline:
                         batch_inputs[k] = batch_inputs[k].to(f"cuda:{model_device}")
                     loading_end = timer()
                     inference_start = timer()
+                    logger.info("loaded models: {}".format(self.loaded_models.keys()))
                     output = self.loaded_models[model_name].generate(
                         **batch_inputs, **kwargs
                     )
@@ -136,7 +137,6 @@ class HuggingFacePipeline:
     @torch.inference_mode()
     def _load_target_model(self, model_name: str, gpu_id=None):
         logger.info(f"loading {model_name}...")
-        logger.info(f"loaded models: {self.loaded_model_names}")
         if model_name not in self.loaded_model_names:
             if gpu_id is None:
                 model_device = self._find_device()
