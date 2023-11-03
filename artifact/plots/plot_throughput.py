@@ -12,7 +12,10 @@ def plot(args):
     for item in results:
         provider = item["system"]
         name = "HuggingFace" if provider["name"] == "hf" else "FMZip"
-        provider = f"{name} bsz={provider['args'].get('batch_size', 1)}<br>{provider['args'].get('placement_strategy', 'none')}<br>Lossless Only={provider['args'].get('lossless_only', 'false')}"
+        if name == "FMZip":
+            provider = f"{name} bsz={provider['args'].get('batch_size', 1)}<br>{provider['args'].get('placement_strategy', 'none')}<br>Lossy={not provider['args'].get('lossless_only', False)}"
+        else:
+            provider = "HuggingFace"
         for res in item["results"]:
             plot_data.append(
                 {

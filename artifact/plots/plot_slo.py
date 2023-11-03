@@ -9,7 +9,7 @@ def get_provider_name(provider):
     if provider["name"] == "hf":
         return "HuggingFace"
     elif provider["name"] == "fmzip":
-        return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>strategy={provider['args'].get('placement_strategy','none')}<br>lossless={provider['args'].get('lossless_only', False)}"
+        return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>strategy={provider['args'].get('placement_strategy','none')}<br>lossy={not provider['args'].get('lossless_only', False)}"
 
 
 def plot(args):
@@ -29,7 +29,8 @@ def plot(args):
                 }
             )
     df = pd.DataFrame(plot_data)
-    slo_requirements = np.arange(1, 15, 0.1)
+    max_time = df["time_elapsed"].max()
+    slo_requirements = np.arange(1, max_time, 0.5)
     # for each slo_requirement, find how many requests are satisfied
     slo_data = []
     for slo in slo_requirements:
@@ -47,7 +48,6 @@ def plot(args):
                 }
             )
     df = pd.DataFrame(slo_data)
-    print(df)
     fig = px.line(df, x="slo", y="success_rate", color="provider")
     fig.update_layout(
         width=800,
@@ -67,6 +67,8 @@ def plot(args):
         legend=dict(font=dict(size=18)),
         legend_title=dict(font=dict(size=18)),
     )
+    fig.update_traces(line=dict(width=4))
+
     fig.update_layout(
         yaxis=dict(
             title_text="Success Rate (%)", title_font=dict(size=22), tickfont_size=18
