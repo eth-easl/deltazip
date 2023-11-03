@@ -31,20 +31,19 @@ def prepare_poisson(args):
     poisson_ticks = PoissonProcess(args.arrival_rate).generate_arrivals(
         0, args.duration
     )
-    trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
-    models = {}
+    df = pd.read_csv(
+        "artifact/data/AzureFunctionsInvocationTraceForTwoWeeksJan2021.txt"
+    )
+    models = set()
+    for row_id, item in df.iterrows():
+        models.add(item["func"])
     mapping = {}
-    for item in trace:
-        if item["model_a"] not in models:
-            models[item["model_a"]] = 1
-        else:
-            models[item["model_a"]] += 1
     traces_data = []
     for idx, model in enumerate(models):
         mapping[model] = to_eval_models[idx % len(to_eval_models)]
     mapped_models = []
-    for item in trace:
-        mapped_models.append(mapping[item["model_a"]])
+    for row_id, item in df.iterrows():
+        mapped_models.append(mapping[item["func"]])
     for idx in range(len(poisson_ticks)):
         traces_data.append(
             {
