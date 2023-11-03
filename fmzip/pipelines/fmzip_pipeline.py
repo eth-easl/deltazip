@@ -224,20 +224,18 @@ class FMZipPipeline:
         logger.warning(f"PyTorch free/total: {free / 1e9:.2f}/{total / 1e9:.2f} GB")
 
     def _evict_deltas(self, deltas: List[str]):
-        # if all deltas are base model, no need to evict
-        if all([delta == self.base_model_name for delta in deltas]):
-            logger.info("eviction skipped: all requested models are base model")
-            return
+        print(f"len model pool: {len(self.model_pool)}")
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:
-            logger.warning(f"Evicting {len(deltas)} models/deltas")
+            req_count_loaded = {k: v for k, v in self.req_count.items() if k in self.model_pool}
+            print(f"req_count_loaded: {req_count_loaded}")
             # sort req_count by value
-            to_evict_models = sorted(self.req_count, key=self.req_count.get)[
+            to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
                 : len(deltas)
             ]
+            logger.info(f"evicting {to_evict_models}")
             for delta in to_evict_models:
                 try:
                     del self.model_pool[delta]
-                    del self.req_count[delta]
                 except KeyError:
                     pass
 
