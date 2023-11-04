@@ -35,6 +35,7 @@ class FMZipPipeline:
         placement_args: dict = None,
         lossless_only: bool = False,
         offload_base_model: bool = False,
+        warmup_model: str = None,
     ) -> None:
         if placement_strategy not in placement_strategies:
             raise ValueError(
@@ -46,19 +47,13 @@ class FMZipPipeline:
         self.batch_size = batch_size
         self.placement_strategy = placement_strategy
         self.placement_args = placement_args
-        self.model_pool = {}
-        self.req_count = {}
-        self.key_list = []
-
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         self.tokenizer.padding_side = "left"
         # avoid using eos_token as padding token
         # https://github.com/facebookresearch/llama/issues/380
         # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
-        # fmzip manages a pool of model
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-
         self.device_count = get_gpu_count()
         self._load_base_model()
         self.lossless_only = lossless_only
@@ -69,67 +64,77 @@ class FMZipPipeline:
         if self.placement_strategy != "addback":
             parallelize_neox()
             parallelize_llama()
+        self.model_pool = {}
+        self.req_count = {}
+        self.key_list = []
+        if warmup_model:
+            logger.info("Warming up model triton...")
+            self._load_delta(warmup_model, force=True)
+            self.model_pool = {}
+            self.req_count = {}
+            self.key_list = []
+        torch.cuda.empty_cache()
 
+    @torch.inference_mode()
     def generate(self, queries: List[Tuple], gpu_id: int = 0, **kwargs):
-        with torch.inference_mode():
-            outputs = []
-            for batch_idx in range(0, len(queries), self.batch_size):
-                tokenize_start = timer()
-                sub_queries = queries[batch_idx : batch_idx + self.batch_size]
-                batch = self._prepare_batch(sub_queries, self.tokenizer)
-                deltas = [x[1] for x in sub_queries]
-                batch_inputs = {k: batch[k] for k in batch}
-                tokenize_end = timer()
-                for delta in deltas:
-                    if delta not in self.req_count and delta != self.base_model_name:
-                        self.req_count[delta] = 0
-                    elif delta in self.req_count:
-                        self.req_count[delta] += 1
-                for k in batch_inputs:
-                    batch_inputs[k] = batch_inputs[k].to(f"cuda:{gpu_id}")
-                loading_start = timer()
-                # check if eviction needed, ensure enough memory for loading new deltas
-                self._evict_deltas(deltas)
-                self.report_meminfo()
-                self._load_deltas(deltas, self.offload_base_model, int(gpu_id))
-                loading_end = timer()
-                prepare_start = timer()
-                self._prepare_inference(deltas, int(gpu_id))
-                prepare_end = timer()
-                inference_start = timer()
-                kwargs["do_sample"] = False
-                output = self.base_models[int(gpu_id)].generate(
-                    **batch_inputs, **kwargs
-                )
-                inference_end = timer()
-                output = self.tokenizer.batch_decode(output)
-                tokenize_time = tokenize_end - tokenize_start
-                loading_time = loading_end - loading_start
-                prepare_time = prepare_end - prepare_start
-                inference_time = inference_end - inference_start
-                total_time = inference_end - tokenize_start
-                output = [
-                    {
-                        "data": o,
-                        "model": deltas[i],
-                        "measure": {
-                            "tokenize_time": tokenize_time,
-                            "loading_time": loading_time,
-                            "prepare_time": prepare_time,
-                            "inference_time": inference_time,
-                            "total_time": total_time,
-                        },
-                    }
-                    for i, o in enumerate(output)
-                ]
-                outputs.extend(output)
-                if self.placement_strategy == "addback":
-                    # for add back: batch size always 1
-                    self._clear_addback_delta(deltas[0], int(gpu_id))
-                elif self.placement_strategy in ["colocate", "separation"]:
-                    self._clear_colocate(int(gpu_id))
-                torch.cuda.empty_cache()
-            return outputs
+        outputs = []
+        for batch_idx in range(0, len(queries), self.batch_size):
+            tokenize_start = timer()
+            sub_queries = queries[batch_idx : batch_idx + self.batch_size]
+            batch = self._prepare_batch(sub_queries, self.tokenizer)
+            deltas = [x[1] for x in sub_queries]
+            batch_inputs = {k: batch[k] for k in batch}
+            tokenize_end = timer()
+            for delta in deltas:
+                if delta not in self.req_count and delta != self.base_model_name:
+                    self.req_count[delta] = 0
+                elif delta in self.req_count:
+                    self.req_count[delta] += 1
+            for k in batch_inputs:
+                batch_inputs[k] = batch_inputs[k].to(f"cuda:{gpu_id}")
+            loading_start = timer()
+            # check if eviction needed, ensure enough memory for loading new deltas
+            self._evict_deltas(deltas)
+            self.report_meminfo()
+            self._load_deltas(deltas, self.offload_base_model, int(gpu_id))
+            loading_end = timer()
+            prepare_start = timer()
+            self._prepare_inference(deltas, int(gpu_id))
+            prepare_end = timer()
+            inference_start = timer()
+            kwargs["do_sample"] = False
+            output = self.base_models[int(gpu_id)].generate(
+                **batch_inputs, **kwargs
+            )
+            inference_end = timer()
+            output = self.tokenizer.batch_decode(output)
+            tokenize_time = tokenize_end - tokenize_start
+            loading_time = loading_end - loading_start
+            prepare_time = prepare_end - prepare_start
+            inference_time = inference_end - inference_start
+            total_time = inference_end - tokenize_start
+            output = [
+                {
+                    "data": o,
+                    "model": deltas[i],
+                    "measure": {
+                        "tokenize_time": tokenize_time,
+                        "loading_time": loading_time,
+                        "prepare_time": prepare_time,
+                        "inference_time": inference_time,
+                        "total_time": total_time,
+                    },
+                }
+                for i, o in enumerate(output)
+            ]
+            outputs.extend(output)
+            if self.placement_strategy == "addback":
+                # for add back: batch size always 1
+                self._clear_addback_delta(deltas[0], int(gpu_id))
+            elif self.placement_strategy in ["colocate", "separation"]:
+                self._clear_colocate(int(gpu_id))
+            torch.cuda.empty_cache()
+        return outputs
 
     def _load_base_model(self):
         self.base_models = [None for _ in range(self.device_count)]
@@ -156,6 +161,7 @@ class FMZipPipeline:
             if self.placement_strategy == "addback" and not self.lossless_only
             else False,
             low_cpu_mem_usage=True,
+            use_triton=True if not self.placement_strategy =='colocate' else False,
         )
         if delta_model not in self.req_count:
             self.req_count[delta_model] = 0
@@ -181,7 +187,12 @@ class FMZipPipeline:
             logger.info("loading skipped: all requested models are base model")
             return
         if offload_base_model:
-            self.base_models[gpu_id] = self.base_models[gpu_id].to("cpu")
+            logger.info("offloading base model")
+            self.base_models[gpu_id] = self.base_models[gpu_id].to(
+                "cpu",
+                non_blocking=True
+            )
+            logger.info("base model offloaded")
         if self.placement_strategy in ["colocate", "addback"]:
             [
                 self._load_delta(delta, device=f"cuda:{gpu_id}")
@@ -200,7 +211,7 @@ class FMZipPipeline:
             )
         if offload_base_model:
             # move back
-            self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
+            self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id, non_blocking=True)
 
     def report_meminfo(self):
         # force garbage collection and free memory
@@ -213,20 +224,18 @@ class FMZipPipeline:
         logger.warning(f"PyTorch free/total: {free / 1e9:.2f}/{total / 1e9:.2f} GB")
 
     def _evict_deltas(self, deltas: List[str]):
-        # if all deltas are base model, no need to evict
-        if all([delta == self.base_model_name for delta in deltas]):
-            logger.info("eviction skipped: all requested models are base model")
-            return
+        print(f"len model pool: {len(self.model_pool)}")
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:
-            logger.warning(f"Evicting {len(deltas)} models/deltas")
+            req_count_loaded = {k: v for k, v in self.req_count.items() if k in self.model_pool}
+            print(f"req_count_loaded: {req_count_loaded}")
             # sort req_count by value
-            to_evict_models = sorted(self.req_count, key=self.req_count.get)[
+            to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
                 : len(deltas)
             ]
+            logger.info(f"evicting {to_evict_models}")
             for delta in to_evict_models:
                 try:
                     del self.model_pool[delta]
-                    del self.req_count[delta]
                 except KeyError:
                     pass
 

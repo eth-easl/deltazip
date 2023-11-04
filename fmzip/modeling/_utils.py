@@ -71,7 +71,7 @@ def make_quant(
             else:
                 real_bits = bits
             new_layer = QuantLinear(
-                real_bits, in_features, out_features, tmp.bias is not None
+                real_bits, in_features, out_features, tmp.bias is not None, use_triton=use_triton
             )
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))

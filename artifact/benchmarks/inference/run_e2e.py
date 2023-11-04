@@ -8,7 +8,6 @@ from loguru import logger
 from timeit import default_timer as timer
 import sched, time
 
-
 endpoint = "http://localhost:8000"
 inference_results = []
 
@@ -138,14 +137,15 @@ def run(args):
             }
         )
         inference_results = []
-
-    with open(args.output, "w") as fp:
+    output = args.workload.replace("workloads", "results") + ".json"
+    # create dir if not exists
+    os.makedirs(os.path.dirname(output), exist_ok=True)
+    with open(output, "w") as fp:
         json.dump(benchmark_results, fp)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--workload", type=str, default="")
-    parser.add_argument("--output", type=str, default="")
     args = parser.parse_args()
     run(args)

@@ -33,7 +33,9 @@ from ..core.quant import Quantizer
 from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
+from ..nn_modules.qlinear_cuda import QuantLinear
 
+triton_has_warmup = False
 
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
@@ -1109,15 +1111,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         with cp.cuda.Device(0):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
-        print(f"decompressing tensors on device {device}")
         tensors = losslesscompressor.decompress_state_dict(
             tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16, target_device=device
         )
         # move tensors to target device
         # print model keys
         model.load_state_dict(tensors, strict=False, assign=True)
-        print("model device after loading")
-        print(model.device)
         model = model.to(device)
         if isinstance(
             compress_config, AutoCompressionConfig
@@ -1145,10 +1144,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 "can't get model's sequence length from model config, will set to 2048."
             )
             model.seqlen = 2048
+        global triton_has_warmup
+        if not triton_has_warmup and use_triton:
+            QuantLinear.warmup(model, seqlen=model.seqlen)
+            triton_has_warmup = True
         model.eval()
         del losslesscompressor
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)
-
 
 __all__ = ["BaseFMZipModelForCausalLM", "BaseCompressionConfig"]

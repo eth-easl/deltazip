@@ -22,7 +22,6 @@ class HuggingFacePipeline:
     ) -> None:
         self.current_model = None
         self.loaded_models = {}
-        self.loaded_model_names = set()
         self.base_model = base_model
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             base_model, use_fast=True
@@ -53,15 +52,16 @@ class HuggingFacePipeline:
     def _evict_deltas(self, deltas: List[str]):
         print(f"len model pool: {len(self.loaded_models)}")
         if len(self.loaded_models) + len(deltas) > self.max_num_models:
-            logger.warning(f"Evicting {len(deltas)} models/deltas")
+            req_count_loaded = {k: v for k, v in self.req_count.items() if k in self.loaded_models}
+            print(f"req_count_loaded: {req_count_loaded}")
             # sort req_count by value
-            to_evict_models = sorted(self.req_count, key=self.req_count.get)[
+            to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
                 : len(deltas)
             ]
+            logger.info(f"evicting {to_evict_models}")
             for delta in to_evict_models:
                 try:
                     del self.loaded_models[delta]
-                    del self.req_count[delta]
                 except KeyError:
                     pass
 
@@ -96,6 +96,7 @@ class HuggingFacePipeline:
                         batch_inputs[k] = batch_inputs[k].to(f"cuda:{model_device}")
                     loading_end = timer()
                     inference_start = timer()
+                    logger.info("loaded models: {}".format(self.loaded_models.keys()))
                     output = self.loaded_models[model_name].generate(
                         **batch_inputs, **kwargs
                     )
@@ -136,8 +137,7 @@ class HuggingFacePipeline:
     @torch.inference_mode()
     def _load_target_model(self, model_name: str, gpu_id=None):
         logger.info(f"loading {model_name}...")
-        logger.info(f"loaded models: {self.loaded_model_names}")
-        if model_name not in self.loaded_model_names:
+        if model_name not in self.loaded_models:
             if gpu_id is None:
                 model_device = self._find_device()
             else:
@@ -152,7 +152,6 @@ class HuggingFacePipeline:
                     torch.device(f"cuda:{model_device}")
                 )
                 self.device_models[int(model_device)].append(model_name)
-                self.loaded_model_names.add(model_name)
         else:
             logger.info(f"{model_name} already loaded, skipping...")
             model_device = None
