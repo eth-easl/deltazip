@@ -1,14 +1,14 @@
 import os
 import sys
+import torch
 from timeit import default_timer as timer
 from fmzip.pipelines import FMZipPipeline
 from loguru import logger
-
 logger.remove()
-logger.add(sys.stdout, level="WARNING")
+logger.add(sys.stdout, level="ERROR")
 
 base_model = "openlm-research/open_llama_3b_v2"
-
+ 
 requests = [
     ("Computer Science is about ", ".cache/compressed_models/3b-parameters/openllama-chat-1"),
     ("Alan Turing is ", ".cache/compressed_models/3b-parameters/openllama-chat-2"),
@@ -28,23 +28,23 @@ def addback():
         placement_strategy='addback',
         offload_base_model=True,
     )
-    return pipeline.generate(requests)
+    return pipeline.generate(requests, max_new_tokens=64)
 
 def colocate():
     pipeline = FMZipPipeline(
         base_model=base_model,
         max_num_deltas=8,
-        batch_size=5,
+        batch_size=6,
         placement_strategy='colocate'
     )
-    return pipeline.generate(requests)
+    return pipeline.generate(requests, max_new_tokens=64)
 
 def benchmark():
-    start = timer()
-    addback()
-    end = timer()
-    print(f"[Addback]: {end - start:.2f}s")
-
+    # start = timer()
+    # addback()
+    # end = timer()
+    # print(f"[Addback]: {end - start:.2f}s")
+    torch.cuda.empty_cache()
     start = timer()
     colocate()
     end = timer()

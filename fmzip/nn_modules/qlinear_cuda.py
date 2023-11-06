@@ -43,9 +43,6 @@ class QuantLinear(nn.Module):
         global _autogptq_cuda_available
         if bits not in [2, 3, 4, 8]:
             raise NotImplementedError("Only 2,3,4,8 bits are supported.")
-        if trainable:
-            _autogptq_cuda_available = False
-
         self.infeatures = infeatures
         self.outfeatures = outfeatures
         self.bits = bits
