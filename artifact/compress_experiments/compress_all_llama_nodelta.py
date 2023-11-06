@@ -10,7 +10,7 @@ out_dir = os.path.join(
     "experiments",
     "fmzip",
     "compressed_models",
-    "3b0.5s_nodelta",
+    "3b0.75s_nodelta",
     "open_llama_3b_v2",
 )
 ar_dataset = os.path.join(cache_folder, "datasets", "qi", "ar")
@@ -21,7 +21,7 @@ for task in tasks:
     steps = os.listdir(os.path.join(in_folder, task))
     for step in steps:
         if not os.path.exists(os.path.join(out_dir, task, step, "config.json")):
-            job = f"python cli/compress.py --target-model {os.path.join(in_folder, task, step)} --outdir {os.path.join(out_dir, task, step)} --dataset {os.path.join(ar_dataset, task+'.train.jsonl')} --n-samples 256 --bits 3 --group-size 128 --sparsity 0.5 --lossless gdeflate --base-model openlm-research/open_llama_3b_v2"
+            job = f"python cli/compress.py --target-model {os.path.join(in_folder, task, step)} --outdir {os.path.join(out_dir, task, step)} --dataset {os.path.join(ar_dataset, task+'.train.jsonl')} --n-samples 256 --bits 3 --group-size 128 --sparsity 0.75 --lossless gdeflate --base-model openlm-research/open_llama_3b_v2"
             jobs.append(job)
 
 os.system("ts -S 4")
