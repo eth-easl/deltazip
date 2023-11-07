@@ -10,8 +10,8 @@ logger.add(sys.stdout, level="ERROR")
 base_model = "openlm-research/open_llama_3b_v2"
  
 requests = [
-    ("Computer Science is about ", ".cache/compressed_models/2bits-openllama"),
-    ("Alan Turing is ", ".cache/compressed_models/2bits-openllama"),
+    ("Computer Science is about ", ".cache/compressed_models/3bits-openllama"),
+    ("Alan Turing is ", ".cache/compressed_models/3bits-openllama"),
     # ("Von Neumann is ", ".cache/compressed_models/3b-parameters/openllama-chat-3"),
     # ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-4"),
     # ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-5"),

@@ -416,7 +416,7 @@ class QuantLinear(nn.Module):
         else:
             # triton
             out_shape = x.shape[:-1] + (self.outfeatures,)
-            quant_linear_fn = QuantLinearFunction if self.trainable else QuantLinearInferenceOnlyFunction
+            quant_linear_fn = QuantLinearInferenceOnlyFunction
             out = quant_linear_fn.apply(
                 x.reshape(-1, x.shape[-1]),
                 self.qweight,
@@ -426,7 +426,6 @@ class QuantLinear(nn.Module):
                 self.bits,
                 self.maxq
             )
-
         out = out.half().reshape(out_shape)
         out = out + self.bias if self.bias is not None else out
         return out
