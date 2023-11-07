@@ -10,14 +10,14 @@ logger.add(sys.stdout, level="ERROR")
 base_model = "openlm-research/open_llama_3b_v2"
  
 requests = [
-    ("Computer Science is about ", ".cache/compressed_models/3b-parameters/openllama-chat-1"),
-    ("Alan Turing is ", ".cache/compressed_models/3b-parameters/openllama-chat-2"),
-    ("Von Neumann is ", ".cache/compressed_models/3b-parameters/openllama-chat-3"),
-    ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-4"),
-    ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-5"),
-    ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-6"),
-    ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-7"),
-    ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-8"),
+    ("Computer Science is about ", ".cache/compressed_models/2bits-openllama"),
+    ("Alan Turing is ", ".cache/compressed_models/2bits-openllama"),
+    # ("Von Neumann is ", ".cache/compressed_models/3b-parameters/openllama-chat-3"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-4"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-5"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-6"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-7"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/openllama-chat-8"),
 ]
 
 def addback():
@@ -28,7 +28,10 @@ def addback():
         placement_strategy='addback',
         offload_base_model=True,
     )
-    return pipeline.generate(requests, max_new_tokens=64)
+    compute_start = timer()
+    output = pipeline.generate(requests, max_new_tokens=128)
+    compute_end = timer()
+    return output, compute_end - compute_start
 
 def colocate():
     pipeline = FMZipPipeline(
@@ -37,18 +40,17 @@ def colocate():
         batch_size=6,
         placement_strategy='colocate'
     )
-    return pipeline.generate(requests, max_new_tokens=64)
+    compute_start = timer()
+    output = pipeline.generate(requests, max_new_tokens=128)
+    compute_end = timer()
+    return output, compute_end-compute_start
 
 def benchmark():
-    # start = timer()
-    # addback()
-    # end = timer()
-    # print(f"[Addback]: {end - start:.2f}s")
+    output, time = addback()
+    print(f"[Addback]: {time:.2f}s")
     torch.cuda.empty_cache()
-    start = timer()
-    colocate()
-    end = timer()
-    print(f"[Colocate]: {end - start:.2f}s")
+    output, time = colocate()
+    print(f"[Colocate]: {time:.2f}s")
 
 if __name__ == "__main__":
     benchmark()

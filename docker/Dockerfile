@@ -1,4 +1,4 @@
-FROM xzyaoi/fmsys:0.0.7
+FROM xzyaoi/fmsys:0.0.9
 
 ENV CUDA_HOME=/usr/local/cuda
 ENV CPATH=$CUDA_HOME/include:$CPATH
@@ -11,4 +11,3 @@ RUN pip install -r requirements.txt
 RUN pip install --no-deps .
 # update pytorch to nightly version
 # for load_state_dict(assign=True)
-RUN pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu121

@@ -28,11 +28,12 @@ def llama_mlp_forward(self, x):
     gate_xs = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
-            up_x = self.delta[i].up_proj(delta_x)
-            gate_x = self.delta[i].gate_proj(delta_x)
-            up_xs.append(up_x)
-            gate_xs.append(gate_x)
+            with torch.cuda.stream(torch.cuda.Stream()):
+                delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
+                up_x = self.delta[i].up_proj(delta_x)
+                gate_x = self.delta[i].gate_proj(delta_x)
+                up_xs.append(up_x)
+                gate_xs.append(gate_x)
         else:
             up_xs.append(torch.zeros_like(hidden_states[i]))
             gate_xs.append(torch.zeros_like(gate_hidden_states[i]))
@@ -51,11 +52,12 @@ def llama_mlp_forward(self, x):
 
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            delta_hidden_states = hidden_states[i].to(
-                self.delta[i].down_proj.qweight.device, non_blocking=True
-            )
-            delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states)
-            delta_down_hss.append(delta_down_hidden_states)
+            with torch.cuda.stream(torch.cuda.Stream()):
+                delta_hidden_states = hidden_states[i].to(
+                    self.delta[i].down_proj.qweight.device, non_blocking=True
+                )
+                delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states)
+                delta_down_hss.append(delta_down_hidden_states)
         else:
             delta_down_hss.append(torch.zeros_like(base_down_hidden_states[i]))
 
@@ -85,12 +87,13 @@ def llama_attention_forward(
 
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            delta_hidden_states = hidden_states[i].to(
-                self.delta[i].q_proj.qweight.device, non_blocking=True
-            )
-            qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
-            ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
-            vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
+            with torch.cuda.stream(torch.cuda.Stream()):
+                delta_hidden_states = hidden_states[i].to(
+                    self.delta[i].q_proj.qweight.device, non_blocking=True
+                )
+                qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
+                ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
+                vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
         else:
             qs_deltas.append(torch.zeros_like(base_query_states[i]))
             ks_deltas.append(torch.zeros_like(base_key_states[i]))
@@ -173,11 +176,12 @@ def llama_attention_forward(
     delta_attn_outputs = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            delta_attn_output = self.delta[i].o_proj(
-                attn_output[i].to(
-                    self.delta[i].o_proj.qweight.device, non_blocking=True
+            with torch.cuda.stream(torch.cuda.Stream()):
+                delta_attn_output = self.delta[i].o_proj(
+                    attn_output[i].to(
+                        self.delta[i].o_proj.qweight.device, non_blocking=True
+                    )
                 )
-            )
         else:
             delta_attn_output = torch.zeros_like(base_attn_output[i])
         delta_attn_outputs.append(delta_attn_output)
@@ -197,15 +201,16 @@ def llama_rmsnorm_forward(self, hidden_states):
     outputs = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            self.delta[i].weight += self.weight.to(self.delta[i].weight.device)
-            hs = hidden_states[i]
-            input_dtype = hs.dtype
-            hs = hs.to(torch.float32)
-            variance = hs.pow(2).mean(-1, keepdim=True)
-            hs = hs * torch.rsqrt(variance + self.variance_epsilon)
-            out = self.delta[i].weight * hs.to(input_dtype)
-            outputs.append(out)
-            self.delta[i].weight -= self.weight
+            with torch.cuda.stream(torch.cuda.Stream()):
+                self.delta[i].weight += self.weight.to(self.delta[i].weight.device)
+                hs = hidden_states[i]
+                input_dtype = hs.dtype
+                hs = hs.to(torch.float32)
+                variance = hs.pow(2).mean(-1, keepdim=True)
+                hs = hs * torch.rsqrt(variance + self.variance_epsilon)
+                out = self.delta[i].weight * hs.to(input_dtype)
+                outputs.append(out)
+                self.delta[i].weight -= self.weight
         else:
             hs = hidden_states[i]
             input_dtype = hs.dtype
@@ -261,11 +266,12 @@ def llama_forcausallm_forward(
     logits = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            self.delta[i].lm_head.weight += self.lm_head.weight.to(
-                self.delta[i].lm_head.weight.device
-            )
-            logit = self.delta[i].lm_head(hidden_states[i])
-            self.delta[i].lm_head.weight -= self.lm_head.weight
+            with torch.cuda.stream(torch.cuda.Stream()):
+                self.delta[i].lm_head.weight += self.lm_head.weight.to(
+                    self.delta[i].lm_head.weight.device
+                )
+                logit = self.delta[i].lm_head(hidden_states[i])
+                self.delta[i].lm_head.weight -= self.lm_head.weight
         else:
             logit = self.lm_head(hidden_states[i].to(BASE_DEVICE))
         logits.append(logit)
@@ -362,11 +368,12 @@ def llama_model_forward(
         input_embeds = []
         for i in range(len(self.delta)):
             if self.delta[i] is not None:
-                self.delta[i].embed_tokens.weight += self.embed_tokens.weight.to(
-                    self.delta[i].embed_tokens.weight.device
-                )
-                input_embeds.append(self.delta[i].embed_tokens(input_ids[i]))
-                self.delta[i].embed_tokens.weight -= self.embed_tokens.weight
+                with torch.cuda.stream(torch.cuda.Stream()):
+                    self.delta[i].embed_tokens.weight += self.embed_tokens.weight.to(
+                        self.delta[i].embed_tokens.weight.device
+                    )
+                    input_embeds.append(self.delta[i].embed_tokens(input_ids[i]))
+                    self.delta[i].embed_tokens.weight -= self.embed_tokens.weight
             else:
                 input_embeds.append(self.embed_tokens(input_ids[i].to(BASE_DEVICE)))
         inputs_embeds = torch.stack(input_embeds, dim=0)
@@ -380,21 +387,17 @@ def llama_model_forward(
     attention_mask = self._prepare_decoder_attention_mask(
         attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
     )
-
     hidden_states = inputs_embeds
-
     if self.gradient_checkpointing and self.training:
         if use_cache:
             logger.warning_once(
                 "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
             )
             use_cache = False
-
     # decoder layers
     all_hidden_states = () if output_hidden_states else None
     all_self_attns = () if output_attentions else None
     next_decoder_cache = () if use_cache else None
-
     for idx, decoder_layer in enumerate(self.layers):
         if output_hidden_states:
             all_hidden_states += (hidden_states,)
@@ -402,12 +405,10 @@ def llama_model_forward(
         past_key_value = past_key_values[idx] if past_key_values is not None else None
 
         if self.gradient_checkpointing and self.training:
-
             def create_custom_forward(module):
                 def custom_forward(*inputs):
                     # None for past_key_value
                     return module(*inputs, past_key_value, output_attentions)
-
                 return custom_forward
 
             layer_outputs = torch.utils.checkpoint.checkpoint(
