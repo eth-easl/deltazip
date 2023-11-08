@@ -103,9 +103,11 @@ class FMZipPipeline:
             prepare_end = timer()
             inference_start = timer()
             kwargs["do_sample"] = False
+            torch.cuda.profiler.cudart().cudaProfilerStart()
             output = self.base_models[int(gpu_id)].generate(
                 **batch_inputs, **kwargs
             )
+            torch.cuda.profiler.cudart().cudaProfilerStop()
             inference_end = timer()
             output = self.tokenizer.batch_decode(output)
             tokenize_time = tokenize_end - tokenize_start

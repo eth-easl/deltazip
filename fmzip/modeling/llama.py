@@ -84,10 +84,10 @@ def llama_attention_forward(
     base_query_states = self.q_proj(hidden_states)
     base_key_states = self.k_proj(hidden_states)
     base_value_states = self.v_proj(hidden_states)
-
+    streams = [torch.cuda.Stream() for i in range(len(self.delta))]
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            with torch.cuda.stream(torch.cuda.Stream()):
+            with torch.cuda.stream(streams[i]):
                 delta_hidden_states = hidden_states[i].to(
                     self.delta[i].q_proj.qweight.device, non_blocking=True
                 )
@@ -176,7 +176,7 @@ def llama_attention_forward(
     delta_attn_outputs = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            with torch.cuda.stream(torch.cuda.Stream()):
+            with torch.cuda.stream(streams[i]):
                 delta_attn_output = self.delta[i].o_proj(
                     attn_output[i].to(
                         self.delta[i].o_proj.qweight.device, non_blocking=True
