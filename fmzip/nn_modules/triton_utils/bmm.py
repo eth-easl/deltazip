@@ -1,6 +1,5 @@
 import torch
-from logging import getLogger
-from torch.cuda.amp import custom_bwd, custom_fwd
+from torch.cuda.amp import custom_fwd
 
 import triton
 import triton.language as tl
@@ -13,7 +12,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
                 'BLOCK_SIZE_M': 64,
                 'BLOCK_SIZE_N': 256,
                 'BLOCK_SIZE_K': 32,
-                'GROUP_SIZE_M': 8
+                'GROUP_SIZE_M': 16
             },
             num_stages=4,
             num_warps=4
@@ -23,7 +22,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
                 'BLOCK_SIZE_M': 128,
                 'BLOCK_SIZE_N': 128,
                 'BLOCK_SIZE_K': 32,
-                'GROUP_SIZE_M': 8
+                'GROUP_SIZE_M': 16
             },
             num_stages=4,
             num_warps=4
@@ -69,7 +68,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
             num_warps=8
         )
     ],
-    key=['M', 'N', 'K'],
+    key=['B', 'M', 'N', 'K'],
     nearest_power_of_two=True,
     prune_configs_by={
         'early_config_prune': custom_autotune.matmul248_kernel_config_pruner,
@@ -81,7 +80,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
 def quant_bmm_248_kernel(
     a_ptr, b_ptr, c_ptr,
     scales_ptr, zeros_ptr, g_ptr,
-    M, N, K,
+    M, N, K, B,
     bits, maxq,
     stride_am, stride_ak,
     stride_bk, stride_bn,
@@ -184,7 +183,7 @@ def quant_bmm_248(input, qweight, scales, qzeros, g_idx, bits, maxq):
         quant_bmm_248_kernel[grid](
             input, qweight, output,
             scales, qzeros, g_idx,
-            input.shape[1], qweight.shape[2], input.shape[2],
+            input.shape[1], qweight.shape[2], input.shape[2], bsz,
             bits, maxq,
             input.stride(1), input.stride(2),
             qweight.stride(1), qweight.stride(2),
