@@ -52,7 +52,7 @@ def main():
     #     )
     # del delta_model
     torch.cuda.empty_cache()
-    mpm = FMZipPipeline(base_model=base_model_name, placement_strategy='colocate')
+    mpm = FMZipPipeline(base_model=base_model_name, placement_strategy="colocate")
     # print("delta model results")
     # print(delta_model_results)
     print("Mixed Precision Model results")

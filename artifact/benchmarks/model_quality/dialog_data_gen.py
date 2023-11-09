@@ -7,6 +7,7 @@ import json
 def format_lmsys(prompt):
     return f"USER: {prompt}\nASSISTANT:"
 
+
 trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
 traces_data = []
 

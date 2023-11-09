@@ -6,11 +6,12 @@ from timeit import default_timer as timer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 
+
 def main(args):
     tokenizer = AutoTokenizer.from_pretrained("meta-llama/Llama-2-7b-hf", use_fast=True)
     with torch.inference_mode():
         logger.info("Loading target model")
-        
+
         delta_model = AutoFMZipModelForCausalLM.from_compressed(
             args.target_model, strict=False, device="cuda", unpack=False
         )

@@ -4,6 +4,7 @@ from typing import Optional, Tuple
 from transformers.models.gpt_neox.modeling_gpt_neox import apply_rotary_pos_emb
 from ._base import *
 
+
 def gpt_neox_attention_forward(
     self,
     hidden_states: torch.FloatTensor,
@@ -19,9 +20,13 @@ def gpt_neox_attention_forward(
     # Attention heads [batch, seq_len, hidden_size]
     #   --> [batch, seq_len, (np * 3 * head_size)]
     qkv = self.query_key_value(hidden_states)
-    qkv += torch.stack([
-        self.delta[i].query_key_value(hidden_states[i]) for i in range(len(self.delta))
-    ], dim=0)
+    qkv += torch.stack(
+        [
+            self.delta[i].query_key_value(hidden_states[i])
+            for i in range(len(self.delta))
+        ],
+        dim=0,
+    )
 
     # [batch, seq_len, (num_heads * 3 * head_size)]
     #   --> [batch, seq_len, num_heads, 3 * head_size]
@@ -67,10 +72,9 @@ def gpt_neox_attention_forward(
 
     main_attn_output = self.dense(attn_output)
 
-
-    main_attn_output += torch.stack([
-        self.delta[i].dense(attn_output[i]) for i in range(len(self.delta))
-    ], dim=0)
+    main_attn_output += torch.stack(
+        [self.delta[i].dense(attn_output[i]) for i in range(len(self.delta))], dim=0
+    )
     outputs = (main_attn_output, present)
     if output_attentions:
         outputs += (attn_weights,)

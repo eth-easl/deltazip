@@ -9,6 +9,7 @@ from transformers.models.gpt_neox.modeling_gpt_neox import (
 from fmzip.modeling.neox_monkey_patch import gpt_neox_attention_forward
 from timeit import default_timer as timer
 
+
 def forward(
     self,
     hidden_states: torch.FloatTensor,
@@ -72,7 +73,6 @@ def forward(
     return outputs
 
 
-
 transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = forward
 
 config = GPTNeoXConfig(
@@ -110,7 +110,9 @@ print(ft_attention_output)
 print("Time taken for FT attention: ", end - start)
 # now parallelize the attention forward
 
-transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = gpt_neox_attention_forward
+transformers.models.gpt_neox.modeling_gpt_neox.GPTNeoXAttention.forward = (
+    gpt_neox_attention_forward
+)
 
 setattr(base_attention, "delta", [delta_attention])
 start = timer()

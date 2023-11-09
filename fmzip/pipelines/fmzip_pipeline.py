@@ -104,9 +104,7 @@ class FMZipPipeline:
             inference_start = timer()
             kwargs["do_sample"] = False
             torch.cuda.profiler.cudart().cudaProfilerStart()
-            output = self.base_models[int(gpu_id)].generate(
-                **batch_inputs, **kwargs
-            )
+            output = self.base_models[int(gpu_id)].generate(**batch_inputs, **kwargs)
             torch.cuda.profiler.cudart().cudaProfilerStop()
             inference_end = timer()
             output = self.tokenizer.batch_decode(output)
@@ -163,7 +161,7 @@ class FMZipPipeline:
             if self.placement_strategy == "addback" and not self.lossless_only
             else False,
             low_cpu_mem_usage=True,
-            use_triton=True if not self.placement_strategy =='colocate' else False,
+            use_triton=True if not self.placement_strategy == "colocate" else False,
         )
         if delta_model not in self.req_count:
             self.req_count[delta_model] = 0
@@ -191,8 +189,7 @@ class FMZipPipeline:
         if offload_base_model:
             logger.info("offloading base model")
             self.base_models[gpu_id] = self.base_models[gpu_id].to(
-                "cpu",
-                non_blocking=True
+                "cpu", non_blocking=True
             )
             logger.info("base model offloaded")
         if self.placement_strategy in ["colocate", "addback"]:
@@ -213,7 +210,9 @@ class FMZipPipeline:
             )
         if offload_base_model:
             # move back
-            self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id, non_blocking=True)
+            self.base_models[gpu_id] = self.base_models[gpu_id].to(
+                gpu_id, non_blocking=True
+            )
 
     def report_meminfo(self):
         # force garbage collection and free memory
@@ -228,7 +227,9 @@ class FMZipPipeline:
     def _evict_deltas(self, deltas: List[str]):
         print(f"len model pool: {len(self.model_pool)}")
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:
-            req_count_loaded = {k: v for k, v in self.req_count.items() if k in self.model_pool}
+            req_count_loaded = {
+                k: v for k, v in self.req_count.items() if k in self.model_pool
+            }
             print(f"req_count_loaded: {req_count_loaded}")
             # sort req_count by value
             to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
