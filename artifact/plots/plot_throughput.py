@@ -30,7 +30,7 @@ def plot(args):
     total_jobs = df["id"].max()
     df = df.sort_values(by=["time_elapsed"], ascending=True)
     print(df)
-    df['throughput'] = (total_jobs) / df['time_elapsed']
+    df["throughput"] = (total_jobs) / df["time_elapsed"]
     fig = px.bar(df, x="provider", y="throughput")
     fig.update_layout(
         width=800,

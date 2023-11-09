@@ -2,7 +2,8 @@ import os
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-def get_size(start_path = '.'):
+
+def get_size(start_path="."):
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(start_path):
         for f in filenames:
@@ -11,6 +12,7 @@ def get_size(start_path = '.'):
             if not os.path.islink(fp):
                 total_size += os.path.getsize(fp)
     return total_size / 1024 / 1024
+
 
 finetune_task = "task112_asset_simple_sentence_identification"
 base_model = AutoModelForCausalLM.from_pretrained("openlm-research/open_llama_3b_v2")
@@ -33,4 +35,6 @@ for step in steps:
         zero_percent = 100 * (delta.numel() - delta.nonzero().size(0)) / delta.numel()
         total_numel += delta.numel()
         total_zero += delta.numel() - delta.nonzero().size(0)
-    print(f"{step},{100 * total_zero / total_numel:.2f},{get_size(ft_model_path)/get_size(compressed_step_path):.2f}")
+    print(
+        f"{step},{100 * total_zero / total_numel:.2f},{get_size(ft_model_path)/get_size(compressed_step_path):.2f}"
+    )

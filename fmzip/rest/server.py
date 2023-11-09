@@ -31,9 +31,7 @@ gpu_id_start = 1
 def randomly_clear_disk_cache():
     # randomly clear disk cache with a probability of 0.5
     if random.random() < 1:
-        subprocess.Popen(
-            "sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True
-        )
+        subprocess.Popen("sudo echo 3 | sudo tee /proc/sys/vm/drop_caches", shell=True)
         pass
 
 
@@ -102,6 +100,7 @@ class BackgroundTasks(threading.Thread):
 
 
 results = {}
+
 
 class InferenceTask(BaseModel):
     id: Optional[int] = ""

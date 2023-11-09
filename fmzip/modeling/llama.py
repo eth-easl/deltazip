@@ -22,21 +22,28 @@ from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
-use_bmm = True
+use_bmm = False
+
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
     gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE, non_blocking=True))
     if use_bmm:
         inputs = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in x], dim=0)
-        hidden_states += BatchedQuantLinearForward(inputs, [l.up_proj for l in self.delta])
-        gate_hidden_states += BatchedQuantLinearForward(inputs, [l.gate_proj for l in self.delta])
+        hidden_states += BatchedQuantLinearForward(
+            inputs, [l.up_proj for l in self.delta]
+        )
+        gate_hidden_states += BatchedQuantLinearForward(
+            inputs, [l.gate_proj for l in self.delta]
+        )
     else:
         up_xs = []
         gate_xs = []
         for i in range(len(self.delta)):
             if self.delta[i] is not None:
-                delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
+                delta_x = x[i].to(
+                    self.delta[i].up_proj.qweight.device, non_blocking=True
+                )
                 up_x = self.delta[i].up_proj(delta_x)
                 gate_x = self.delta[i].gate_proj(delta_x)
                 up_xs.append(up_x)
@@ -58,8 +65,13 @@ def llama_mlp_forward(self, x):
     delta_down_hss = []
 
     if use_bmm:
-        inputs = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0)
-        hidden_states = BatchedQuantLinearForward(inputs, [l.down_proj for l in self.delta]) + base_down_hidden_states
+        inputs = torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0
+        )
+        hidden_states = (
+            BatchedQuantLinearForward(inputs, [l.down_proj for l in self.delta])
+            + base_down_hidden_states
+        )
     else:
         for i in range(len(self.delta)):
             if self.delta[i] is not None:
@@ -92,10 +104,18 @@ def llama_attention_forward(
     base_key_states = self.k_proj(hidden_states)
     base_value_states = self.v_proj(hidden_states)
     if use_bmm:
-        inputs = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0)
-        qs_delta_hidden_states = BatchedQuantLinearForward(inputs, [l.q_proj for l in self.delta])
-        ks_delta_hidden_states = BatchedQuantLinearForward(inputs, [l.k_proj for l in self.delta])
-        vs_delta_hidden_states = BatchedQuantLinearForward(inputs, [l.v_proj for l in self.delta])
+        inputs = torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0
+        )
+        qs_delta_hidden_states = BatchedQuantLinearForward(
+            inputs, [l.q_proj for l in self.delta]
+        )
+        ks_delta_hidden_states = BatchedQuantLinearForward(
+            inputs, [l.k_proj for l in self.delta]
+        )
+        vs_delta_hidden_states = BatchedQuantLinearForward(
+            inputs, [l.v_proj for l in self.delta]
+        )
     else:
         qs_deltas = []
         ks_deltas = []
@@ -188,20 +208,28 @@ def llama_attention_forward(
 
     base_attn_output = self.o_proj(attn_output.to(BASE_DEVICE, non_blocking=True))
     delta_attn_outputs = []
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            delta_attn_output = self.delta[i].o_proj(
-                attn_output[i].to(
-                    self.delta[i].o_proj.qweight.device, non_blocking=True
+    if use_bmm:
+        b_input = torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in attn_output], dim=0
+        )
+        attn_output = base_attn_output + BatchedQuantLinearForward(
+            b_input, [l.o_proj for l in self.delta]
+        )
+    else:
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
+                delta_attn_output = self.delta[i].o_proj(
+                    attn_output[i].to(
+                        self.delta[i].o_proj.qweight.device, non_blocking=True
+                    )
                 )
-            )
-        else:
-            delta_attn_output = torch.zeros_like(base_attn_output[i])
-        delta_attn_outputs.append(delta_attn_output)
+            else:
+                delta_attn_output = torch.zeros_like(base_attn_output[i])
+            delta_attn_outputs.append(delta_attn_output)
 
-    attn_output = base_attn_output + torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0
-    )
+        attn_output = base_attn_output + torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0
+        )
 
     if not output_attentions:
         attn_weights = None
@@ -415,10 +443,12 @@ def llama_model_forward(
         past_key_value = past_key_values[idx] if past_key_values is not None else None
 
         if self.gradient_checkpointing and self.training:
+
             def create_custom_forward(module):
                 def custom_forward(*inputs):
                     # None for past_key_value
                     return module(*inputs, past_key_value, output_attentions)
+
                 return custom_forward
 
             layer_outputs = torch.utils.checkpoint.checkpoint(

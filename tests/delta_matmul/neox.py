@@ -8,6 +8,7 @@ from transformers.models.gpt_neox.modeling_gpt_neox import (
 )
 from fmzip.modeling.gpt_neox import parallelize_neox
 
+
 def forward(
     self,
     hidden_states: torch.FloatTensor,

@@ -3,6 +3,7 @@ from typing import List
 from fmzip.nn_modules.qlinear_cuda import QuantLinear
 from fmzip.nn_modules.triton_utils.bmm import quant_bmm_248
 
+
 def BatchedQuantLinearForward(inputs, layers: List[QuantLinear]):
     # assuming all bits are the same
     bits = layers[0].bits

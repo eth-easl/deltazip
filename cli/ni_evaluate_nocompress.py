@@ -8,6 +8,7 @@ from transformers import AutoTokenizer, TextGenerationPipeline, AutoModelForCaus
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 
+
 def postprocess(text):
     # logic:
     # if starts with \n, take the remaining
@@ -25,7 +26,9 @@ def generate(args):
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
     tokenizer.pad_token_id = tokenizer.eos_token_id
     with torch.inference_mode():
-        target_model = AutoModelForCausalLM.from_pretrained(args.target_model, torch_dtype=torch.bfloat16)
+        target_model = AutoModelForCausalLM.from_pretrained(
+            args.target_model, torch_dtype=torch.bfloat16
+        )
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]
         # to leave more memory for higher-throughput generation,

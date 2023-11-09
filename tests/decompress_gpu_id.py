@@ -3,11 +3,14 @@ import cupy as cp
 from safetensors.numpy import safe_open
 from fmzip.lossless.compressor import LosslessCompressor
 
-losslesscompressor = LosslessCompressor(algorithm='gdeflate', device_id=0)
+losslesscompressor = LosslessCompressor(algorithm="gdeflate", device_id=0)
 
 tensors = {}
 
-with safe_open('.cache/compressed_models/3b-parameters/openllama-chat-1/fmzip-compressed.safetensors', framework="numpy") as f:
+with safe_open(
+    ".cache/compressed_models/3b-parameters/openllama-chat-1/fmzip-compressed.safetensors",
+    framework="numpy",
+) as f:
     metadata = f.metadata()
     keys = f.keys()
     for key in keys:

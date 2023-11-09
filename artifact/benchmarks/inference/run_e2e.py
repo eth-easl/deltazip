@@ -53,7 +53,7 @@ def issue_queries(queries):
     global threads
     global inference_results
     time_range = [x["timestamp"] for x in queries]
-    max_time = max(time_range) + 1  
+    max_time = max(time_range) + 1
     # execute for one more second
     start = timer()
     for time in np.arange(0, max_time, time_step):

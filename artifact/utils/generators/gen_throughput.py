@@ -9,11 +9,14 @@ from artifact.utils.generators.arrival import PoissonProcess
 to_eval_models = [f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)]
 to_eval_models = ["openlm-research/open_llama_3b_v2"] + to_eval_models
 
+
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 
+
 def format_lmsys(prompt):
     return f"USER: {prompt}\nASSISTANT:"
+
 
 def get_dialogs():
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
@@ -22,8 +25,10 @@ def get_dialogs():
         all_dialogs.append(format_openllama(item["conversation_a"][0]["content"]))
     return all_dialogs
 
+
 def pick_model(idx):
     trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
+
 
 def prepare_poisson(args):
     print(args)
@@ -50,12 +55,13 @@ def prepare_poisson(args):
                 "id": idx,
                 "prompt": dialogs[idx],
                 "timestamp": poisson_ticks[idx],
-                "model": mapped_models[idx]
+                "model": mapped_models[idx],
             }
         )
     os.makedirs(os.path.dirname(args.output), exist_ok=True)
     with open(args.output, "w") as fp:
         json.dump({"queries": traces_data}, fp)
+
 
 def main(args):
     if args.trace == "poisson":
