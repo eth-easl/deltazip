@@ -50,11 +50,11 @@ def colocate():
     return output, compute_end-compute_start
 
 def benchmark():
-    addback() # warmup
-    output, time = addback()
-    print(output)
-    print(f"[Addback]: {time:.2f}s")
-    torch.cuda.empty_cache()
+    # addback() # warmup
+    # output, time = addback()
+    # print(output)
+    # print(f"[Addback]: {time:.2f}s")
+    # torch.cuda.empty_cache()
     colocate() # warmup
     torch.cuda.empty_cache()
     output, time = colocate()

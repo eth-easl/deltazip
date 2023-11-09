@@ -22,7 +22,7 @@ from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
-use_bmm = False
+use_bmm = True
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))

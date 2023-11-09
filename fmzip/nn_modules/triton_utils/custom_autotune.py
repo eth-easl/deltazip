@@ -90,7 +90,8 @@ class CustomizedTritonAutoTuner(triton.KernelInterface):
                 pruned_configs = self.prune_configs(kwargs)
                 bench_start = time.time()
                 timings = {config: self._bench(*args, config=config, **kwargs) for config in pruned_configs}
-                
+                str_timings = {str(config): timings[config] for config in timings}
+                print(str_timings)
                 bench_end = time.time()
                 self.bench_time = bench_end - bench_start
                 self.cache[key] = builtins.min(timings, key=timings.get)
@@ -100,7 +101,6 @@ class CustomizedTritonAutoTuner(triton.KernelInterface):
         else:
             config = self.configs[0]
         self.best_config = config
-        print(self.best_config)
         if config.pre_hook is not None:
             config.pre_hook(self.nargs)
         return self.fn.run(*args, num_warps=config.num_warps, num_stages=config.num_stages, **kwargs, **config.kwargs)
