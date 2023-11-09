@@ -17,53 +17,63 @@ from transformers.modeling_outputs import (
 )
 from loguru import logger
 
+from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
+
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
+use_bmm = True
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
     gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE, non_blocking=True))
-    up_xs = []
-    gate_xs = []
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            with torch.cuda.stream(torch.cuda.Stream()):
+    if use_bmm:
+        inputs = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in x], dim=0)
+        hidden_states += BatchedQuantLinearForward(inputs, [l.up_proj for l in self.delta])
+        gate_hidden_states += BatchedQuantLinearForward(inputs, [l.gate_proj for l in self.delta])
+    else:
+        up_xs = []
+        gate_xs = []
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
                 delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
                 up_x = self.delta[i].up_proj(delta_x)
                 gate_x = self.delta[i].gate_proj(delta_x)
                 up_xs.append(up_x)
                 gate_xs.append(gate_x)
-        else:
-            up_xs.append(torch.zeros_like(hidden_states[i]))
-            gate_xs.append(torch.zeros_like(gate_hidden_states[i]))
+            else:
+                up_xs.append(torch.zeros_like(hidden_states[i]))
+                gate_xs.append(torch.zeros_like(gate_hidden_states[i]))
 
-    hidden_states += torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in up_xs], dim=0
-    )
-    gate_hidden_states += torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in gate_xs], dim=0
-    )
+        hidden_states += torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in up_xs], dim=0
+        )
+        gate_hidden_states += torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in gate_xs], dim=0
+        )
 
     hidden_states = self.act_fn(gate_hidden_states) * hidden_states
     base_hidden_states = hidden_states.to(BASE_DEVICE, non_blocking=True)
     base_down_hidden_states = self.down_proj(base_hidden_states)
     delta_down_hss = []
 
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            with torch.cuda.stream(torch.cuda.Stream()):
+    if use_bmm:
+        inputs = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0)
+        hidden_states = BatchedQuantLinearForward(inputs, [l.down_proj for l in self.delta]) + base_down_hidden_states
+    else:
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
                 delta_hidden_states = hidden_states[i].to(
                     self.delta[i].down_proj.qweight.device, non_blocking=True
                 )
                 delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states)
                 delta_down_hss.append(delta_down_hidden_states)
-        else:
-            delta_down_hss.append(torch.zeros_like(base_down_hidden_states[i]))
+            else:
+                delta_down_hss.append(torch.zeros_like(base_down_hidden_states[i]))
 
-    hidden_states = base_down_hidden_states + torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in delta_down_hss], dim=0
-    )
+        hidden_states = base_down_hidden_states + torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in delta_down_hss], dim=0
+        )
     return hidden_states
 
 
@@ -78,35 +88,39 @@ def llama_attention_forward(
     padding_mask: Optional[torch.LongTensor] = None,
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
     bsz, q_len, _ = hidden_states.size()
-    qs_deltas = []
-    ks_deltas = []
-    vs_deltas = []
     base_query_states = self.q_proj(hidden_states)
     base_key_states = self.k_proj(hidden_states)
     base_value_states = self.v_proj(hidden_states)
-    streams = [torch.cuda.Stream() for i in range(len(self.delta))]
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            with torch.cuda.stream(streams[i]):
+    if use_bmm:
+        inputs = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0)
+        qs_delta_hidden_states = BatchedQuantLinearForward(inputs, [l.q_proj for l in self.delta])
+        ks_delta_hidden_states = BatchedQuantLinearForward(inputs, [l.k_proj for l in self.delta])
+        vs_delta_hidden_states = BatchedQuantLinearForward(inputs, [l.v_proj for l in self.delta])
+    else:
+        qs_deltas = []
+        ks_deltas = []
+        vs_deltas = []
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
                 delta_hidden_states = hidden_states[i].to(
                     self.delta[i].q_proj.qweight.device, non_blocking=True
                 )
                 qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
                 ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
                 vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
-        else:
-            qs_deltas.append(torch.zeros_like(base_query_states[i]))
-            ks_deltas.append(torch.zeros_like(base_key_states[i]))
-            vs_deltas.append(torch.zeros_like(base_value_states[i]))
-    qs_delta_hidden_states = torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0
-    )
-    ks_delta_hidden_states = torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in ks_deltas], dim=0
-    )
-    vs_delta_hidden_states = torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0
-    )
+            else:
+                qs_deltas.append(torch.zeros_like(base_query_states[i]))
+                ks_deltas.append(torch.zeros_like(base_key_states[i]))
+                vs_deltas.append(torch.zeros_like(base_value_states[i]))
+            qs_delta_hidden_states = torch.stack(
+                [x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0
+            )
+            ks_delta_hidden_states = torch.stack(
+                [x.to(BASE_DEVICE, non_blocking=True) for x in ks_deltas], dim=0
+            )
+            vs_delta_hidden_states = torch.stack(
+                [x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0
+            )
     query_states = base_query_states + qs_delta_hidden_states
     key_states = base_key_states + ks_delta_hidden_states
     value_states = base_value_states + vs_delta_hidden_states
@@ -176,12 +190,11 @@ def llama_attention_forward(
     delta_attn_outputs = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            with torch.cuda.stream(streams[i]):
-                delta_attn_output = self.delta[i].o_proj(
-                    attn_output[i].to(
-                        self.delta[i].o_proj.qweight.device, non_blocking=True
-                    )
+            delta_attn_output = self.delta[i].o_proj(
+                attn_output[i].to(
+                    self.delta[i].o_proj.qweight.device, non_blocking=True
                 )
+            )
         else:
             delta_attn_output = torch.zeros_like(base_attn_output[i])
         delta_attn_outputs.append(delta_attn_output)
@@ -201,16 +214,15 @@ def llama_rmsnorm_forward(self, hidden_states):
     outputs = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            with torch.cuda.stream(torch.cuda.Stream()):
-                self.delta[i].weight += self.weight.to(self.delta[i].weight.device)
-                hs = hidden_states[i]
-                input_dtype = hs.dtype
-                hs = hs.to(torch.float32)
-                variance = hs.pow(2).mean(-1, keepdim=True)
-                hs = hs * torch.rsqrt(variance + self.variance_epsilon)
-                out = self.delta[i].weight * hs.to(input_dtype)
-                outputs.append(out)
-                self.delta[i].weight -= self.weight
+            self.delta[i].weight += self.weight.to(self.delta[i].weight.device)
+            hs = hidden_states[i]
+            input_dtype = hs.dtype
+            hs = hs.to(torch.float32)
+            variance = hs.pow(2).mean(-1, keepdim=True)
+            hs = hs * torch.rsqrt(variance + self.variance_epsilon)
+            out = self.delta[i].weight * hs.to(input_dtype)
+            outputs.append(out)
+            self.delta[i].weight -= self.weight
         else:
             hs = hidden_states[i]
             input_dtype = hs.dtype
@@ -266,12 +278,11 @@ def llama_forcausallm_forward(
     logits = []
     for i in range(len(self.delta)):
         if self.delta[i] is not None:
-            with torch.cuda.stream(torch.cuda.Stream()):
-                self.delta[i].lm_head.weight += self.lm_head.weight.to(
-                    self.delta[i].lm_head.weight.device
-                )
-                logit = self.delta[i].lm_head(hidden_states[i])
-                self.delta[i].lm_head.weight -= self.lm_head.weight
+            self.delta[i].lm_head.weight += self.lm_head.weight.to(
+                self.delta[i].lm_head.weight.device
+            )
+            logit = self.delta[i].lm_head(hidden_states[i])
+            self.delta[i].lm_head.weight -= self.lm_head.weight
         else:
             logit = self.lm_head(hidden_states[i].to(BASE_DEVICE))
         logits.append(logit)
@@ -368,12 +379,11 @@ def llama_model_forward(
         input_embeds = []
         for i in range(len(self.delta)):
             if self.delta[i] is not None:
-                with torch.cuda.stream(torch.cuda.Stream()):
-                    self.delta[i].embed_tokens.weight += self.embed_tokens.weight.to(
-                        self.delta[i].embed_tokens.weight.device
-                    )
-                    input_embeds.append(self.delta[i].embed_tokens(input_ids[i]))
-                    self.delta[i].embed_tokens.weight -= self.embed_tokens.weight
+                self.delta[i].embed_tokens.weight += self.embed_tokens.weight.to(
+                    self.delta[i].embed_tokens.weight.device
+                )
+                input_embeds.append(self.delta[i].embed_tokens(input_ids[i]))
+                self.delta[i].embed_tokens.weight -= self.embed_tokens.weight
             else:
                 input_embeds.append(self.embed_tokens(input_ids[i].to(BASE_DEVICE)))
         inputs_embeds = torch.stack(input_embeds, dim=0)
