@@ -18,10 +18,10 @@ requests = [
     ("Alan Turing is ", ".cache/compressed_models/2bits-openllama"),
     ("Von Neumann is ", ".cache/compressed_models/2bits-openllama"),
     ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
 ]
 
 
@@ -47,7 +47,7 @@ def colocate():
     pipeline = FMZipPipeline(
         base_model=base_model,
         max_num_deltas=8,
-        batch_size=8,
+        batch_size=4,
         placement_strategy="colocate",
     )
     torch.cuda.synchronize()

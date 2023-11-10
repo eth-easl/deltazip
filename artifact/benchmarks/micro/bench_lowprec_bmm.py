@@ -37,12 +37,12 @@ for batch_size in range(1, BATCH_SIZE + 1):
         end = timer()
         if iter > 0:
             loop_time = end - start
-        torch.cuda.synchronize()
-        start = timer()
-        b_qweights = torch.stack(qweights)
         b_qzeros = torch.stack(qzeros)
+        b_qweights = torch.stack(qweights)
         b_scales = torch.stack(scales)
         b_g_idx = torch.stack(g_idx)
+        torch.cuda.synchronize()
+        start = timer()
         batch_results = quant_bmm_248(
             input, b_qweights, b_scales, b_qzeros, b_g_idx, BITS, MAX_Q
         )
