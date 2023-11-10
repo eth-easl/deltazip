@@ -50,7 +50,7 @@ if BUILD_CUDA_EXT:
 
     if not CUDA_VERSION:
         print(
-            f"Trying to compile auto-gptq for CUDA, but Pytorch {torch.__version__} "
+            f"Trying to compile fmzip for CUDA, but Pytorch {torch.__version__} "
             "is installed without CUDA support."
         )
         sys.exit(-1)
@@ -62,9 +62,6 @@ if BUILD_CUDA_EXT:
 include_dirs = ["fmzip/core/csrc"]
 with open("requirements.txt") as f:
     requirements = f.read().splitlines()
-
-extras_require = {"triton": ["triton==2.0.0"], "test": ["parameterized"]}
-
 
 if BUILD_CUDA_EXT:
     from torch.utils import cpp_extension
@@ -162,7 +159,6 @@ common_setup_kwargs.update(additional_setup_kwargs)
 setup(
     packages=find_packages(),
     install_requires=requirements,
-    extras_require=extras_require,
     include_dirs=include_dirs,
     python_requires=">=3.8.0",
     **common_setup_kwargs,

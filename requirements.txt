@@ -16,3 +16,4 @@ tokenizers
 parameterized
 pydantic
 accelerate
+ninja
