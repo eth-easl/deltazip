@@ -10,7 +10,7 @@ from fmzip.nn_modules.triton_utils.kernels import (
     transpose_quant_matmul_248,
     quant_matmul_inference_only_248,
     QuantLinearFunction,
-    QuantLinearInferenceOnlyFunction
+    QuantLinearInferenceOnlyFunction,
 )
 
 try:
@@ -43,9 +43,6 @@ class QuantLinear(nn.Module):
         global _autogptq_cuda_available
         if bits not in [2, 3, 4, 8]:
             raise NotImplementedError("Only 2,3,4,8 bits are supported.")
-        if trainable:
-            _autogptq_cuda_available = False
-
         self.infeatures = infeatures
         self.outfeatures = outfeatures
         self.bits = bits
@@ -356,7 +353,9 @@ class QuantLinear(nn.Module):
                     zeros = zeros.reshape(self.scales.shape)
 
                     weight = torch.bitwise_right_shift(
-                        torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
+                        torch.unsqueeze(self.qweight, 1).expand(
+                            -1, 32 // self.bits, -1
+                        ),
                         self.wf.unsqueeze(-1),
                     ).to(torch.int16 if self.bits == 8 else torch.int8)
                     torch.bitwise_and(weight, (2**self.bits) - 1, out=weight)
@@ -373,7 +372,11 @@ class QuantLinear(nn.Module):
                     )
                     zeros = zeros & 0x7
                     zeros = torch.cat(
-                        [zeros[:, :, 0, :11], zeros[:, :, 1, 1:12], zeros[:, :, 2, 1:11]],
+                        [
+                            zeros[:, :, 0, :11],
+                            zeros[:, :, 1, 1:12],
+                            zeros[:, :, 2, 1:11],
+                        ],
                         dim=2,
                     )
 
@@ -392,12 +395,15 @@ class QuantLinear(nn.Module):
                     )
                     weight = weight & 0x7
                     weight = torch.cat(
-                        [weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]], dim=1
+                        [weight[:, 0, :11], weight[:, 1, 1:12], weight[:, 2, 1:11]],
+                        dim=1,
                     )
                 else:
                     raise NotImplementedError("Only 2,3,4,8 bits are supported.")
 
-                weight = weight.reshape(weight.shape[0] * weight.shape[1], weight.shape[2])
+                weight = weight.reshape(
+                    weight.shape[0] * weight.shape[1], weight.shape[2]
+                )
                 num_itr = self.g_idx.shape[0] // x.shape[-1]
                 if num_itr == 1:
                     weights = self.scales[self.g_idx.long()] * (
@@ -412,14 +418,15 @@ class QuantLinear(nn.Module):
                         zeros_i = zeros[:, i * num_dim : (i + 1) * num_dim]
                         g_idx_i = self.g_idx[i * num_dim : (i + 1) * num_dim]
                         weights.append(
-                            scale_i[g_idx_i.long()] * (weight_i - zeros_i[g_idx_i.long()])
+                            scale_i[g_idx_i.long()]
+                            * (weight_i - zeros_i[g_idx_i.long()])
                         )
                     weights = torch.cat(weights, dim=1)
                 out = torch.matmul(x.half(), weights)
         else:
             # triton
             out_shape = x.shape[:-1] + (self.outfeatures,)
-            quant_linear_fn = QuantLinearFunction if self.trainable else QuantLinearInferenceOnlyFunction
+            quant_linear_fn = QuantLinearInferenceOnlyFunction
             out = quant_linear_fn.apply(
                 x.reshape(-1, x.shape[-1]),
                 self.qweight,
@@ -427,13 +434,12 @@ class QuantLinear(nn.Module):
                 self.qzeros,
                 self.g_idx,
                 self.bits,
-                self.maxq
+                self.maxq,
             )
-
         out = out.half().reshape(out_shape)
         out = out + self.bias if self.bias is not None else out
         return out
-    
+
     @classmethod
     def warmup(cls, model, transpose=False, seqlen=2048):
         """
@@ -451,24 +457,41 @@ class QuantLinear(nn.Module):
             n = m.outfeatures
 
             if (k, n) not in kn_values:
-                kn_values[(k, n)] = (m.qweight, m.scales, m.qzeros, m.g_idx, m.bits, m.maxq)
+                kn_values[(k, n)] = (
+                    m.qweight,
+                    m.scales,
+                    m.qzeros,
+                    m.g_idx,
+                    m.bits,
+                    m.maxq,
+                )
 
-        logger.info(f'Found {len(kn_values)} unique KN Linear values.')
-        logger.info('Warming up autotune cache ...')
+        logger.info(f"Found {len(kn_values)} unique KN Linear values.")
+        logger.info("Warming up autotune cache ...")
         with torch.no_grad():
             for m in tqdm(range(0, math.ceil(math.log2(seqlen)) + 1)):
-                m = 2 ** m
-                for (k, n), (qweight, scales, qzeros, g_idx, bits, maxq) in kn_values.items():
+                m = 2**m
+                for (k, n), (
+                    qweight,
+                    scales,
+                    qzeros,
+                    g_idx,
+                    bits,
+                    maxq,
+                ) in kn_values.items():
                     if transpose:
                         a = torch.randn(m, k, dtype=torch.float16, device=model.device)
                         quant_matmul_248(a, qweight, scales, qzeros, g_idx, bits, maxq)
                         a = torch.randn(m, n, dtype=torch.float16, device=model.device)
-                        transpose_quant_matmul_248(a, qweight, scales, qzeros, g_idx, bits, maxq)
+                        transpose_quant_matmul_248(
+                            a, qweight, scales, qzeros, g_idx, bits, maxq
+                        )
                     else:
                         a = torch.randn(m, k, dtype=torch.float16, device=model.device)
-                        quant_matmul_inference_only_248(a, qweight, scales, qzeros, g_idx, bits, maxq)
+                        quant_matmul_inference_only_248(
+                            a, qweight, scales, qzeros, g_idx, bits, maxq
+                        )
         del kn_values
-
 
 
 __all__ = ["QuantLinear"]

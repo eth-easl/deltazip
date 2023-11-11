@@ -3,11 +3,15 @@ import torch
 from tqdm import tqdm
 import torch.nn.functional as F
 
+
 def svd_decomposition(matrix, rank):
     U, S, Vh = torch.pca_lowrank(matrix, q=rank)
-    return U @ torch.diag_embed(S),  Vh.T
+    return U @ torch.diag_embed(S), Vh.T
 
-def low_rank_decomposition(W, rank, learning_rate=0.01, max_iterations=500, tolerance=1e-5, X = None):
+
+def low_rank_decomposition(
+    W, rank, learning_rate=0.01, max_iterations=500, tolerance=1e-5, X=None
+):
     L = torch.rand((W.shape[0], rank), device=W.device)
     R = torch.rand((rank, W.shape[1]), device=W.device)
     tick = time.time()
@@ -28,10 +32,10 @@ def low_rank_decomposition(W, rank, learning_rate=0.01, max_iterations=500, tole
                 break
     else:
         for i in range(max_iterations):
-            diff_part1 = W@X
+            diff_part1 = W @ X
             diff_part2 = L @ R @ X
             diff = diff_part1 - diff_part2
-            gradient_L = -2 * (diff @ ((R@X).T))
+            gradient_L = -2 * (diff @ ((R @ X).T))
             gradient_R = -2 * (L.T @ diff @ X.T)
             L -= learning_rate * gradient_L
             R -= learning_rate * gradient_R
@@ -39,6 +43,7 @@ def low_rank_decomposition(W, rank, learning_rate=0.01, max_iterations=500, tole
                 early_stop = True
                 break
     return L, R
+
 
 def torch_autograd(W, X, rank, lr, steps):
     L = torch.rand((W.shape[0], rank), device=W.device, requires_grad=True)
@@ -53,7 +58,8 @@ def torch_autograd(W, X, rank, lr, steps):
         optimizer.step()
     return L, R
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     FULL_RANK = 128
     LOW_RANK = 16
     TARGET_SIZE = 2
@@ -61,13 +67,9 @@ if __name__=="__main__":
     W = torch.rand((FULL_RANK, FULL_RANK))
     input_matrix = torch.rand((FULL_RANK, TARGET_SIZE))
     output_matrix = W @ input_matrix
-    
+
     L_sensitive, R_sensitive = low_rank_decomposition(
-        W,
-        LOW_RANK,
-        learning_rate=1e-6,
-        max_iterations=1000,
-        X=input_matrix
+        W, LOW_RANK, learning_rate=1e-6, max_iterations=1000, X=input_matrix
     )
     L_noinput, R_noinput = low_rank_decomposition(
         W,

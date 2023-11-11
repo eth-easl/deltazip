@@ -9,6 +9,7 @@ from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 from tqdm import tqdm
 
+
 def postprocess(text):
     # logic:
     # if starts with \n, take the remaining
@@ -71,7 +72,6 @@ def generate(args):
             top_k=args.top_k,
             top_p=args.top_p,
             return_full_text=False,
-            
         )
         results = []
         for datum, output in zip(data, outputs):

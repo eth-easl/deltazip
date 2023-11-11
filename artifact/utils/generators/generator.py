@@ -17,6 +17,7 @@ to_eval_models = [
 # ]
 # to_eval_models =["openlm-research/open_llama_3b_v2"] + to_eval_models
 
+
 def format_openllama(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 
@@ -63,7 +64,7 @@ def prepare_lmsys(args):
         traces_data.append(
             {
                 "id": idx,
-                "prompt":format_lmsys(item["conversation_a"][0]["content"]),
+                "prompt": format_lmsys(item["conversation_a"][0]["content"]),
                 "timestamp": (item["tstamp"] - min_tstamp) / 1000,
                 "model": mapping[item["model_a"]],
             }

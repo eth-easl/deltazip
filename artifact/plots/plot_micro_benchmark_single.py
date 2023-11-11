@@ -19,7 +19,7 @@ def plot(args):
 
         min_length = item["gen_configs"]["min_length"]
         for idx, query in enumerate(item["results"]):
-            query = query['response']['response']
+            query = query["response"]["response"]
             # total_elapsed = query['total_elapsed']
             tokenize_time = query["measure"]["tokenize_time"]
             loading_time = query["measure"]["loading_time"]

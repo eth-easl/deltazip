@@ -37,6 +37,7 @@ from ..nn_modules.qlinear_cuda import QuantLinear
 
 triton_has_warmup = False
 
+
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
     tolerance: float = field(default=1e-9)
@@ -1112,7 +1113,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             for key in tensors.keys():
                 tensors[key] = cp.array(tensors[key], copy=False)
         tensors = losslesscompressor.decompress_state_dict(
-            tensors, tensor_shapes, tensor_dtypes, use_bfloat16=use_bfloat16, target_device=device
+            tensors,
+            tensor_shapes,
+            tensor_dtypes,
+            use_bfloat16=use_bfloat16,
+            target_device=device,
         )
         # move tensors to target device
         # print model keys
@@ -1152,5 +1157,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         del losslesscompressor
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)
+
 
 __all__ = ["BaseFMZipModelForCausalLM", "BaseCompressionConfig"]

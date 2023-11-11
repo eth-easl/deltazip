@@ -66,7 +66,11 @@ class LosslessCompressor:
         return cp.asnumpy(compressed_tensor), tensor_shape, dtype
 
     def decompress_tensor(
-        self, compressed_tensor: cp.array, tensor_shape: tuple, dtype="fp16", target_device="cuda:0",
+        self,
+        compressed_tensor: cp.array,
+        tensor_shape: tuple,
+        dtype="fp16",
+        target_device="cuda:0",
     ):
         self.comp_manager.input_type = cp_dtype_maps[dtype]
         decompressed_tensor = self.comp_manager.decompress(compressed_tensor)
@@ -97,7 +101,10 @@ class LosslessCompressor:
             tensors = {}
             for key in compressed_state_dict.keys():
                 decompressed = self.decompress_tensor(
-                    compressed_state_dict[key], tensor_shapes[key], tensor_dtypes[key], target_device
+                    compressed_state_dict[key],
+                    tensor_shapes[key],
+                    tensor_dtypes[key],
+                    target_device,
                 )
                 if use_bfloat16:
                     tensors[key] = decompressed.bfloat16()

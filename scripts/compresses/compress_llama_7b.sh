@@ -1,3 +1,3 @@
 # python cli/compress.py --base-model meta-llama/Llama-2-7b-hf --target-model meta-llama/Llama-2-7b-chat-hf --dataset /home/xzyao/Documents/datasets/ni_calib/train/answer_verification.jsonl --bits 4 --sparsity 0.8 --outdir .cache/compressed_models/llama-2-7b --delta subtract --lossless gdeflate
 
-python cli/compress.py --base-model openlm-research/open_llama_3b_v2 --target-model xzyao/openllama-3b-chat --dataset /home/xzyao/Documents/datasets/ni_calib/train/answer_verification.jsonl --bits 2 --sparsity 0.2 --outdir .cache/compressed_models/2bits-openllama --delta subtract --lossless gdeflate
+python cli/compress.py --base-model openlm-research/open_llama_3b_v2 --target-model xzyao/openllama-3b-chat --dataset /home/xzyao/Documents/datasets/ni_calib/train/answer_verification.jsonl --bits 4 --sparsity 0.5 --outdir .cache/compressed_models/2bits-openllama --delta subtract --lossless gdeflate

@@ -38,7 +38,7 @@ class HuggingFacePipeline:
         self.device_models = {k: [] for k in range(get_gpu_count())}
         self.batch_size = batch_size
         logger.info("Max number of models: {}".format(self.max_num_models))
-    
+
     def report_meminfo(self):
         # force garbage collection and free memory
         torch.cuda.empty_cache()
@@ -52,7 +52,9 @@ class HuggingFacePipeline:
     def _evict_deltas(self, deltas: List[str]):
         print(f"len model pool: {len(self.loaded_models)}")
         if len(self.loaded_models) + len(deltas) > self.max_num_models:
-            req_count_loaded = {k: v for k, v in self.req_count.items() if k in self.loaded_models}
+            req_count_loaded = {
+                k: v for k, v in self.req_count.items() if k in self.loaded_models
+            }
             print(f"req_count_loaded: {req_count_loaded}")
             # sort req_count by value
             to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
@@ -100,7 +102,7 @@ class HuggingFacePipeline:
                     output = self.loaded_models[model_name].generate(
                         **batch_inputs, **kwargs
                     )
-                    
+
                     inference_end = timer()
                     output = self.tokenizer.batch_decode(output)
                     tokenize_time = tokenize_end - tokenize_start

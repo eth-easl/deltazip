@@ -17,51 +17,75 @@ from transformers.modeling_outputs import (
 )
 from loguru import logger
 
+from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
+
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
+
+use_bmm = False
 
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
     gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE, non_blocking=True))
-    up_xs = []
-    gate_xs = []
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            delta_x = x[i].to(self.delta[i].up_proj.qweight.device, non_blocking=True)
-            up_x = self.delta[i].up_proj(delta_x)
-            gate_x = self.delta[i].gate_proj(delta_x)
-            up_xs.append(up_x)
-            gate_xs.append(gate_x)
-        else:
-            up_xs.append(torch.zeros_like(hidden_states[i]))
-            gate_xs.append(torch.zeros_like(gate_hidden_states[i]))
+    if use_bmm:
+        inputs = torch.stack([x.to(BASE_DEVICE, non_blocking=True) for x in x], dim=0)
+        hidden_states += BatchedQuantLinearForward(
+            inputs, [l.up_proj for l in self.delta]
+        )
+        gate_hidden_states += BatchedQuantLinearForward(
+            inputs, [l.gate_proj for l in self.delta]
+        )
+    else:
+        up_xs = []
+        gate_xs = []
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
+                delta_x = x[i].to(
+                    self.delta[i].up_proj.qweight.device, non_blocking=True
+                )
+                up_x = self.delta[i].up_proj(delta_x)
+                gate_x = self.delta[i].gate_proj(delta_x)
+                up_xs.append(up_x)
+                gate_xs.append(gate_x)
+            else:
+                up_xs.append(torch.zeros_like(hidden_states[i]))
+                gate_xs.append(torch.zeros_like(gate_hidden_states[i]))
 
-    hidden_states += torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in up_xs], dim=0
-    )
-    gate_hidden_states += torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in gate_xs], dim=0
-    )
+        hidden_states += torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in up_xs], dim=0
+        )
+        gate_hidden_states += torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in gate_xs], dim=0
+        )
 
     hidden_states = self.act_fn(gate_hidden_states) * hidden_states
     base_hidden_states = hidden_states.to(BASE_DEVICE, non_blocking=True)
     base_down_hidden_states = self.down_proj(base_hidden_states)
     delta_down_hss = []
 
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            delta_hidden_states = hidden_states[i].to(
-                self.delta[i].down_proj.qweight.device, non_blocking=True
-            )
-            delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states)
-            delta_down_hss.append(delta_down_hidden_states)
-        else:
-            delta_down_hss.append(torch.zeros_like(base_down_hidden_states[i]))
+    if use_bmm:
+        inputs = torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0
+        )
+        hidden_states = (
+            BatchedQuantLinearForward(inputs, [l.down_proj for l in self.delta])
+            + base_down_hidden_states
+        )
+    else:
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
+                delta_hidden_states = hidden_states[i].to(
+                    self.delta[i].down_proj.qweight.device, non_blocking=True
+                )
+                delta_down_hidden_states = self.delta[i].down_proj(delta_hidden_states)
+                delta_down_hss.append(delta_down_hidden_states)
+            else:
+                delta_down_hss.append(torch.zeros_like(base_down_hidden_states[i]))
 
-    hidden_states = base_down_hidden_states + torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in delta_down_hss], dim=0
-    )
+        hidden_states = base_down_hidden_states + torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in delta_down_hss], dim=0
+        )
     return hidden_states
 
 
@@ -76,34 +100,47 @@ def llama_attention_forward(
     padding_mask: Optional[torch.LongTensor] = None,
 ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
     bsz, q_len, _ = hidden_states.size()
-    qs_deltas = []
-    ks_deltas = []
-    vs_deltas = []
     base_query_states = self.q_proj(hidden_states)
     base_key_states = self.k_proj(hidden_states)
     base_value_states = self.v_proj(hidden_states)
-
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            delta_hidden_states = hidden_states[i].to(
-                self.delta[i].q_proj.qweight.device, non_blocking=True
+    if use_bmm:
+        inputs = torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in hidden_states], dim=0
+        )
+        qs_delta_hidden_states = BatchedQuantLinearForward(
+            inputs, [l.q_proj for l in self.delta]
+        )
+        ks_delta_hidden_states = BatchedQuantLinearForward(
+            inputs, [l.k_proj for l in self.delta]
+        )
+        vs_delta_hidden_states = BatchedQuantLinearForward(
+            inputs, [l.v_proj for l in self.delta]
+        )
+    else:
+        qs_deltas = []
+        ks_deltas = []
+        vs_deltas = []
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
+                delta_hidden_states = hidden_states[i].to(
+                    self.delta[i].q_proj.qweight.device, non_blocking=True
+                )
+                qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
+                ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
+                vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
+            else:
+                qs_deltas.append(torch.zeros_like(base_query_states[i]))
+                ks_deltas.append(torch.zeros_like(base_key_states[i]))
+                vs_deltas.append(torch.zeros_like(base_value_states[i]))
+            qs_delta_hidden_states = torch.stack(
+                [x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0
             )
-            qs_deltas.append(self.delta[i].q_proj(delta_hidden_states))
-            ks_deltas.append(self.delta[i].k_proj(delta_hidden_states))
-            vs_deltas.append(self.delta[i].v_proj(delta_hidden_states))
-        else:
-            qs_deltas.append(torch.zeros_like(base_query_states[i]))
-            ks_deltas.append(torch.zeros_like(base_key_states[i]))
-            vs_deltas.append(torch.zeros_like(base_value_states[i]))
-    qs_delta_hidden_states = torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in qs_deltas], dim=0
-    )
-    ks_delta_hidden_states = torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in ks_deltas], dim=0
-    )
-    vs_delta_hidden_states = torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0
-    )
+            ks_delta_hidden_states = torch.stack(
+                [x.to(BASE_DEVICE, non_blocking=True) for x in ks_deltas], dim=0
+            )
+            vs_delta_hidden_states = torch.stack(
+                [x.to(BASE_DEVICE, non_blocking=True) for x in vs_deltas], dim=0
+            )
     query_states = base_query_states + qs_delta_hidden_states
     key_states = base_key_states + ks_delta_hidden_states
     value_states = base_value_states + vs_delta_hidden_states
@@ -171,20 +208,28 @@ def llama_attention_forward(
 
     base_attn_output = self.o_proj(attn_output.to(BASE_DEVICE, non_blocking=True))
     delta_attn_outputs = []
-    for i in range(len(self.delta)):
-        if self.delta[i] is not None:
-            delta_attn_output = self.delta[i].o_proj(
-                attn_output[i].to(
-                    self.delta[i].o_proj.qweight.device, non_blocking=True
+    if use_bmm:
+        b_input = torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in attn_output], dim=0
+        )
+        attn_output = base_attn_output + BatchedQuantLinearForward(
+            b_input, [l.o_proj for l in self.delta]
+        )
+    else:
+        for i in range(len(self.delta)):
+            if self.delta[i] is not None:
+                delta_attn_output = self.delta[i].o_proj(
+                    attn_output[i].to(
+                        self.delta[i].o_proj.qweight.device, non_blocking=True
+                    )
                 )
-            )
-        else:
-            delta_attn_output = torch.zeros_like(base_attn_output[i])
-        delta_attn_outputs.append(delta_attn_output)
+            else:
+                delta_attn_output = torch.zeros_like(base_attn_output[i])
+            delta_attn_outputs.append(delta_attn_output)
 
-    attn_output = base_attn_output + torch.stack(
-        [x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0
-    )
+        attn_output = base_attn_output + torch.stack(
+            [x.to(BASE_DEVICE, non_blocking=True) for x in delta_attn_outputs], dim=0
+        )
 
     if not output_attentions:
         attn_weights = None
@@ -380,21 +425,17 @@ def llama_model_forward(
     attention_mask = self._prepare_decoder_attention_mask(
         attention_mask, (batch_size, seq_length), inputs_embeds, past_key_values_length
     )
-
     hidden_states = inputs_embeds
-
     if self.gradient_checkpointing and self.training:
         if use_cache:
             logger.warning_once(
                 "`use_cache=True` is incompatible with gradient checkpointing. Setting `use_cache=False`..."
             )
             use_cache = False
-
     # decoder layers
     all_hidden_states = () if output_hidden_states else None
     all_self_attns = () if output_attentions else None
     next_decoder_cache = () if use_cache else None
-
     for idx, decoder_layer in enumerate(self.layers):
         if output_hidden_states:
             all_hidden_states += (hidden_states,)
