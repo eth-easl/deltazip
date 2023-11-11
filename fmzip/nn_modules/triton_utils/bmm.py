@@ -31,7 +31,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
         triton.Config(
             {
                 "BLOCK_SIZE_M": 128,
-                "BLOCK_SIZE_N": 128,
+                "BLOCK_SIZE_N": 512,
                 "BLOCK_SIZE_K": 32,
                 "GROUP_SIZE_M": 8,
             },
@@ -41,7 +41,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
         triton.Config(
             {
                 "BLOCK_SIZE_M": 64,
-                "BLOCK_SIZE_N": 128,
+                "BLOCK_SIZE_N": 512,
                 "BLOCK_SIZE_K": 32,
                 "GROUP_SIZE_M": 8,
             },
@@ -51,7 +51,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
         triton.Config(
             {
                 "BLOCK_SIZE_M": 128,
-                "BLOCK_SIZE_N": 32,
+                "BLOCK_SIZE_N": 512,
                 "BLOCK_SIZE_K": 32,
                 "GROUP_SIZE_M": 8,
             },

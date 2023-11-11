@@ -10,3 +10,4 @@ artifact/data
 artifact/benchmark_*.json
 *.sif
 *.csv
+*.png
