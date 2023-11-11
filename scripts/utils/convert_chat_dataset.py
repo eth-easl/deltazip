@@ -1,7 +1,6 @@
 import json
 import argparse
 
-
 def convert(format):
     if format == "meta":
         user_identifier = "[INST]"

@@ -3,4 +3,4 @@ singularity shell \
     --bind $PWD/:/app/ \
     --pwd /app \
     --nv \
-    fmzip_0.0.2.sif
+    fmzip_0.0.4.sif

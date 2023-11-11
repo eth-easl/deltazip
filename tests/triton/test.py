@@ -10,7 +10,7 @@ def add_kernel(
     output_ptr,  # *Pointer* to output vector.
     n_elements,  # Size of the vector.
     BLOCK_SIZE: tl.constexpr,  # Number of elements each program should process.
-                 # NOTE: `constexpr` so it can be used as a shape value.
+    # NOTE: `constexpr` so it can be used as a shape value.
 ):
     # There are multiple 'programs' processing different data. We identify which program
     # we are here:
