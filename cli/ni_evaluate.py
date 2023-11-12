@@ -12,6 +12,7 @@ from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 def postprocess(text):
     # logic:
     # if starts with \n, take the remaining
+    text = text.strip()
     if text.startswith("\n"):
         text = text.split("\n")[1]
     # if there's \n left, take the first part
