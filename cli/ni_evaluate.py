@@ -32,7 +32,7 @@ def generate(args):
         lossless="gdeflate",
         damp_percent=0.02,
     )
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=False)
     tokenizer.pad_token_id = tokenizer.eos_token_id
     with torch.inference_mode():
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
@@ -74,6 +74,7 @@ def generate(args):
         for datum, output in zip(data, outputs):
             result = datum
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]
+            result["raw_prediction"] = [o["generated_text"] for o in output]
             results.append(result)
         with open(args.output_file, "w") as f:
             for datum in data:

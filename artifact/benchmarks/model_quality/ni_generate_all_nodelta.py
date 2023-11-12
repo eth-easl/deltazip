@@ -3,6 +3,7 @@ import os
 CACHE_PATH = os.environ.get("YAO_CACHE", "")
 folder_name = "3b0.75s_nodelta"
 model_family = "open_llama_3b_v2"
+
 compressed_models = os.path.join(
     CACHE_PATH, f"experiments/fmzip/compressed_models/{folder_name}/{model_family}"
 )
@@ -10,13 +11,17 @@ compressed_models = os.path.join(
 data_dir = os.path.join(CACHE_PATH, "datasets/qi/test")
 
 tasks = os.listdir(compressed_models)
-output_dir = os.path.join(
-    CACHE_PATH, f"experiments/fmzip/generation_llama/generation_results_{folder_name}"
-)
+
 if model_family == "open_llama_3b_v2":
     base_model = "openlm-research/open_llama_3b_v2"
+    output_dir = os.path.join(
+        CACHE_PATH, f"experiments/fmzip/generation_llama/generation_results_{folder_name}"
+    )
 else:
     base_model = "EleutherAI/pythia-2.8b-deduped"
+    output_dir = os.path.join(
+        CACHE_PATH, f"experiments/fmzip/generation_pythia/generation_results_{folder_name}"
+    )
 jobs = []
 for task in tasks:
     steps = os.listdir(os.path.join(compressed_models, task))
