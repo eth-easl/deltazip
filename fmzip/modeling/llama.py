@@ -28,6 +28,9 @@ BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 use_bmm = True
 use_flash_attn = True
 
+if use_flash_attn:
+    torch.backends.cuda.enable_flash_sdp(True)
+
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
     gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE, non_blocking=True))
