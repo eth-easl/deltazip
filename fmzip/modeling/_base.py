@@ -1121,7 +1121,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         )
         # move tensors to target device
         # print model keys
-        model.load_state_dict(tensors, strict=False, assign=True)
+        missing_keys, unexpected_keys = model.load_state_dict(tensors, strict=True, assign=True)
+        if missing_keys:
+            logger.warning(f"missing keys: {missing_keys}")
+        if unexpected_keys:
+            logger.warning(f"unexpected keys: {unexpected_keys}")
         model = model.to(device)
         if isinstance(
             compress_config, AutoCompressionConfig

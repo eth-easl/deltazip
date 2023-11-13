@@ -8,11 +8,11 @@ from transformers import AutoTokenizer, TextGenerationPipeline
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 
-
 def postprocess(text):
     # logic:
-    # if starts with \n, take the remaining
+    # remove leading and trailing spaces
     text = text.strip()
+    # if starts with \n, take the remaining
     if text.startswith("\n"):
         text = text.split("\n")[1]
     # if there's \n left, take the first part
@@ -34,14 +34,16 @@ def generate(args):
         damp_percent=0.02,
     )
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=False)
-    tokenizer.pad_token_id = tokenizer.eos_token_id
+    tokenizer.pad_token = tokenizer.bos_token
+    tokenizer.pad_token_id = tokenizer.bos_token_id
+    tokenizer.padding_side = "left"
     with torch.inference_mode():
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config
         )
+        base_model = base_model.half()
         base_model = base_model.to(torch.device("cuda"))
         logger.info("Loading target model")
-        start = timer()
         delta_model = AutoFMZipModelForCausalLM.from_compressed(
             args.target_model, strict=False, device="cpu", unpack=True
         )
