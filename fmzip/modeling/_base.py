@@ -106,7 +106,7 @@ class BaseCompressionConfig(PushToHubMixin):
     group_rows: int = field(default=1)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
-    sym: bool = field(default=True)
+    sym: bool = field(default=False)
     true_sequential: bool = field(default=True)
     lossless: str = field(default="none")
     dtype: str = field(default="fp16")
