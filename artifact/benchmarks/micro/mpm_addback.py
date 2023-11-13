@@ -18,12 +18,12 @@ requests = [
     ("Alan Turing is ", ".cache/compressed_models/2bits-openllama"),
     ("Von Neumann is ", ".cache/compressed_models/2bits-openllama"),
     ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    ("QED is ", ".cache/compressed_models/2bits-openllama"),
 ]
-
+warmup_models = [req[1] for req in requests]
 
 def addback():
     pipeline = FMZipPipeline(
@@ -42,12 +42,11 @@ def addback():
     compute_end = timer()
     return output, compute_end - compute_start
 
-
 def colocate():
     pipeline = FMZipPipeline(
         base_model=base_model,
         max_num_deltas=8,
-        batch_size=4,
+        batch_size=8,
         placement_strategy="colocate",
     )
     torch.cuda.synchronize()
@@ -61,12 +60,12 @@ def colocate():
 
 
 def benchmark():
-    addback()  # warmup
-    output, time = addback()
-    print(output)
-    print(f"[Addback]: {time:.2f}s")
-    torch.cuda.empty_cache()
-    print("warming up")
+    # addback()  # warmup
+    # output, time = addback()
+    # print(output)
+    # print(f"[Addback]: {time:.2f}s")
+    # torch.cuda.empty_cache()
+    # print("warming up")
     colocate()  # warmup
     torch.cuda.empty_cache()
     print("actual..")

@@ -479,18 +479,10 @@ class QuantLinear(nn.Module):
                     bits,
                     maxq,
                 ) in kn_values.items():
-                    if transpose:
-                        a = torch.randn(m, k, dtype=torch.float16, device=model.device)
-                        quant_matmul_248(a, qweight, scales, qzeros, g_idx, bits, maxq)
-                        a = torch.randn(m, n, dtype=torch.float16, device=model.device)
-                        transpose_quant_matmul_248(
-                            a, qweight, scales, qzeros, g_idx, bits, maxq
-                        )
-                    else:
-                        a = torch.randn(m, k, dtype=torch.float16, device=model.device)
-                        quant_matmul_inference_only_248(
-                            a, qweight, scales, qzeros, g_idx, bits, maxq
-                        )
+                    a = torch.randn(m, k, dtype=torch.float16, device=model.device)
+                    quant_matmul_inference_only_248(
+                        a, qweight, scales, qzeros, g_idx, bits, maxq
+                    )
         del kn_values
 
 
