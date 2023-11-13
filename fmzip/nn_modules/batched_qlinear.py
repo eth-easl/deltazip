@@ -16,7 +16,6 @@ def BatchedQuantLinearForward(inputs, layers: List[QuantLinear]):
     return quant_bmm_248(
         inputs, b_qweights, b_scales, b_qzeros, b_g_idx, bits, max_q)
 
-CompiledBatchedQuantLinearForward = torch.compile(BatchedQuantLinearForward, mode="reduce-overhead")
 
 def WarmupBQLForward(models: List, b = 8, seqlen=2048):
     """

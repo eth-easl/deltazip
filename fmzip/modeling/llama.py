@@ -15,14 +15,139 @@ from transformers.modeling_outputs import (
     CausalLMOutputWithPast,
     BaseModelOutputWithPast,
 )
+import torch.nn.functional as F
 from loguru import logger
+from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 
-from fmzip.nn_modules.batched_qlinear import CompiledBatchedQuantLinearForward as BatchedQuantLinearForward
+from flash_attn import flash_attn_func, flash_attn_varlen_func
+from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
 use_bmm = True
+
+def _get_unpad_data(attention_mask):
+    seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
+    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
+    max_seqlen_in_batch = seqlens_in_batch.max().item()
+    cu_seqlens = F.pad(torch.cumsum(seqlens_in_batch, dim=0, dtype=torch.torch.int32), (1, 0))
+    return (
+        indices,
+        cu_seqlens,
+        max_seqlen_in_batch,
+    )
+
+def _upad_input(self, query_layer, key_layer, value_layer, attention_mask, query_length):
+    indices_k, cu_seqlens_k, max_seqlen_in_batch_k = _get_unpad_data(attention_mask)
+    batch_size, kv_seq_len, num_key_value_heads, head_dim = key_layer.shape
+
+    key_layer = index_first_axis(
+        key_layer.reshape(batch_size * kv_seq_len, num_key_value_heads, head_dim), indices_k
+    )
+    value_layer = index_first_axis(
+        value_layer.reshape(batch_size * kv_seq_len, num_key_value_heads, head_dim), indices_k
+    )
+    if query_length == kv_seq_len:
+        query_layer = index_first_axis(
+            query_layer.reshape(batch_size * kv_seq_len, self.num_heads, head_dim), indices_k
+        )
+        cu_seqlens_q = cu_seqlens_k
+        max_seqlen_in_batch_q = max_seqlen_in_batch_k
+        indices_q = indices_k
+    elif query_length == 1:
+        max_seqlen_in_batch_q = 1
+        cu_seqlens_q = torch.arange(
+            batch_size + 1, dtype=torch.int32, device=query_layer.device
+        )  # There is a memcpy here, that is very bad.
+        indices_q = cu_seqlens_q[:-1]
+        query_layer = query_layer.squeeze(1)
+    else:
+        # The -q_len: slice assumes left padding.
+        attention_mask = attention_mask[:, -query_length:]
+        query_layer, indices_q, cu_seqlens_q, max_seqlen_in_batch_q = unpad_input(query_layer, attention_mask)
+
+    return (
+        query_layer,
+        key_layer,
+        value_layer,
+        indices_q,
+        (cu_seqlens_q, cu_seqlens_k),
+        (max_seqlen_in_batch_q, max_seqlen_in_batch_k),
+    )
+
+def _flash_attention_forward(
+    self,
+    query_states,
+    key_states,
+    value_states,
+    attention_mask,
+    query_length,
+    dropout=0.0,
+    softmax_scale=None,
+):
+    """
+    Calls the forward method of Flash Attention - if the input hidden states contain at least one padding token
+    first unpad the input, then computes the attention scores and pad the final attention scores.
+
+    Args:
+        query_states (`torch.Tensor`):
+            Input query states to be passed to Flash Attention API
+        key_states (`torch.Tensor`):
+            Input key states to be passed to Flash Attention API
+        value_states (`torch.Tensor`):
+            Input value states to be passed to Flash Attention API
+        attention_mask (`torch.Tensor`):
+            The padding mask - corresponds to a tensor of size `(batch_size, seq_len)` where 0 stands for the
+            position of padding tokens and 1 for the position of non-padding tokens.
+        dropout (`int`, *optional*):
+            Attention dropout
+        softmax_scale (`float`, *optional*):
+            The scaling of QK^T before applying softmax. Default to 1 / sqrt(head_dim)
+    """
+    # Contains at least one padding token in the sequence
+    if attention_mask is not None:
+        batch_size = query_states.shape[0]
+        (
+            query_states,
+            key_states,
+            value_states,
+            indices_q,
+            cu_seq_lens,
+            max_seq_lens,
+        ) = self._upad_input(
+            query_states, key_states, value_states, attention_mask, query_length
+        )
+
+        cu_seqlens_q, cu_seqlens_k = cu_seq_lens
+        max_seqlen_in_batch_q, max_seqlen_in_batch_k = max_seq_lens
+
+        attn_output_unpad = flash_attn_varlen_func(
+            query_states,
+            key_states,
+            value_states,
+            cu_seqlens_q=cu_seqlens_q,
+            cu_seqlens_k=cu_seqlens_k,
+            max_seqlen_q=max_seqlen_in_batch_q,
+            max_seqlen_k=max_seqlen_in_batch_k,
+            dropout_p=dropout,
+            softmax_scale=softmax_scale,
+            causal=True,
+        )
+
+        attn_output = pad_input(attn_output_unpad, indices_q, batch_size, query_length)
+    else:
+        attn_output = flash_attn_func(
+            query_states,
+            key_states,
+            value_states,
+            dropout,
+            softmax_scale=softmax_scale,
+            causal=True,
+        )
+
+    return attn_output
+
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
@@ -169,9 +294,26 @@ def llama_attention_forward(
 
     past_key_value = (key_states, value_states) if use_cache else None
 
-    # repeat k/v heads if n_kv_heads < n_heads
+    
+
+    # # repeat k/v heads if n_kv_heads < n_heads
     key_states = repeat_kv(key_states, self.num_key_value_groups)
     value_states = repeat_kv(value_states, self.num_key_value_groups)
+    
+    """
+    flash attention branch
+    """
+    # query_states = query_states.transpose(1, 2)
+    # key_states = key_states.transpose(1, 2)
+    # value_states = value_states.transpose(1, 2)
+
+    # attn_output = F.scaled_dot_product_attention(
+    #     query_states,
+    #     key_states,
+    #     value_states,
+    #     dropout_p = 0.0,
+    #     is_causal = True,
+    # )
 
     attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
         self.head_dim
@@ -203,7 +345,7 @@ def llama_attention_forward(
         )
 
     attn_output = attn_output.transpose(1, 2).contiguous()
-    attn_output = attn_output.reshape(bsz, q_len, self.hidden_size)
+    attn_output = attn_output.reshape(bsz, q_len, self.hidden_size).contiguous()
 
     base_attn_output = self.o_proj(attn_output.to(BASE_DEVICE, non_blocking=True))
     delta_attn_outputs = []
@@ -515,6 +657,8 @@ def parallelize_llama():
     transformers.models.llama.modeling_llama.LlamaAttention.forward = (
         llama_attention_forward
     )
+    transformers.models.llama.modeling_llama.LlamaAttention._flash_attention_forward = _flash_attention_forward
+    transformers.models.llama.modeling_llama.LlamaAttention._upad_input = _upad_input
     transformers.models.llama.modeling_llama.LlamaRMSNorm.forward = (
         llama_rmsnorm_forward
     )
