@@ -8,6 +8,7 @@ from fmzip.modeling.llama import parallelize_llama
 from fmzip.modeling.gpt_neox import parallelize_neox
 from fmzip.pipelines.utils import get_gpu_count, get_submodules
 from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
+from fmzip.nn_modules.batched_qlinear import WarmupBQLForward
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
@@ -35,7 +36,7 @@ class FMZipPipeline:
         placement_args: dict = None,
         lossless_only: bool = False,
         offload_base_model: bool = False,
-        warmup_model: str = None,
+        warmup_models: List[str] = [],
     ) -> None:
         if placement_strategy not in placement_strategies:
             raise ValueError(
@@ -67,12 +68,14 @@ class FMZipPipeline:
         self.model_pool = {}
         self.req_count = {}
         self.key_list = []
-        if warmup_model:
+        if len(warmup_models) > 0:
             logger.info("Warming up model triton...")
-            self._load_delta(warmup_model, force=True)
+            self._load_deltas(warmup_models)
+            WarmupBQLForward([self.model_pool[delta] for delta in warmup_models])
             self.model_pool = {}
             self.req_count = {}
             self.key_list = []
+        
         torch.cuda.empty_cache()
 
     @torch.inference_mode()
@@ -133,7 +136,7 @@ class FMZipPipeline:
                 self._clear_addback_delta(deltas[0], int(gpu_id))
             elif self.placement_strategy in ["colocate", "separation"]:
                 self._clear_colocate(int(gpu_id))
-            torch.cuda.empty_cache()
+            # torch.cuda.empty_cache()
         return outputs
 
     def _load_base_model(self):
