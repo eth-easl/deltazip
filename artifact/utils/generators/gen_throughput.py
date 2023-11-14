@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 from artifact.utils.generators.arrival import PoissonProcess
 
-to_eval_models = [f".cache/raw_models/openllama-3b-chat-{i}" for i in range(1, 19)]
-to_eval_models = ["openlm-research/open_llama_3b_v2"] + to_eval_models
+to_eval_models = [f".cache/raw_models/openllama-3b-chat-{i}" for i in range(0, 10)]
+# to_eval_models = ["openlm-research/open_llama_3b_v2"] + to_eval_models
 
 
 def format_openllama(prompt):

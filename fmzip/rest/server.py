@@ -27,7 +27,6 @@ print(f"Available GPUs {num_gpus}")
 inference_model = None
 gpu_id_start = 1
 
-
 def randomly_clear_disk_cache():
     # randomly clear disk cache with a probability of 0.5
     if random.random() < 1:
