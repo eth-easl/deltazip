@@ -52,7 +52,7 @@ def colocate():
     torch.cuda.synchronize()
     compute_start = timer()
     torch.cuda.nvtx.range_push("colocate-start")
-    output = pipeline.generate(requests, max_new_tokens=64, use_cache=True)
+    output = pipeline.generate(requests, max_new_tokens=32, use_cache=True)
     torch.cuda.synchronize()
     torch.cuda.nvtx.range_pop()
     compute_end = timer()
@@ -65,7 +65,8 @@ def benchmark():
     # print(output)
     # print(f"[Addback]: {time:.2f}s")
     # torch.cuda.empty_cache()
-    # print("warming up")
+    
+    print("warming up")
     colocate()  # warmup
     torch.cuda.empty_cache()
     print("actual..")

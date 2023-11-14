@@ -22,7 +22,7 @@ from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
-use_bmm = True
+use_bmm = False
 use_flash_attn = True
 
 if use_flash_attn:
