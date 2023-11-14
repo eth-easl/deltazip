@@ -1,7 +1,7 @@
 import os
 
 cache_folder = os.environ.get("YAO_CACHE")
-bits = 3
+bits = 2
 sparsity = 0
 in_folder = os.path.join(
     cache_folder, "experiments", "fmzip", "finetuned_raw", "llama-3b"
