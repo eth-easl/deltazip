@@ -1,1 +1,3 @@
 python cli/compress.py --target-model .cache/raw_models/gsd/global_step19 --base-model EleutherAI/pythia-2.8b-deduped --dataset .cache/datasets/negotiation_strategy_detection.train.jsonl --bits 4 --sparsity 0.5 --lossless gdeflate --delta subtract --outdir .cache/compressed_models/p2.8b_gsd_133 --group-size 128
+
+python cli/compress.py --target-model lomahony/pythia-2.8b-helpful-sft --base-model EleutherAI/pythia-2.8b --dataset .cache/datasets/hh-rlhf.json --bits 4 --sparsity 0 --lossless gdeflate --delta subtract --outdir .cache/compressed_models/pythia-2b0s --group-size 128 --n-samples 256

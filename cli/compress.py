@@ -35,7 +35,6 @@ def main(args):
             args.base_model, compress_config=compress_config
         )
         base_model.requires_grad_(False)
-
         # now perform the delta op
         if args.delta == "subtract":
             target_model = subtract(base_model, target_model)
@@ -43,7 +42,8 @@ def main(args):
             target_model = xor(base_model, target_model)
         else:
             raise ValueError(f"Unknown delta mode: {args.delta}")
-
+    del base_model
+    torch.cuda.empty_cache()
     for name, param in target_model.named_parameters():
         # check if nan exists
         if torch.isnan(param).any():
@@ -55,8 +55,8 @@ def main(args):
         examples = examples
     else:
         import random
-
         examples = random.sample(examples, args.n_samples)
+
     examples = [tokenizer(x) for x in examples]
     target_model.lossy_compress(examples)
     # write to folder
