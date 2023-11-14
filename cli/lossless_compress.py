@@ -54,7 +54,6 @@ def main(args):
         examples = examples
     else:
         import random
-
         examples = random.sample(examples, args.n_samples)
     examples = [tokenizer(x) for x in examples]
     target_model.lossless_compress(examples)
