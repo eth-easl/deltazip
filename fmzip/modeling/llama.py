@@ -19,9 +19,6 @@ import torch.nn.functional as F
 from loguru import logger
 from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 
-from flash_attn import flash_attn_func, flash_attn_varlen_func
-from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
-
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 

@@ -25,7 +25,6 @@ dummy_compression_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
-
 class FMZipPipeline:
     def __init__(
         self,

@@ -10,14 +10,14 @@ from fmzip.nn_modules.triton_utils import custom_autotune
     configs=[
         triton.Config(
             {
-                "BLOCK_SIZE_M": 16,
-                "BLOCK_SIZE_N": 16,
-                "BLOCK_SIZE_K": 16,
+                "BLOCK_SIZE_M": 128,
+                "BLOCK_SIZE_N": 512,
+                "BLOCK_SIZE_K": 32,
                 "GROUP_SIZE_M": 8,
-                "BATCH_SIZE_B": 2,
+                "BATCH_SIZE_B": 4,
             },
-            num_stages=4,
-            num_warps=4,
+            num_stages=8,
+            num_warps=32,
         ),
         triton.Config(
             {
@@ -28,7 +28,7 @@ from fmzip.nn_modules.triton_utils import custom_autotune
                 "BATCH_SIZE_B": 2,
             },
             num_stages=4,
-            num_warps=4,
+            num_warps=16,
         ),
         triton.Config(
             {
