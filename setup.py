@@ -40,13 +40,11 @@ if BUILD_CUDA_EXT:
         sys.exit(-1)
 
     CUDA_VERSION = None
-    ROCM_VERSION = os.environ.get("ROCM_VERSION", None)
 
-    if not ROCM_VERSION:
-        default_cuda_version = torch.version.cuda
-        CUDA_VERSION = "".join(
-            os.environ.get("CUDA_VERSION", default_cuda_version).split(".")
-        )
+    default_cuda_version = torch.version.cuda
+    CUDA_VERSION = "".join(
+        os.environ.get("CUDA_VERSION", default_cuda_version).split(".")
+    )
 
     if not CUDA_VERSION:
         print(
@@ -113,40 +111,36 @@ if BUILD_CUDA_EXT:
             ],
         ),
     ]
-
-    if platform.system() != "Windows":
-        extensions.append(
-            cpp_extension.CppExtension(
-                "cQIGen",
-                ["fmzip/core/csrc/qigen/backend.cpp"],
-                extra_compile_args=[
-                    "-O3",
-                    "-mavx",
-                    "-mavx2",
-                    "-mfma",
-                    "-march=native",
-                    "-ffast-math",
-                    "-ftree-vectorize",
-                    "-faligned-new",
-                    "-std=c++17",
-                    "-fopenmp",
-                    "-fno-signaling-nans",
-                    "-fno-trapping-math",
-                ],
-            )
-        )
-
     extensions.append(
         cpp_extension.CUDAExtension(
-            "exllama_kernels",
+            "exllamav2_kernels",
             [
-                "fmzip/core/csrc/exllama/exllama_ext.cpp",
-                "fmzip/core/csrc/exllama/cuda_buffers.cu",
-                "fmzip/core/csrc/exllama/cuda_func/column_remap.cu",
-                "fmzip/core/csrc/exllama/cuda_func/q4_matmul.cu",
-                "fmzip/core/csrc/exllama/cuda_func/q4_matrix.cu",
+                "fmzip/core/csrc/exllamav2/ext.cpp",
+                "fmzip/core/csrc/exllamav2/cuda/q_matrix.cu",
+                "fmzip/core/csrc/exllamav2/cuda/q_gemm.cu",
             ],
-            extra_link_args=[],
+            extra_link_args=[]
+        )
+    )
+
+    extensions.append(
+        cpp_extension.CppExtension(
+            "cQIGen",
+            ["fmzip/core/csrc/qigen/backend.cpp"],
+            extra_compile_args=[
+                "-O3",
+                "-mavx",
+                "-mavx2",
+                "-mfma",
+                "-march=native",
+                "-ffast-math",
+                "-ftree-vectorize",
+                "-faligned-new",
+                "-std=c++17",
+                "-fopenmp",
+                "-fno-signaling-nans",
+                "-fno-trapping-math",
+            ],
         )
     )
 
@@ -154,6 +148,7 @@ if BUILD_CUDA_EXT:
         "ext_modules": extensions,
         "cmdclass": {"build_ext": cpp_extension.BuildExtension},
     }
+    
 common_setup_kwargs.update(additional_setup_kwargs)
 
 setup(

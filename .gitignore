@@ -11,3 +11,4 @@ artifact/benchmark_*.json
 *.sif
 *.csv
 *.png
+.build/

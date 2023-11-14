@@ -1,7 +1,5 @@
 FROM nvcr.io/nvidia/pytorch:23.10-py3
 
-ENV CUDA_HOME=/usr/local/cuda
-ENV CPATH=$CUDA_HOME/include
 ENV MAX_JOBS=16
 # https://github.com/oobabooga/text-generation-webui/issues/2128
 ARG TORCH_CUDA_ARCH_LIST="7.5;8.0;8.6+PTX;8.9;9.0"

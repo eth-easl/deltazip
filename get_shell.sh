@@ -1,6 +1,1 @@
-singularity shell \
-    --env PYTHONPATH=/app \
-    --bind $PWD/:/app/ \
-    --pwd /app \
-    --nv \
-    fmzip_0.0.4.sif
+docker run --gpus all -it --volume .:/app fmzip:0.0.1 /bin/bash
