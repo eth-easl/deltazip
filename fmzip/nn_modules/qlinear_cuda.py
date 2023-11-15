@@ -10,7 +10,7 @@ from fmzip.nn_modules.triton_utils.kernels import (
     QuantLinearInferenceOnlyFunction,
 )
 
-use_exllama = True
+use_exllama = False
 
 try:
     import autogptq_cuda_256
@@ -113,7 +113,7 @@ class QuantLinear(nn.Module):
             self.padding =- outfeatures % 32
 
     def post_init(self, temp_dq):
-        if self.bits == 4 and _exllama_v2_available:
+        if self.bits == 4 and _exllama_v2_available and use_exllama:
             assert self.qweight.device.type == "cuda"
             assert self.qweight.device.index is not None
             self.q_tensors = {

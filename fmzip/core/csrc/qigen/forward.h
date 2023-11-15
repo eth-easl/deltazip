@@ -21,7 +21,7 @@ const int tb,
 int ogtt,
 const int gs,
 const int cutoff){
-#pragma omp parallel num_threads(12)
+#pragma omp parallel num_threads(16)
 {
 int tid;
 const int mu = 16;
@@ -414,7 +414,7 @@ float* __restrict__ output,
 int n, 
  int m, 
  int t) {
-q2gemm_gs(input, W, scales, zeros, bias, sums, output, n, m, t, 1, 1024, 32, 352, 64, 8);
+q2gemm_gs(input, W, scales, zeros, bias, sums, output, n, m, t, 1, 1024, 32, 256, 64, 17);
 }
 inline void pack_input(float* A, float* B){
   // copy the full matrix A in blocked format into B
@@ -476,5 +476,5 @@ inline void pack_output(float* A, float* B){
 void print_parameters(){
 std::ofstream outfile;
 outfile.open(".build/qigen/tmp.csv", std::ios_base::app);
-outfile << 2 << "," << 1 << "," << 16 << "," << 32 << "," << 8 << "," << 12  << "," << 64 << ",";
+outfile << 2 << "," << 1 << "," << 16 << "," << 32 << "," << 8 << "," << 16  << "," << 64 << ",";
 }

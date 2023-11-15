@@ -1,7 +1,7 @@
 import os
 
 cache_folder = os.environ.get("YAO_CACHE")
-bits = 2
+bits = 4
 sparsity = 0
 in_folder = os.path.join(
     cache_folder, "experiments", "fmzip", "finetuned_raw", "llama-3b"
@@ -11,11 +11,11 @@ include_delta = False
 poi_tasks = [
     'task151_tomqa_find_location_easy_clean',
     'task152_tomqa_find_location_easy_noise',
-    'task523_find_if_numbers_or_alphabets_are_more_in_list', 
-    'task936_defeasible_nli_snli_classification', 
-    'task380_boolq_yes_no_question', 
-    'task1308_amazonreview_category_classification', 
-    'task372_synthetic_palindrome_numbers', 
+    'task523_find_if_numbers_or_alphabets_are_more_in_list',
+    'task936_defeasible_nli_snli_classification',
+    'task380_boolq_yes_no_question',
+    'task1308_amazonreview_category_classification',
+    'task372_synthetic_palindrome_numbers',
     'task227_clariq_classification'
 ]
 poi_steps = [
