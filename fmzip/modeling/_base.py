@@ -34,7 +34,7 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 from ..nn_modules.qlinear_cuda import QuantLinear
-
+from fmzip.modeling._utils import fmzip_post_init
 triton_has_warmup = False
 
 
@@ -1127,6 +1127,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if unexpected_keys:
             logger.warning(f"unexpected keys: {unexpected_keys}")
         model = model.to(device)
+        model = fmzip_post_init(model, use_act_order = compress_config.desc_act)
+        model.eval()
         if isinstance(
             compress_config, AutoCompressionConfig
         ) or compress_config.bits in [2, 3, 4, 8]:
@@ -1157,7 +1159,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if not triton_has_warmup and use_triton:
             QuantLinear.warmup(model, seqlen=model.seqlen)
             triton_has_warmup = True
-        model.eval()
+        
         del losslesscompressor
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)

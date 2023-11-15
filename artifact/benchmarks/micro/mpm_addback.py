@@ -13,15 +13,15 @@ base_model = "openlm-research/open_llama_3b_v2"
 requests = [
     (
         "<human>: What is Computer Science about?<|endoftext|><assistant>: ",
-        ".cache/compressed_models/2bits-openllama",
+        ".cache/compressed_models/3b-parameters/4bits-openllama-0",
     ),
-    ("Alan Turing is ", ".cache/compressed_models/2bits-openllama"),
-    ("Von Neumann is ", ".cache/compressed_models/2bits-openllama"),
-    ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
-    # ("QED is ", ".cache/compressed_models/2bits-openllama"),
+    ("Alan Turing is ", ".cache/compressed_models/3b-parameters/4bits-openllama-1"),
+    ("Von Neumann is ", ".cache/compressed_models/3b-parameters/4bits-openllama-2"),
+    ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-3"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-4"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-5"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-6"),
+    # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-7"),
 ]
 warmup_models = [req[1] for req in requests]
 
@@ -60,11 +60,11 @@ def colocate():
 
 
 def benchmark():
-    # addback()  # warmup
-    # output, time = addback()
-    # print(output)
-    # print(f"[Addback]: {time:.2f}s")
-    # torch.cuda.empty_cache()
+    addback()  # warmup
+    output, time = addback()
+    print(output)
+    print(f"[Addback]: {time:.2f}s")
+    torch.cuda.empty_cache()
     
     print("warming up")
     colocate()  # warmup
