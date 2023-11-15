@@ -65,6 +65,7 @@ class AutoFMZipModelForCausalLM:
         trust_remote_code: bool = False,
         warmup_triton: bool = True,
         unpack: bool = False,
+        use_exllama: bool = False,
         **kwargs
     ) -> BaseFMZipModelForCausalLM:
         model_type = check_and_get_model_type(save_dir)
@@ -90,6 +91,7 @@ class AutoFMZipModelForCausalLM:
             trust_remote_code=trust_remote_code,
             warmup_triton=warmup_triton,
             unpack=unpack,
+            use_exllama = use_exllama,
             **keywords
         )
 

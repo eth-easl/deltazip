@@ -45,10 +45,13 @@ def get_module_by_name(model, module_name: str):
 
 
 def make_quant(
-    module, names, bits, name="", use_triton=False, use_cuda_fp16=True, desc_act=False
+    module, names, bits, name="", 
+    use_triton=False,
+    use_cuda_fp16=True,
+    desc_act=False,
+    use_exllama: bool = False,
 ):
     from ..nn_modules.qlinear_cuda import QuantLinear
-
     if isinstance(module, QuantLinear):
         return
     for attr in dir(module):
@@ -60,12 +63,6 @@ def make_quant(
             if type(tmp) == nn.Linear:
                 in_features = tmp.in_features
                 out_features = tmp.out_features
-            elif type(tmp) == nn.Conv2d:
-                in_features = tmp.in_channels
-                out_features = tmp.out_channels
-            elif type(tmp) == transformers.pytorch_utils.Conv1D:
-                in_features = tmp.weight.shape[0]
-                out_features = tmp.weight.shape[1]
             if isinstance(bits, dict):
                 real_bits = bits[name1]
             else:
@@ -76,6 +73,7 @@ def make_quant(
                 out_features,
                 tmp.bias is not None,
                 use_triton=use_triton,
+                use_exllama=use_exllama
             )
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))
@@ -89,6 +87,7 @@ def make_quant(
             use_triton=use_triton,
             use_cuda_fp16=use_cuda_fp16,
             desc_act=desc_act,
+            use_exllama=use_exllama
         )
 
 def fmzip_post_init(model, use_act_order: bool, max_input_length: Optional[int] = None):
