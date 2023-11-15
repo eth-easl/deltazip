@@ -10,6 +10,8 @@ from fmzip.nn_modules.triton_utils.kernels import (
     QuantLinearInferenceOnlyFunction,
 )
 
+use_exllama = True
+
 try:
     import autogptq_cuda_256
     import autogptq_cuda_64
@@ -22,9 +24,8 @@ except ImportError:
     _autogptq_cuda_available = False
 
 try:
-    from exllamav2_kernels import make_q_matrix, gemm_half_q_half
-    _exllama_v2_available = True
     from fmzip.nn_modules.exllama_utils import ext_make_q_matrix, ext_gemm_half_q_half
+    _exllama_v2_available = True
 except ImportError as exllama_v2_import_exception:
     logger.warning("Exllama V2 extension not installed.")
     _exllama_v2_available = False
@@ -125,7 +126,7 @@ class QuantLinear(nn.Module):
             self.q_handle = ext_make_q_matrix(
                 self.q_tensors, temp_dq
             )
-            
+
     def temp_dq_size(self):
         return self.infeatures * self.outfeatures * 2 + 128
     
@@ -325,7 +326,7 @@ class QuantLinear(nn.Module):
             return linear
 
     def forward(self, x: torch.Tensor):
-        if self.bits == 4 and _exllama_v2_available:
+        if self.bits == 4 and _exllama_v2_available and use_exllama:
             output = ext_gemm_half_q_half(x, self.q_handle, self.outfeatures, False)
             if self.bias:
                 output.add_(self.bias)
@@ -341,7 +342,6 @@ class QuantLinear(nn.Module):
                 out = torch.zeros(
                     (x.shape[0], self.outfeatures), device=x.device, dtype=torch.float32
                 )
-                
                 self.autogptq_cuda.vecquant3matmul(
                     x.float(),
                     self.qweight,
@@ -356,7 +356,6 @@ class QuantLinear(nn.Module):
                 )
                 if self.wf.device != self.qzeros.device:
                     self.wf = self.wf.to(self.qzeros.device)
-
                 zeros = self.qzeros.reshape(
                     self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1
                 ).expand(-1, -1, -1, 12)

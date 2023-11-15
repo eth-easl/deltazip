@@ -16,7 +16,7 @@ requests = [
         ".cache/compressed_models/3b-parameters/4bits-openllama-0",
     ),
     ("<human>: Who is Alan Turing?<|endoftext|><assistant>:", ".cache/compressed_models/3b-parameters/4bits-openllama-1"),
-    ("<human>: Who is Von Neumann<|endoftext|><assistant>:", ".cache/compressed_models/3b-parameters/4bits-openllama-2"),
+    ("<human>: Who is John von Neumann<|endoftext|><assistant>:", ".cache/compressed_models/3b-parameters/4bits-openllama-2"),
     ("<human>: What is QED<|endoftext|><assistant>:", ".cache/compressed_models/3b-parameters/4bits-openllama-3"),
     # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-4"),
     # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-5"),
