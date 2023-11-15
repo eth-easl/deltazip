@@ -1,7 +1,7 @@
 import os
 
 CACHE_PATH = os.environ.get("YAO_CACHE", "")
-folder_name = "3b0s"
+folder_name = "2b0s"
 
 compressed_models = os.path.join(
     CACHE_PATH, f"experiments/fmzip/compressed_models/{folder_name}/open_llama_3b_v2"
