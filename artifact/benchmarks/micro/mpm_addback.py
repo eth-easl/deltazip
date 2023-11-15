@@ -12,12 +12,12 @@ base_model = "openlm-research/open_llama_3b_v2"
 
 requests = [
     (
-        "<human>: What is Computer Science about?<|endoftext|><assistant>: ",
+        "<human>: What is Computer Science about?<|endoftext|><assistant>:",
         ".cache/compressed_models/3b-parameters/4bits-openllama-0",
     ),
-    ("Alan Turing is ", ".cache/compressed_models/3b-parameters/4bits-openllama-1"),
-    ("Von Neumann is ", ".cache/compressed_models/3b-parameters/4bits-openllama-2"),
-    ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-3"),
+    ("<human>: Who is Alan Turing?<|endoftext|><assistant>:", ".cache/compressed_models/3b-parameters/4bits-openllama-1"),
+    ("<human>: Who is Von Neumann<|endoftext|><assistant>:", ".cache/compressed_models/3b-parameters/4bits-openllama-2"),
+    ("<human>: What is QED<|endoftext|><assistant>:", ".cache/compressed_models/3b-parameters/4bits-openllama-3"),
     # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-4"),
     # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-5"),
     # ("QED is ", ".cache/compressed_models/3b-parameters/4bits-openllama-6"),
