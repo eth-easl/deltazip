@@ -10,7 +10,7 @@ from fmzip.nn_modules.triton_utils.kernels import (
     QuantLinearInferenceOnlyFunction,
 )
 
-use_exllama = False
+use_exllama = True
 
 try:
     import autogptq_cuda_256
@@ -246,18 +246,19 @@ class QuantLinear(nn.Module):
             if self.bits in [2, 4, 8]:
                 zeros = torch.bitwise_right_shift(
                     torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
-                    self.wf.unsqueeze(0),
+                    self.wf.unsqueeze(0)
                 ).to(torch.int16 if self.bits == 8 else torch.int8)
-                torch.bitwise_and(zeros, (2**self.bits) - 1, out=zeros)
+                zeros = torch.bitwise_and(zeros, (2 ** self.bits) - 1)
 
                 zeros = zeros + 1
                 zeros = zeros.reshape(self.scales.shape)
 
+
                 weight = torch.bitwise_right_shift(
                     torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
-                    self.wf.unsqueeze(-1),
+                    self.wf.unsqueeze(-1)
                 ).to(torch.int16 if self.bits == 8 else torch.int8)
-                torch.bitwise_and(weight, (2**self.bits) - 1, out=weight)
+                weight = torch.bitwise_and(weight, (2 ** self.bits) - 1)
             elif self.bits == 3:
                 zeros = self.qzeros.reshape(
                     self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1

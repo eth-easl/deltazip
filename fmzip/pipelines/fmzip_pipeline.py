@@ -105,9 +105,7 @@ class FMZipPipeline:
             prepare_end = timer()
             inference_start = timer()
             kwargs["do_sample"] = False
-            torch.cuda.profiler.cudart().cudaProfilerStart()
             output = self.base_models[int(gpu_id)].generate(**batch_inputs, **kwargs)
-            torch.cuda.profiler.cudart().cudaProfilerStop()
             inference_end = timer()
             output = self.tokenizer.batch_decode(output)
             tokenize_time = tokenize_end - tokenize_start
@@ -262,6 +260,7 @@ class FMZipPipeline:
             logger.info(f"adding delta {deltas[0]} to base model")
             with torch.no_grad():
                 for name, param in self.model_pool[deltas[0]].model.named_parameters():
+                    print(f"adding {name}")
                     self.base_models[gpu_id].state_dict()[name] += param
 
     def _prepare_colocate(self, deltas, gpu_id):

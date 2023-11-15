@@ -94,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument("--output-file", type=str, default="")
     parser.add_argument("--do-sample", action="store_true", default=False)
     parser.add_argument("--top-p", type=float, default=0.9)
-    parser.add_argument("--top-k", type=int, default=1)
+    parser.add_argument("--top-k", type=int, default=50)
     parser.add_argument("--temperature", type=float, default=0.1)
     parser.add_argument("--max-length", type=int, default=64)
     args = parser.parse_args()
