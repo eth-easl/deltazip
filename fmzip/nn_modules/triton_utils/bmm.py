@@ -10,79 +10,20 @@ from fmzip.nn_modules.triton_utils import custom_autotune
     configs=[
         triton.Config(
             {
-                "BLOCK_SIZE_M": 64,
-                "BLOCK_SIZE_N": 256,
-                "BLOCK_SIZE_K": 32,
-                "GROUP_SIZE_M": 8,
-            },
-            num_stages=4,
-            num_warps=4,
-        ),
-        triton.Config(
-            {
                 "BLOCK_SIZE_M": 32,
-                "BLOCK_SIZE_N": 64,
-                "BLOCK_SIZE_K": 64,
-                "GROUP_SIZE_M": 16,
+                "BLOCK_SIZE_N": 32,
+                "BLOCK_SIZE_K": 16,
+                "GROUP_SIZE_M": 64,
+                "BATCH_SIZE_B": 1,
             },
-            num_stages=4,
-            num_warps=4,
-        ),
-        triton.Config(
-            {
-                "BLOCK_SIZE_M": 128,
-                "BLOCK_SIZE_N": 512,
-                "BLOCK_SIZE_K": 32,
-                "GROUP_SIZE_M": 8,
-            },
-            num_stages=4,
-            num_warps=4,
-        ),
-        triton.Config(
-            {
-                "BLOCK_SIZE_M": 64,
-                "BLOCK_SIZE_N": 512,
-                "BLOCK_SIZE_K": 32,
-                "GROUP_SIZE_M": 8,
-            },
-            num_stages=4,
-            num_warps=4,
-        ),
-        triton.Config(
-            {
-                "BLOCK_SIZE_M": 128,
-                "BLOCK_SIZE_N": 512,
-                "BLOCK_SIZE_K": 32,
-                "GROUP_SIZE_M": 8,
-            },
-            num_stages=4,
-            num_warps=4,
-        ),
-        triton.Config(
-            {
-                "BLOCK_SIZE_M": 64,
-                "BLOCK_SIZE_N": 64,
-                "BLOCK_SIZE_K": 32,
-                "GROUP_SIZE_M": 8,
-            },
-            num_stages=4,
-            num_warps=4,
-        ),
-        triton.Config(
-            {
-                "BLOCK_SIZE_M": 64,
-                "BLOCK_SIZE_N": 128,
-                "BLOCK_SIZE_K": 32,
-                "GROUP_SIZE_M": 8,
-            },
-            num_stages=2,
-            num_warps=8,
+            num_stages=8,
+            num_warps=1,
         ),
     ],
     key=["B", "M", "N", "K"],
     nearest_power_of_two=True,
     prune_configs_by={
-        "early_config_prune": custom_autotune.matmul248_kernel_config_pruner,
+        "early_config_prune": custom_autotune.bmm248_kernel_config_pruner,
         "perf_model": None,
         "top_k": None,
     },
@@ -119,6 +60,7 @@ def quant_bmm_248_kernel(
     BLOCK_SIZE_N: tl.constexpr,
     BLOCK_SIZE_K: tl.constexpr,
     GROUP_SIZE_M: tl.constexpr,
+    BATCH_SIZE_B: tl.constexpr,
 ):
     """
     Compute the matrix multiplication C = A x B.
@@ -131,7 +73,7 @@ def quant_bmm_248_kernel(
     """
     infearure_per_bits = 32 // bits
 
-    pid_b = tl.program_id(axis=0)
+    pid_batch = tl.program_id(axis=0)
     pid = tl.program_id(axis=1)
     num_pid_m = tl.cdiv(M, BLOCK_SIZE_M)
     num_pid_n = tl.cdiv(N, BLOCK_SIZE_N)
@@ -142,6 +84,8 @@ def quant_bmm_248_kernel(
     group_size_m = min(num_pid_m - first_pid_m, GROUP_SIZE_M)
     pid_m = first_pid_m + (pid % group_size_m)
     pid_n = (pid % num_pid_in_group) // group_size_m
+
+    pid_b = pid_batch // BATCH_SIZE_B
 
     offs_am = pid_m * BLOCK_SIZE_M + tl.arange(0, BLOCK_SIZE_M)
     offs_bn = pid_n * BLOCK_SIZE_N + tl.arange(0, BLOCK_SIZE_N)
@@ -219,7 +163,6 @@ class QuantLinearFunction(torch.autograd.Function):
         ctx.save_for_backward(qweight, scales, qzeros, g_idx)
         ctx.bits, ctx.maxq = bits, maxq
         return output
-
 
 def quant_bmm_248(input, qweight, scales, qzeros, g_idx, bits, maxq):
     with torch.cuda.device(input.device):

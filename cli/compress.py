@@ -17,6 +17,7 @@ def main(args):
         group_size=args.group_size,
         sparsity=args.sparsity,
         prunen=args.prunen,
+        block_size=args.block_size,
         prunem=args.prunem,
         lossless=args.lossless,
         damp_percent=args.perc_damp,
@@ -34,7 +35,6 @@ def main(args):
             args.base_model, compress_config=compress_config
         )
         base_model.requires_grad_(False)
-
         # now perform the delta op
         if args.delta == "subtract":
             target_model = subtract(base_model, target_model)
@@ -42,7 +42,7 @@ def main(args):
             target_model = xor(base_model, target_model)
         else:
             raise ValueError(f"Unknown delta mode: {args.delta}")
-
+    torch.cuda.empty_cache()
     for name, param in target_model.named_parameters():
         # check if nan exists
         if torch.isnan(param).any():
@@ -54,8 +54,8 @@ def main(args):
         examples = examples
     else:
         import random
-
         examples = random.sample(examples, args.n_samples)
+
     examples = [tokenizer(x) for x in examples]
     target_model.lossy_compress(examples)
     # write to folder
@@ -81,6 +81,7 @@ if __name__ == "__main__":
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
     parser.add_argument("--sparsity", type=float, default=0.5)
     parser.add_argument("--bits", type=int, default=4)
+    parser.add_argument("--block-size", type=int, default=128)
     parser.add_argument("--group-size", type=int, default=-1)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)

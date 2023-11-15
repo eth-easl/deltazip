@@ -106,7 +106,7 @@ class BaseCompressionConfig(PushToHubMixin):
     group_rows: int = field(default=1)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
-    sym: bool = field(default=True)
+    sym: bool = field(default=False)
     true_sequential: bool = field(default=True)
     lossless: str = field(default="none")
     dtype: str = field(default="fp16")
@@ -1121,7 +1121,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         )
         # move tensors to target device
         # print model keys
-        model.load_state_dict(tensors, strict=False, assign=True)
+        missing_keys, unexpected_keys = model.load_state_dict(tensors, strict=True, assign=True)
+        if missing_keys:
+            logger.warning(f"missing keys: {missing_keys}")
+        if unexpected_keys:
+            logger.warning(f"unexpected keys: {unexpected_keys}")
         model = model.to(device)
         if isinstance(
             compress_config, AutoCompressionConfig

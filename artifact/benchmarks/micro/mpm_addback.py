@@ -23,7 +23,7 @@ requests = [
     # ("QED is ", ".cache/compressed_models/2bits-openllama"),
     # ("QED is ", ".cache/compressed_models/2bits-openllama"),
 ]
-
+warmup_models = [req[1] for req in requests]
 
 def addback():
     pipeline = FMZipPipeline(
@@ -42,7 +42,6 @@ def addback():
     compute_end = timer()
     return output, compute_end - compute_start
 
-
 def colocate():
     pipeline = FMZipPipeline(
         base_model=base_model,
@@ -53,7 +52,7 @@ def colocate():
     torch.cuda.synchronize()
     compute_start = timer()
     torch.cuda.nvtx.range_push("colocate-start")
-    output = pipeline.generate(requests, max_new_tokens=64, use_cache=True)
+    output = pipeline.generate(requests, max_new_tokens=32, use_cache=True)
     torch.cuda.synchronize()
     torch.cuda.nvtx.range_pop()
     compute_end = timer()
@@ -61,11 +60,12 @@ def colocate():
 
 
 def benchmark():
-    addback()  # warmup
-    output, time = addback()
-    print(output)
-    print(f"[Addback]: {time:.2f}s")
-    torch.cuda.empty_cache()
+    # addback()  # warmup
+    # output, time = addback()
+    # print(output)
+    # print(f"[Addback]: {time:.2f}s")
+    # torch.cuda.empty_cache()
+    
     print("warming up")
     colocate()  # warmup
     torch.cuda.empty_cache()

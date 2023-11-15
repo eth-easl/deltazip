@@ -1,7 +1,7 @@
 import os
 
 CACHE_PATH = os.environ.get("YAO_CACHE", "")
-folder_name = "3b0.75s_nodelta"
+folder_name = "2b0s_nodelta"
 model_family = "open_llama_3b_v2"
 
 compressed_models = os.path.join(

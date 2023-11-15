@@ -13,6 +13,9 @@ DEBUG = False
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
 
+def calculate_sparsity(tensor: torch.Tensor):
+    return (tensor == 0).sum().item() / tensor.numel()
+
 
 class SparseGPT:
     def __init__(self, layer):
@@ -47,7 +50,7 @@ class SparseGPT:
         self.H += inp.matmul(inp.t())
 
     def fasterprune(
-        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01, actorder=False
+        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01
     ):
         W = self.layer.weight.data.clone()
         if isinstance(self.layer, nn.Conv2d):
@@ -67,11 +70,6 @@ class SparseGPT:
         dead = torch.diag(H) == 0
         H[dead, dead] = 1
         W[:, dead] = 0
-
-        if actorder:
-            perm = torch.argsort(torch.diag(H), descending=True)
-            W = W[:, perm]
-            H = H[perm][:, perm]
 
         Losses = torch.zeros(self.rows, device=self.dev)
         # we repeat the process and find percdamp that doesn't cause instability
@@ -113,27 +111,15 @@ class SparseGPT:
                     # sparsity: mask1 is a boolean mask, True means the weight is pruned
                     # the larger the sparsity, the more weights are pruned (higher compression ratio)
                     thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
-                    mask1 = tmp <= thresh
-                    ## debug: check how many weights are pruned
-                    ## logger.debug(f"sparsity: {torch.sum(mask1).item() / mask1.numel()}")
+                    mask1 = tmp < thresh
             else:
                 mask1 = torch.zeros_like(W1) == 1
             for i in range(count):
                 w = W1[:, i]
                 d = Hinv1[i, i]
 
-                if prunen != 0 and i % prunem == 0:
-                    tmp = (
-                        W1[:, i : (i + prunem)] ** 2
-                        / (torch.diag(Hinv1)[i : (i + prunem)].reshape((1, -1))) ** 2
-                    )
-                    mask1.scatter_(
-                        1, i + torch.topk(tmp, prunen, dim=1, largest=False)[1], True
-                    )
-
                 q = w.clone()
                 q[mask1[:, i]] = 0
-
                 if hasattr(self, "quantizer"):
                     q = quantize(
                         q.unsqueeze(1),
@@ -150,7 +136,7 @@ class SparseGPT:
 
             W[:, i1:i2] = Q1
             Losses += torch.sum(Losses1, 1) / 2
-
+            
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
             # if DEBUG:
@@ -160,27 +146,21 @@ class SparseGPT:
             #     print(torch.sum(Losses))
 
         torch.cuda.synchronize()
-        logger.info(f"duration: {(time.time() - tick)}")
-        logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples}")
         avg_loss = torch.sum(Losses).item() / self.nsamples
+        logger.info(f"duration: {(time.time() - tick)}")
+        logger.info(f"avg loss: {avg_loss}")
+        logger.info(f"sparsity: {calculate_sparsity(W)}")
 
         g_idx = [i // self.columns for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
-        if actorder:
-            invperm = torch.argsort(perm)
-            Q = Q[:, invperm]
-            g_idx = g_idx[invperm]
 
         if isinstance(self.layer, transformers.Conv1D):
             W = W.t()
         self.layer.weight.data = W.reshape(self.layer.weight.shape).to(
             self.layer.weight.data.dtype
         )
-        # check how many zeros in the weight data
-        # logger.debug(f"sparsity: {torch.sum(self.layer.weight.data == 0).item() / self.layer.weight.data.numel()}")
         if DEBUG:
             print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
-
         if scale == []:
             scale.append(self.quantizer.scale)
             zero.append(self.quantizer.zero)

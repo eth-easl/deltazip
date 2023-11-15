@@ -15,15 +15,18 @@ from transformers.modeling_outputs import (
     CausalLMOutputWithPast,
     BaseModelOutputWithPast,
 )
+import torch.nn.functional as F
 from loguru import logger
-
 from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)
 
 use_bmm = False
+use_flash_attn = True
 
+if use_flash_attn:
+    torch.backends.cuda.enable_flash_sdp(True)
 
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
@@ -87,7 +90,6 @@ def llama_mlp_forward(self, x):
             [x.to(BASE_DEVICE, non_blocking=True) for x in delta_down_hss], dim=0
         )
     return hidden_states
-
 
 def llama_attention_forward(
     self,
@@ -162,7 +164,6 @@ def llama_attention_forward(
     query_states, key_states = apply_rotary_pos_emb(
         query_states, key_states, cos, sin, position_ids
     )
-
     if past_key_value is not None:
         # reuse k, v, self_attention
         key_states = torch.cat([past_key_value[0], key_states], dim=2)
@@ -170,32 +171,40 @@ def llama_attention_forward(
 
     past_key_value = (key_states, value_states) if use_cache else None
 
-    # repeat k/v heads if n_kv_heads < n_heads
+    # # repeat k/v heads if n_kv_heads < n_heads
     key_states = repeat_kv(key_states, self.num_key_value_groups)
     value_states = repeat_kv(value_states, self.num_key_value_groups)
-
-    attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
-        self.head_dim
-    )
-
-    if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
-        raise ValueError(
-            f"Attention weights should be of size {(bsz, self.num_heads, q_len, kv_seq_len)}, but is"
-            f" {attn_weights.size()}"
+    if use_flash_attn:
+        attn_output = F.scaled_dot_product_attention(
+            query_states,
+            key_states,
+            value_states,
+            dropout_p = 0.0,
+            attn_mask=attention_mask,
+        )
+    else:
+        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
+            self.head_dim
         )
 
-    if attention_mask is not None:
-        if attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
+        if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
-                f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
+                f"Attention weights should be of size {(bsz, self.num_heads, q_len, kv_seq_len)}, but is"
+                f" {attn_weights.size()}"
             )
-        attn_weights = attn_weights + attention_mask
 
-    # upcast attention to fp32
-    attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
-        query_states.dtype
-    )
-    attn_output = torch.matmul(attn_weights, value_states)
+        if attention_mask is not None:
+            if attention_mask.size() != (bsz, 1, q_len, kv_seq_len):
+                raise ValueError(
+                    f"Attention mask should be of size {(bsz, 1, q_len, kv_seq_len)}, but is {attention_mask.size()}"
+                )
+            attn_weights = attn_weights + attention_mask
+
+        # upcast attention to fp32
+        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
+            query_states.dtype
+        )
+        attn_output = torch.matmul(attn_weights, value_states)
 
     if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
         raise ValueError(
