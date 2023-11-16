@@ -162,6 +162,7 @@ class FMZipPipeline:
             else False,
             low_cpu_mem_usage=True,
             use_triton=True if not self.placement_strategy == "colocate" else False,
+            use_exllama=True if self.placement_strategy == "colocate" else False,
         )
         if delta_model not in self.req_count:
             self.req_count[delta_model] = 0
@@ -260,7 +261,6 @@ class FMZipPipeline:
             logger.info(f"adding delta {deltas[0]} to base model")
             with torch.no_grad():
                 for name, param in self.model_pool[deltas[0]].model.named_parameters():
-                    print(f"adding {name}")
                     self.base_models[gpu_id].state_dict()[name] += param
 
     def _prepare_colocate(self, deltas, gpu_id):

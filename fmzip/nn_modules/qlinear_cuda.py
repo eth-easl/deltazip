@@ -10,12 +10,9 @@ from fmzip.nn_modules.triton_utils.kernels import (
     QuantLinearInferenceOnlyFunction,
 )
 
-use_exllama = False
-
 try:
     import autogptq_cuda_256
     import autogptq_cuda_64
-
     _autogptq_cuda_available = True
 except ImportError:
     logger.warning("CUDA extension not installed.")
@@ -50,7 +47,9 @@ class QuantLinear(nn.Module):
         kernel_switch_threshold=256,
         trainable=False,
         use_triton=True,
+        use_exllama=False,
     ):
+        
         super().__init__()
         global _autogptq_cuda_available
         if bits not in [2, 3, 4, 8]:
@@ -60,7 +59,7 @@ class QuantLinear(nn.Module):
         self.bits = bits
         self.group_size = infeatures
         self.maxq = 2**self.bits - 1
-
+        self.use_exllama = use_exllama
         self.register_buffer(
             "qweight",
             torch.zeros((infeatures // 32 * self.bits, outfeatures), dtype=torch.int32),
@@ -109,11 +108,11 @@ class QuantLinear(nn.Module):
             self.autogptq_cuda_available = False
         self.use_triton = use_triton
         self.trainable = trainable
-        if self.bits == 4 and _exllama_v2_available:
+        if self.bits == 4 and _exllama_v2_available and self.use_exllama:
             self.padding =- outfeatures % 32
 
     def post_init(self, temp_dq):
-        if self.bits == 4 and _exllama_v2_available and use_exllama:
+        if self.bits == 4 and _exllama_v2_available and self.use_exllama:
             assert self.qweight.device.type == "cuda"
             assert self.qweight.device.index is not None
             self.q_tensors = {
@@ -253,7 +252,6 @@ class QuantLinear(nn.Module):
                 zeros = zeros + 1
                 zeros = zeros.reshape(self.scales.shape)
 
-
                 weight = torch.bitwise_right_shift(
                     torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
                     self.wf.unsqueeze(-1)
@@ -327,7 +325,7 @@ class QuantLinear(nn.Module):
             return linear
 
     def forward(self, x: torch.Tensor):
-        if self.bits == 4 and _exllama_v2_available and use_exllama:
+        if self.bits == 4 and _exllama_v2_available and self.use_exllama:
             output = ext_gemm_half_q_half(x, self.q_handle, self.outfeatures, False)
             if self.bias:
                 output.add_(self.bias)

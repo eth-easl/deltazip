@@ -1009,6 +1009,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         unpack: bool = False,
         low_cpu_mem_usage: bool = False,
         use_bfloat16: bool = False,
+        use_exllama: bool = False,
         **kwargs,
     ):
         """load compressed model from local disk"""
@@ -1082,6 +1083,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     use_triton=use_triton,
                     use_cuda_fp16=use_cuda_fp16,
                     desc_act=compress_config.desc_act,
+                    use_exllama=use_exllama,
                 )
                 model.tie_weights()
             if device is None and not device_map and not max_memory:
