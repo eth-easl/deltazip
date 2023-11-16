@@ -28,8 +28,6 @@ def main(args):
     )
     target_model.requires_grad_(False)
     if args.base_model != "" and args.delta != "":
-        # import copy
-        # target_model_copy = copy.deepcopy(target_model)
         print("[info] base model is defined, delta mode enabled")
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config
@@ -45,6 +43,7 @@ def main(args):
     torch.cuda.empty_cache()
     for name, param in target_model.named_parameters():
         # check if nan exists
+        print(name)
         if torch.isnan(param).any():
             raise ValueError(f"NaN exists in {name}")
     # now time to prepare inspect dataset

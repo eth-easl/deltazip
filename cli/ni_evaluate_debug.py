@@ -19,24 +19,33 @@ def postprocess(text):
     text = text.split("\n")[0]
     return text
 
+compress_config = BaseCompressionConfig(
+    bits=4,
+    group_size=128,
+    sparsity=1,
+    prunen=0,
+    prunem=0,
+    lossless="gdeflate",
+    damp_percent=0.02,
+)
+
+raw_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
+raw_model = AutoFMZipModelForCausalLM.from_pretrained(raw_model, compress_config=compress_config)
+raw_model = raw_model.half()
+raw_model = raw_model.to(torch.device("cuda"))
+lm_head = torch.nn.Parameter(raw_model.state_dict()['lm_head.weight'].cuda().half())
+embed_token = torch.nn.Parameter(raw_model.state_dict()['model.embed_tokens.weight'].cuda().half())
 
 def generate(args):
     print(args)
     # just placeholder, we don't need it for base model...
     # (todo:xiaozhe) remove the need of compress_config
-    compress_config = BaseCompressionConfig(
-        bits=4,
-        group_size=128,
-        sparsity=1,
-        prunen=0,
-        prunem=0,
-        lossless="gdeflate",
-        damp_percent=0.02,
-    )
+    
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=False)
     tokenizer.pad_token = tokenizer.bos_token
     tokenizer.pad_token_id = tokenizer.bos_token_id
     tokenizer.padding_side = "left"
+    tokenizer.skip_special_tokens = False
     with torch.inference_mode():
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config
@@ -59,7 +68,24 @@ def generate(args):
         # to leave more memory for higher-throughput generation,
         # put the base model to cpu
         base_model = base_model.to(torch.device("cpu"))
+        del base_model
         torch.cuda.empty_cache()
+        # patch delta model
+        delta_model.lm_head.weight = lm_head
+        delta_model.model.embed_tokens.weight = embed_token
+
+        print(f"Verifying...")
+        # for name, param in delta_model.named_parameters():
+        #     if "self_attn" in name:
+        #         print("skipping self_attn")
+        #         param.copy_(raw_model.state_dict()[name])
+        #     if "mlp" in name:
+        #         print("skipping mlp")
+        #         param = raw_model.state_dict()[name]
+        
+        for name, param in delta_model.named_parameters():
+            print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
+
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
@@ -75,7 +101,7 @@ def generate(args):
         )
         results = []
         for datum, output in zip(data, outputs):
-            result = datum
+            result = datum.copy()
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]
             result["raw_prediction"] = [o["generated_text"] for o in output]
             results.append(result)
