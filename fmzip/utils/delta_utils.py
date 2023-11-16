@@ -13,21 +13,18 @@ def subtract(base: AutoFMZipModelForCausalLM, target: AutoFMZipModelForCausalLM)
             param -= base.state_dict()[name]
     return target
 
-
 def xor(base: AutoFMZipModelForCausalLM, target: AutoFMZipModelForCausalLM):
     with torch.no_grad():
         for name, param in target.named_parameters():
             param ^= base.state_dict()[name]
     return target
 
-
 def subtract_inverse(base: AutoFMZipModelForCausalLM, delta: AutoFMZipModelForCausalLM):
     with torch.no_grad():
         for name, param in delta.named_parameters():
-            print(f"name = {name}, sparsity = {calculate_sparsity(param)}")
+            # print(f"name = {name}, sparsity = {calculate_sparsity(param)}")
             param += base.state_dict()[name]
     return delta
-
 
 def xor_inverse(base: AutoFMZipModelForCausalLM, delta: AutoFMZipModelForCausalLM):
     with torch.no_grad():

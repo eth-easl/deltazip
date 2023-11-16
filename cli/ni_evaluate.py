@@ -45,17 +45,16 @@ def generate(args):
         base_model = base_model.to(torch.device("cuda"))
         logger.info("Loading target model")
         delta_model = AutoFMZipModelForCausalLM.from_compressed(
-            args.target_model, strict=False, device="cpu", unpack=True
+            args.target_model, strict=True, device="cpu", unpack=True
         )
         delta_model = delta_model.half()
         delta_model = delta_model.to(torch.device("cuda"))
-        if args.delta != "":
-            if args.delta == "subtract":
-                delta_model = subtract_inverse(base_model, delta_model)
-            elif args.delta == "xor":
-                delta_model = xor_inverse(base_model, delta_model)
+        if args.delta == "subtract":
+            delta_model = subtract_inverse(base_model, delta_model)
+        elif args.delta == "xor":
+            raise NotImplementedError
         with open(args.input_file, "r") as f:
-            data = [json.loads(line) for line in f]
+            data = [json.loads(line) for line in f][:5]
         # to leave more memory for higher-throughput generation,
         # put the base model to cpu
         base_model = base_model.to(torch.device("cpu"))
@@ -79,9 +78,10 @@ def generate(args):
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]
             result["raw_prediction"] = [o["generated_text"] for o in output]
             results.append(result)
-        with open(args.output_file, "w") as f:
-            for datum in data:
-                f.write(json.dumps(datum) + "\n")
+        print(results)
+        # with open(args.output_file, "w") as f:
+        #     for datum in data:
+        #         f.write(json.dumps(datum) + "\n")
 
 
 if __name__ == "__main__":

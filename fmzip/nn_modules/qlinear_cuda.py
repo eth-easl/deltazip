@@ -10,7 +10,7 @@ from fmzip.nn_modules.triton_utils.kernels import (
     QuantLinearInferenceOnlyFunction,
 )
 
-use_exllama = True
+use_exllama = False
 
 try:
     import autogptq_cuda_256

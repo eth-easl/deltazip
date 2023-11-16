@@ -11,7 +11,7 @@ data_dir = os.path.join(CACHE_PATH, "datasets/qi/test")
 
 tasks = os.listdir(compressed_models)
 output_dir = os.path.join(
-    CACHE_PATH, f"experiments/fmzip/generation_llama/new_generation_results_{folder_name}"
+    CACHE_PATH, f"experiments/fmzip/generation_llama/generation_results_{folder_name}"
 )
 jobs = []
 for task in tasks:
