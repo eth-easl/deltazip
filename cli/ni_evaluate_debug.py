@@ -60,32 +60,27 @@ def generate(args):
         delta_model = delta_model.to(torch.device("cuda"))
         if args.delta == "subtract":
             print(f"Subtracting")
-            delta_model = subtract_inverse(base_model, delta_model)
+            for name, param in base_model.named_parameters():
+                delta_model.state_dict()[name].copy_(param + delta_model.state_dict()[name])
+           
         elif args.delta == "xor":
             raise NotImplementedError
         with open(args.input_file, "r") as f:
-            data = [json.loads(line) for line in f][:5]
-        # to leave more memory for higher-throughput generation,
-        # put the base model to cpu
-        base_model = base_model.to(torch.device("cpu"))
-        del base_model
+            data = [json.loads(line) for line in f][:10]
         torch.cuda.empty_cache()
         # patch delta model
         delta_model.lm_head.weight = lm_head
         delta_model.model.embed_tokens.weight = embed_token
-
-        print(f"Verifying...")
-        # for name, param in delta_model.named_parameters():
-        #     if "self_attn" in name:
-        #         print("skipping self_attn")
-        #         param.copy_(raw_model.state_dict()[name])
-        #     if "mlp" in name:
-        #         print("skipping mlp")
-        #         param = raw_model.state_dict()[name]
         
+        print(f"Verifying...")
         for name, param in delta_model.named_parameters():
-            print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
-
+            if "mlp" in name:
+                print(f"[{name}], diff: {torch.max(param - raw_model.state_dict()[name])}")
+                # param.copy_(raw_model.state_dict()[name])
+        
+        # for name, param in delta_model.named_parameters():
+        #     print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
+        torch.cuda.synchronize()
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
@@ -94,6 +89,7 @@ def generate(args):
         outputs = pipe(
             prompts,
             max_new_tokens=args.max_length,
+            do_sample=True,
             temperature=args.temperature,
             top_k=args.top_k,
             top_p=args.top_p,
@@ -105,7 +101,8 @@ def generate(args):
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]
             result["raw_prediction"] = [o["generated_text"] for o in output]
             results.append(result)
-        print(results)
+        for result in results:
+            print(f"output: {result['output']} prediction: {result['prediction']}")
         # with open(args.output_file, "w") as f:
         #     for datum in data:
         #         f.write(json.dumps(datum) + "\n")
@@ -122,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument("--do-sample", action="store_true", default=False)
     parser.add_argument("--top-p", type=float, default=0.9)
     parser.add_argument("--top-k", type=int, default=50)
-    parser.add_argument("--temperature", type=float, default=0.1)
+    parser.add_argument("--temperature", type=float, default=0.6)
     parser.add_argument("--max-length", type=int, default=64)
     args = parser.parse_args()
     generate(args)

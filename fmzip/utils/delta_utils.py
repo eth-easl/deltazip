@@ -22,7 +22,7 @@ def xor(base: AutoFMZipModelForCausalLM, target: AutoFMZipModelForCausalLM):
 def subtract_inverse(base: AutoFMZipModelForCausalLM, delta: AutoFMZipModelForCausalLM):
     with torch.no_grad():
         for name, param in delta.named_parameters():
-            param.copy(param + base.state_dict()[name])
+            param.copy_(param + base.state_dict()[name])
     return delta
 
 def xor_inverse(base: AutoFMZipModelForCausalLM, delta: AutoFMZipModelForCausalLM):

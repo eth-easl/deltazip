@@ -36,3 +36,5 @@ with torch.inference_mode():
 
     for name, param in delta_model.state_dict().items():
         print(f"{name}, {torch.max(param - target_model.state_dict()[name])}")
+        print(f"{param}")
+        print(f"{target_model.state_dict()[name]}")
