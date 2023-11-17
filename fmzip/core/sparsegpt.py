@@ -53,10 +53,6 @@ class SparseGPT:
         self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01
     ):
         W = self.layer.weight.data.clone()
-        if isinstance(self.layer, nn.Conv2d):
-            W = W.flatten(1)
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
         W = W.float()
 
         if hasattr(self, "quantizer"):
@@ -153,7 +149,9 @@ class SparseGPT:
         logger.info(f"duration: {(time.time() - tick)}")
         logger.info(f"avg loss: {avg_loss}")
         logger.info(f"sparsity: {calculate_sparsity(W)}")
-
+        if calculate_sparsity(W) == 1:
+            logger.warning("sparsity is 1")
+            print(W)
         g_idx = [i // self.columns for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
 

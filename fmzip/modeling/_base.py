@@ -43,10 +43,9 @@ class AutoCompressionConfig(PushToHubMixin):
     tolerance: float = field(default=1e-9)
     bits: List[int] = field(default_factory=lambda: [2, 3, 4, 8])
     sparsity: List[float] = field(default_factory=[0, 0.5, 0.75, 0.9, 0.99])
-    prunen: int = field(default=2)
-    prunem: int = field(default=4)
+    prunen: int = field(default=0)
+    prunem: int = field(default=0)
     block_size: int = field(default=128)
-    group_rows: int = field(default=1)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
     sym: bool = field(default=True)
@@ -85,12 +84,14 @@ class AutoCompressionConfig(PushToHubMixin):
             "sparsity": self.sparsity,
             "final_bit": self.final_bit,
             "final_sparsity": self.final_sparsity,
-            "group_rows": self.group_rows,
             "damp_percent": self.damp_percent,
             "desc_act": self.desc_act,
             "sym": self.sym,
             "true_sequential": self.true_sequential,
             "lossless": self.lossless,
+            "prunen": self.prunen,
+            "prunem": self.prunem,
+            "block_size": self.block_size,
         }
 
 
@@ -99,11 +100,10 @@ class BaseCompressionConfig(PushToHubMixin):
     bits: int = field(default=4, metadata={"choices": [2, 3, 4, 8, 16]})
     # sparsity = how many parameters we set to zero after quantization
     sparsity: float = field(default=0)
-    prunen: int = field(default=2)
-    prunem: int = field(default=4)
+    prunen: int = field(default=0)
+    prunem: int = field(default=0)
     group_size: int = field(default=-1)
     block_size: int = field(default=128)
-    group_rows: int = field(default=1)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
     sym: bool = field(default=False)
@@ -137,13 +137,15 @@ class BaseCompressionConfig(PushToHubMixin):
         return {
             "bits": self.bits,
             "group_size": self.group_size,
-            "group_rows": self.group_rows,
             "sparsity": self.sparsity,
             "damp_percent": self.damp_percent,
             "desc_act": self.desc_act,
             "sym": self.sym,
             "true_sequential": self.true_sequential,
             "lossless": self.lossless,
+            "prunen": self.prunen,
+            "prunem": self.prunem,
+            "block_size": self.block_size,
         }
 
 
