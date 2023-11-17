@@ -43,7 +43,6 @@ def main(args):
     torch.cuda.empty_cache()
     for name, param in target_model.named_parameters():
         # check if nan exists
-        print(name)
         if torch.isnan(param).any():
             raise ValueError(f"NaN exists in {name}")
     # now time to prepare inspect dataset

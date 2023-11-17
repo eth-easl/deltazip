@@ -2,5 +2,4 @@
 
 python cli/compress.py --base-model openlm-research/open_llama_3b_v2 --target-model xzyao/openllama-3b-chat --dataset .cache/datasets/dialogs.jsonl --bits 2 --sparsity 0 --outdir .cache/compressed_models/3b-parameters/2bits-openllama --delta subtract --lossless gdeflate --n-samples 512
 
-python cli/lossless_compress.py --base-model openlm-research/open_llama_3b_v2 --target-model xzyao/openllama-3b-chat --dataset .cache/datasets/dialogs.jsonl --bits 4 --sparsity 0 --outdir .cache/compressed_models/3b-parameters/openllama-3b-chat-lossless --delta subtract --lossless gdeflate --n-samples 128
-
+python cli/compress.py --base-model openlm-research/open_llama_3b_v2 --target-model /mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/ --dataset /mnt/scratch/xiayao/cache/datasets/qi/ar/task372_synthetic_palindrome_numbers.train.jsonl --bits 16 --sparsity 0 --outdir .cache/4bits-delta-debug-1024s/ --delta subtract --lossless gdeflate --n-samples 1024 --block-size 32

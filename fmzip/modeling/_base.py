@@ -788,21 +788,22 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         percdamp=self.compress_config.damp_percent,
                         blocksize=self.compress_config.block_size,
                     )
-                    self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
-                        sparsegpt[name].quantizer.to(
-                            CPU if force_layer_back_to_cpu else cur_layer_device
-                        ),
-                        move_to_device(
-                            scale, CPU if force_layer_back_to_cpu else cur_layer_device
-                        ),
-                        move_to_device(
-                            zero, CPU if force_layer_back_to_cpu else cur_layer_device
-                        ),
-                        move_to_device(
-                            g_idx, CPU if force_layer_back_to_cpu else cur_layer_device
-                        ),
-                    )
-                    sparsegpt[name].free()
+                    if self.compress_config.bits < 16:
+                        self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
+                            sparsegpt[name].quantizer.to(
+                                CPU if force_layer_back_to_cpu else cur_layer_device
+                            ),
+                            move_to_device(
+                                scale, CPU if force_layer_back_to_cpu else cur_layer_device
+                            ),
+                            move_to_device(
+                                zero, CPU if force_layer_back_to_cpu else cur_layer_device
+                            ),
+                            move_to_device(
+                                g_idx, CPU if force_layer_back_to_cpu else cur_layer_device
+                            ),
+                        )
+                        sparsegpt[name].free()
 
             for j in range(num_batches):
                 layer_input = move_to_device(layer_inputs[j], cur_layer_device)

@@ -161,12 +161,12 @@ class SparseGPT:
         )
         if DEBUG:
             print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
-        if scale == []:
+        if scale == [] and hasattr(self, "quantizer"):
             scale.append(self.quantizer.scale)
             zero.append(self.quantizer.zero)
-
-        scale = torch.cat(scale, dim=1)
-        zero = torch.cat(zero, dim=1)
+        if hasattr(self, "quantizer"):
+            scale = torch.cat(scale, dim=1)
+            zero = torch.cat(zero, dim=1)
         return scale, zero, g_idx, avg_loss
 
     def free(self):
