@@ -110,7 +110,10 @@ class SparseGPT:
                     tmp = W1**2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
                     # sparsity: mask1 is a boolean mask, True means the weight is pruned
                     # the larger the sparsity, the more weights are pruned (higher compression ratio)
-                    thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
+                    if sparsity == 0:
+                        thresh = -9999
+                    else:
+                        thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
                     mask1 = tmp < thresh
             else:
                 mask1 = torch.zeros_like(W1) == 1
@@ -119,7 +122,7 @@ class SparseGPT:
                 d = Hinv1[i, i]
 
                 q = w.clone()
-                q[mask1[:, i]] = 0
+                # q[mask1[:, i]] = 0
                 if hasattr(self, "quantizer"):
                     q = quantize(
                         q.unsqueeze(1),
