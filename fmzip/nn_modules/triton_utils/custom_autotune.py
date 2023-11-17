@@ -9,6 +9,7 @@ from typing import Dict
 Mostly the same as the autotuner in Triton, but with a few changes like using 40 runs instead of 100.
 """
 
+
 class CustomizedTritonAutoTuner(triton.KernelInterface):
     def __init__(
         self,
@@ -221,6 +222,7 @@ def matmul248_kernel_config_pruner(configs, nargs):
             num_stages=config.num_stages,
             num_warps=config.num_warps,
         )
+
 
 def autotune(
     configs, key, prune_configs_by=None, reset_to_zero=None, nearest_power_of_two=False

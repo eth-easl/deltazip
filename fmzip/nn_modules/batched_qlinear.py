@@ -5,6 +5,7 @@ from loguru import logger
 from fmzip.nn_modules.qlinear_cuda import QuantLinear
 from fmzip.nn_modules.triton_utils.bmm import quant_bmm_248
 
+
 def BatchedQuantLinearForward(inputs, layers: List[QuantLinear]):
     # assuming all bits are the same
     bits = layers[0].bits
@@ -13,16 +14,16 @@ def BatchedQuantLinearForward(inputs, layers: List[QuantLinear]):
     b_qzeros = torch.stack([l.qzeros for l in layers])
     b_scales = torch.stack([l.scales for l in layers])
     b_g_idx = torch.stack([l.g_idx for l in layers])
-    return quant_bmm_248(
-        inputs, b_qweights, b_scales, b_qzeros, b_g_idx, bits, max_q)
+    return quant_bmm_248(inputs, b_qweights, b_scales, b_qzeros, b_g_idx, bits, max_q)
 
 
-def WarmupBQLForward(models: List, b = 8, seqlen=2048):
+def WarmupBQLForward(models: List, b=8, seqlen=2048):
     """
     ideally we should also support cuda graphs
     (todo: xiaozhe; high priority)
     """
     from tqdm import tqdm
+
     kn_values = {}
     for model in models:
         for _, m in model.named_modules():

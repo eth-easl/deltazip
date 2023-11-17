@@ -91,7 +91,7 @@ class AutoFMZipModelForCausalLM:
             trust_remote_code=trust_remote_code,
             warmup_triton=warmup_triton,
             unpack=unpack,
-            use_exllama = use_exllama,
+            use_exllama=use_exllama,
             **keywords
         )
 

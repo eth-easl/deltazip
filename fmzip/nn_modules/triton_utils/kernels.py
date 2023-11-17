@@ -351,9 +351,11 @@ def transpose_quant_matmul_248_kernel(
     c_mask = (offs_am[:, None] < M) & (offs_bk[None, :] < K)
     tl.store(c_ptrs, accumulator, mask=c_mask)
 
+
 @triton.jit
 def silu(x):
     return x * tl.sigmoid(x)
+
 
 def quant_matmul_248(input, qweight, scales, qzeros, g_idx, bits, maxq):
     with torch.cuda.device(input.device):

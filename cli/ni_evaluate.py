@@ -8,6 +8,7 @@ from transformers import AutoTokenizer, TextGenerationPipeline
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 
+
 def postprocess(text):
     # logic:
     # remove leading and trailing spaces
@@ -64,7 +65,7 @@ def generate(args):
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
         logger.info("Pipeline Ready")
-        prompts = [datum[args.input_field]+"\n" for datum in data]
+        prompts = [datum[args.input_field] + "\n" for datum in data]
         outputs = pipe(
             prompts,
             max_new_tokens=args.max_length,

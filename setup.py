@@ -119,7 +119,7 @@ if BUILD_CUDA_EXT:
                 "fmzip/core/csrc/exllamav2/cuda/q_matrix.cu",
                 "fmzip/core/csrc/exllamav2/cuda/q_gemm.cu",
             ],
-            extra_link_args=[]
+            extra_link_args=[],
         )
     )
 
@@ -148,7 +148,7 @@ if BUILD_CUDA_EXT:
         "ext_modules": extensions,
         "cmdclass": {"build_ext": cpp_extension.BuildExtension},
     }
-    
+
 common_setup_kwargs.update(additional_setup_kwargs)
 
 setup(

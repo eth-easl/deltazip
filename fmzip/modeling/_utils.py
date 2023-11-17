@@ -11,6 +11,7 @@ from fmzip.nn_modules.qlinear_cuda import QuantLinear
 
 EXLLAMA_DEFAULT_MAX_INPUT_LENGTH = 2048
 
+
 def get_device(obj: Union[torch.Tensor, nn.Module]):
     if isinstance(obj, torch.Tensor):
         return obj.device
@@ -45,13 +46,17 @@ def get_module_by_name(model, module_name: str):
 
 
 def make_quant(
-    module, names, bits, name="", 
+    module,
+    names,
+    bits,
+    name="",
     use_triton=False,
     use_cuda_fp16=True,
     desc_act=False,
     use_exllama: bool = False,
 ):
     from ..nn_modules.qlinear_cuda import QuantLinear
+
     if isinstance(module, QuantLinear):
         return
     for attr in dir(module):
@@ -73,7 +78,7 @@ def make_quant(
                 out_features,
                 tmp.bias is not None,
                 use_triton=use_triton,
-                use_exllama=use_exllama
+                use_exllama=use_exllama,
             )
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))
@@ -87,8 +92,9 @@ def make_quant(
             use_triton=use_triton,
             use_cuda_fp16=use_cuda_fp16,
             desc_act=desc_act,
-            use_exllama=use_exllama
+            use_exllama=use_exllama,
         )
+
 
 def fmzip_post_init(model, use_act_order: bool, max_input_length: Optional[int] = None):
     """
@@ -97,30 +103,32 @@ def fmzip_post_init(model, use_act_order: bool, max_input_length: Optional[int] 
     ## exllamav2
     fixed_bytes = {}
     model_uses_exllamav2 = False
-    
+
     for _, submodule in model.named_modules():
         if hasattr(submodule, "QUANT_TYPE"):
             model_uses_exllamav2 = True
             device = submodule.qweight.device
             scratch_fixed = submodule.scratch_space_fixed()
-            fixed_bytes[device] = max(scratch_fixed, fixed_bytes.get(device,0))
+            fixed_bytes[device] = max(scratch_fixed, fixed_bytes.get(device, 0))
 
     if model_uses_exllamav2:
         from fmzip.nn_modules.exllama_utils import ExLlamaV2DeviceTensors
-        device_tensors = {} 
+
+        device_tensors = {}
         for device, scratch_bytes in fixed_bytes.items():
             device_tensors[device] = ExLlamaV2DeviceTensors(device.index, scratch_bytes)
-        
+
         # have persistent buffers, otherwise we will get OOM
         model.device_tensors = device_tensors
 
         for _, submodule in model.named_modules():
             if hasattr(submodule, "QUANT_TYPE"):
                 device = submodule.qweight.device
-                submodule.post_init(temp_dq = model.device_tensors[device])
+                submodule.post_init(temp_dq=model.device_tensors[device])
     torch.cuda.empty_cache()
 
     return model
+
 
 def unpack_model(model):
     logger.info("Unpacking model...")

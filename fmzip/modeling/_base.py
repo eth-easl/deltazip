@@ -35,6 +35,7 @@ from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 from ..nn_modules.qlinear_cuda import QuantLinear
 from fmzip.modeling._utils import fmzip_post_init
+
 triton_has_warmup = False
 
 
@@ -106,7 +107,7 @@ class BaseCompressionConfig(PushToHubMixin):
     block_size: int = field(default=128)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
-    sym: bool = field(default=False)
+    sym: bool = field(default=True)
     true_sequential: bool = field(default=True)
     lossless: str = field(default="none")
     dtype: str = field(default="fp16")
@@ -661,7 +662,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 for (
                     k,
                     v,
-                ) in kwargs.items():  # make sure other arguments also be captured
+                ) in kwargs.items():
+                    # make sure other arguments also be captured
                     if k not in ["hidden_states", "attention_mask", "position_ids"]:
                         if isinstance(v, torch.Tensor):
                             one_kwargs[k] = move_to_device(v, self.data_device)
@@ -796,13 +798,16 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                                 CPU if force_layer_back_to_cpu else cur_layer_device
                             ),
                             move_to_device(
-                                scale, CPU if force_layer_back_to_cpu else cur_layer_device
+                                scale,
+                                CPU if force_layer_back_to_cpu else cur_layer_device,
                             ),
                             move_to_device(
-                                zero, CPU if force_layer_back_to_cpu else cur_layer_device
+                                zero,
+                                CPU if force_layer_back_to_cpu else cur_layer_device,
                             ),
                             move_to_device(
-                                g_idx, CPU if force_layer_back_to_cpu else cur_layer_device
+                                g_idx,
+                                CPU if force_layer_back_to_cpu else cur_layer_device,
                             ),
                         )
                         sparsegpt[name].free()
@@ -1126,13 +1131,15 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         )
         # move tensors to target device
         # print model keys
-        missing_keys, unexpected_keys = model.load_state_dict(tensors, strict=False, assign=True)
+        missing_keys, unexpected_keys = model.load_state_dict(
+            tensors, strict=False, assign=True
+        )
         if missing_keys:
             logger.debug(f"missing keys: {missing_keys}")
         if unexpected_keys:
             logger.debug(f"unexpected keys: {unexpected_keys}")
         model = model.to(device)
-        model = fmzip_post_init(model, use_act_order = compress_config.desc_act)
+        model = fmzip_post_init(model, use_act_order=compress_config.desc_act)
         model.eval()
         if isinstance(
             compress_config, AutoCompressionConfig
@@ -1164,7 +1171,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if not triton_has_warmup and use_triton:
             QuantLinear.warmup(model, seqlen=model.seqlen)
             triton_has_warmup = True
-        
+
         del losslesscompressor
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)

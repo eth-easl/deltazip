@@ -17,20 +17,16 @@ with torch.inference_mode():
         lossless="gdeflate",
         damp_percent=0.02,
     )
-    base_model = transformers.AutoModel.from_pretrained(
-        base_model
-    )
+    base_model = transformers.AutoModel.from_pretrained(base_model)
     base_model = base_model.half()
     base_model = base_model.to(torch.device("cuda"))
 
-    target_model = transformers.AutoModel.from_pretrained(
-        target_model
-    )
+    target_model = transformers.AutoModel.from_pretrained(target_model)
     target_model = target_model.half()
     target_model = target_model.to(torch.device("cuda"))
 
     diff_model = subtract(base_model, target_model)
-    
+
     reconstructed_model = subtract_inverse(base_model, diff_model)
     for name, param in reconstructed_model.state_dict().items():
         if not torch.equal(param, target_model.state_dict()[name]):

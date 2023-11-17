@@ -20,6 +20,7 @@ def main(args):
         prunem=args.prunem,
         lossless=args.lossless,
         damp_percent=args.perc_damp,
+        sym=True,
     )
     print("[info] compress config:", compress_config)
     target_model = AutoFMZipModelForCausalLM.from_pretrained(
@@ -47,10 +48,13 @@ def main(args):
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)["text"] for line in fp.readlines()]
+
     if args.n_samples <= 0:
         examples = examples
     else:
         import random
+
+        random.seed(42)
         examples = random.sample(examples, args.n_samples)
 
     examples = [tokenizer(x) for x in examples]

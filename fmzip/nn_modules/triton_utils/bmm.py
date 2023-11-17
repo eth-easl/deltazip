@@ -164,6 +164,7 @@ class QuantLinearFunction(torch.autograd.Function):
         ctx.bits, ctx.maxq = bits, maxq
         return output
 
+
 def quant_bmm_248(input, qweight, scales, qzeros, g_idx, bits, maxq):
     with torch.cuda.device(input.device):
         bsz = input.shape[0]

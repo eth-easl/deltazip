@@ -15,12 +15,14 @@ print(compressed_models)
 if model_family == "open_llama_3b_v2":
     base_model = "openlm-research/open_llama_3b_v2"
     output_dir = os.path.join(
-        CACHE_PATH, f"experiments/fmzip/generation_llama/generation_results_{folder_name}"
+        CACHE_PATH,
+        f"experiments/fmzip/generation_llama/generation_results_{folder_name}",
     )
 else:
     base_model = "EleutherAI/pythia-2.8b-deduped"
     output_dir = os.path.join(
-        CACHE_PATH, f"experiments/fmzip/generation_pythia/generation_results_{folder_name}"
+        CACHE_PATH,
+        f"experiments/fmzip/generation_pythia/generation_results_{folder_name}",
     )
 jobs = []
 for task in tasks:

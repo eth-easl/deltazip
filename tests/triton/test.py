@@ -31,6 +31,7 @@ def add_kernel(
     # Write x + y back to DRAM.
     tl.store(output_ptr + offsets, output, mask=mask)
 
+
 def add(x: torch.Tensor, y: torch.Tensor):
     # We need to preallocate the output.
     output = torch.empty_like(x)
@@ -39,7 +40,7 @@ def add(x: torch.Tensor, y: torch.Tensor):
     # The SPMD launch grid denotes the number of kernel instances that run in parallel.
     # It is analogous to CUDA launch grids. It can be either Tuple[int], or Callable(metaparameters) -> Tuple[int].
     # In this case, we use a 1D grid where the size is the number of blocks:
-    grid = lambda meta: (triton.cdiv(n_elements, meta['BLOCK_SIZE']),)
+    grid = lambda meta: (triton.cdiv(n_elements, meta["BLOCK_SIZE"]),)
     # NOTE:
     #  - Each torch.tensor object is implicitly converted into a pointer to its first element.
     #  - `triton.jit`'ed functions can be indexed with a launch grid to obtain a callable GPU kernel.
@@ -49,15 +50,16 @@ def add(x: torch.Tensor, y: torch.Tensor):
     # running asynchronously at this point.
     return output
 
+
 torch.manual_seed(0)
 size = 98432
-x = torch.rand(size, device='cuda')
-y = torch.rand(size, device='cuda')
+x = torch.rand(size, device="cuda")
+y = torch.rand(size, device="cuda")
 output_torch = x + y
 output_triton = add(x, y)
 print(output_torch)
 print(output_triton)
 print(
-    f'The maximum difference between torch and triton is '
-    f'{torch.max(torch.abs(output_torch - output_triton))}'
+    f"The maximum difference between torch and triton is "
+    f"{torch.max(torch.abs(output_torch - output_triton))}"
 )

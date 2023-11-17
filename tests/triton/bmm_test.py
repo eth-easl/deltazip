@@ -7,19 +7,29 @@ from fmzip.nn_modules.triton_utils.kernels import quant_matmul_inference_only_24
 tensors = torch.load(".cache/2bits-openllama/layer-1-selfattn.pt")
 BATCH_SIZE = 4
 BITS = 2
-MAX_Q = 2 ** BITS - 1
+MAX_Q = 2**BITS - 1
 
 input = torch.rand((BATCH_SIZE, 256, 3200), dtype=torch.float16, device="cuda:0")
-projs = ['q_proj', 'k_proj', 'v_proj', 'o_proj']
+projs = ["q_proj", "k_proj", "v_proj", "o_proj"]
 
-qweights = [tensors[f"model.layers.1.self_attn.{proj}.qweight"] for proj in projs][:BATCH_SIZE]
-qzeros = [tensors[f"model.layers.1.self_attn.{proj}.qzeros"] for proj in projs][:BATCH_SIZE]
-scales = [tensors[f"model.layers.1.self_attn.{proj}.scales"] for proj in projs][:BATCH_SIZE]
-g_idx = [tensors[f"model.layers.1.self_attn.{proj}.g_idx"] for proj in projs][:BATCH_SIZE]
+qweights = [tensors[f"model.layers.1.self_attn.{proj}.qweight"] for proj in projs][
+    :BATCH_SIZE
+]
+qzeros = [tensors[f"model.layers.1.self_attn.{proj}.qzeros"] for proj in projs][
+    :BATCH_SIZE
+]
+scales = [tensors[f"model.layers.1.self_attn.{proj}.scales"] for proj in projs][
+    :BATCH_SIZE
+]
+g_idx = [tensors[f"model.layers.1.self_attn.{proj}.g_idx"] for proj in projs][
+    :BATCH_SIZE
+]
 
 results = []
 for i in range(BATCH_SIZE):
-    res = quant_matmul_inference_only_248(input[i], qweights[i], scales[i], qzeros[i], g_idx[i], BITS, MAX_Q)
+    res = quant_matmul_inference_only_248(
+        input[i], qweights[i], scales[i], qzeros[i], g_idx[i], BITS, MAX_Q
+    )
     results.append(res)
 non_batch_results = torch.stack(results)
 print(non_batch_results.shape)

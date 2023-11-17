@@ -13,6 +13,7 @@ from fmzip.nn_modules.triton_utils.kernels import (
 try:
     import autogptq_cuda_256
     import autogptq_cuda_64
+
     _autogptq_cuda_available = True
 except ImportError:
     logger.warning("CUDA extension not installed.")
@@ -22,18 +23,23 @@ except ImportError:
 
 try:
     from fmzip.nn_modules.exllama_utils import ext_make_q_matrix, ext_gemm_half_q_half
+
     _exllama_v2_available = True
 except ImportError as exllama_v2_import_exception:
     logger.warning("Exllama V2 extension not installed.")
     _exllama_v2_available = False
 
     def error_raiser_exllama(*args, **kwargs):
-        raise ValueError(f"Trying to use the exllama v2 backend, but could not import the C++/CUDA dependencies with the following error: {exllama_v2_import_exception}")
+        raise ValueError(
+            f"Trying to use the exllama v2 backend, but could not import the C++/CUDA dependencies with the following error: {exllama_v2_import_exception}"
+        )
+
     make_q_matrix = error_raiser_exllama
     gemm_half_q_half = error_raiser_exllama
 
 # dummy tensor
 none_tensor = torch.empty((1, 1), device="meta")
+
 
 class QuantLinear(nn.Module):
     QUANT_TYPE = "cuda"
@@ -49,7 +55,6 @@ class QuantLinear(nn.Module):
         use_triton=True,
         use_exllama=False,
     ):
-        
         super().__init__()
         global _autogptq_cuda_available
         if bits not in [2, 3, 4, 8]:
@@ -109,32 +114,29 @@ class QuantLinear(nn.Module):
         self.use_triton = use_triton
         self.trainable = trainable
         if self.bits == 4 and _exllama_v2_available and self.use_exllama:
-            self.padding =- outfeatures % 32
+            self.padding = -outfeatures % 32
 
     def post_init(self, temp_dq):
         if self.bits == 4 and _exllama_v2_available and self.use_exllama:
             assert self.qweight.device.type == "cuda"
             assert self.qweight.device.index is not None
             self.q_tensors = {
-                "qweight":self.qweight,
-                "qzeros":self.qzeros,
-                "scales":self.scales,
-                "g_idx":self.g_idx
+                "qweight": self.qweight,
+                "qzeros": self.qzeros,
+                "scales": self.scales,
+                "g_idx": self.g_idx,
             }
             temp_dq = temp_dq.get_scratch_slice(self.temp_dq_size())
-            self.q_handle = ext_make_q_matrix(
-                self.q_tensors, temp_dq
-            )
+            self.q_handle = ext_make_q_matrix(self.q_tensors, temp_dq)
 
     def temp_dq_size(self):
         return self.infeatures * self.outfeatures * 2 + 128
-    
+
     def temp_fwd_size(self, max_input_len, max_batch_size):
         return self.outfeatures * max_input_len * max_batch_size * 4 + 128
-    
+
     def scratch_space_fixed(self, max_input_len=2048, max_batch_size=8):
         return self.temp_dq_size() + self.temp_fwd_size(max_input_len, max_batch_size)
-
 
     def pack(self, linear, scales, zeros, g_idx=None):
         W = linear.weight.data.clone()
@@ -245,18 +247,18 @@ class QuantLinear(nn.Module):
             if self.bits in [2, 4, 8]:
                 zeros = torch.bitwise_right_shift(
                     torch.unsqueeze(self.qzeros, 2).expand(-1, -1, 32 // self.bits),
-                    self.wf.unsqueeze(0)
+                    self.wf.unsqueeze(0),
                 ).to(torch.int16 if self.bits == 8 else torch.int8)
-                zeros = torch.bitwise_and(zeros, (2 ** self.bits) - 1)
+                zeros = torch.bitwise_and(zeros, (2**self.bits) - 1)
 
                 zeros = zeros + 1
                 zeros = zeros.reshape(self.scales.shape)
 
                 weight = torch.bitwise_right_shift(
                     torch.unsqueeze(self.qweight, 1).expand(-1, 32 // self.bits, -1),
-                    self.wf.unsqueeze(-1)
+                    self.wf.unsqueeze(-1),
                 ).to(torch.int16 if self.bits == 8 else torch.int8)
-                weight = torch.bitwise_and(weight, (2 ** self.bits) - 1)
+                weight = torch.bitwise_and(weight, (2**self.bits) - 1)
             elif self.bits == 3:
                 zeros = self.qzeros.reshape(
                     self.qzeros.shape[0], self.qzeros.shape[1] // 3, 3, 1
@@ -330,7 +332,7 @@ class QuantLinear(nn.Module):
             if self.bias:
                 output.add_(self.bias)
             return output
-        
+
         elif self.bits == 3:
             out_shape = x.shape[:-1] + (self.outfeatures,)
             x = x.reshape(-1, x.shape[-1])

@@ -25,6 +25,7 @@ dummy_compression_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+
 class FMZipPipeline:
     def __init__(
         self,
@@ -74,7 +75,7 @@ class FMZipPipeline:
             self.model_pool = {}
             self.req_count = {}
             self.key_list = []
-        
+
         torch.cuda.empty_cache()
 
     @torch.inference_mode()

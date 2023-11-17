@@ -23,13 +23,10 @@ with torch.inference_mode():
     )
     target_model = target_model.half()
     target_model = target_model.to(torch.device("cuda"))
-    
+
     print(f"Loading delta model...")
     delta_model = AutoFMZipModelForCausalLM.from_compressed(
-        delta_model, 
-        strict=True, 
-        device="cpu",
-        unpack=True
+        delta_model, strict=True, device="cpu", unpack=True
     )
     delta_model = delta_model.half()
     delta_model = delta_model.to(torch.device("cuda"))

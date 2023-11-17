@@ -8,6 +8,7 @@ from transformers import AutoTokenizer, TextGenerationPipeline
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
 
+
 def postprocess(text):
     # logic:
     # remove leading and trailing spaces
@@ -18,6 +19,7 @@ def postprocess(text):
     # if there's \n left, take the first part
     text = text.split("\n")[0]
     return text
+
 
 compress_config = BaseCompressionConfig(
     bits=4,
@@ -30,17 +32,22 @@ compress_config = BaseCompressionConfig(
 )
 
 raw_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
-raw_model = AutoFMZipModelForCausalLM.from_pretrained(raw_model, compress_config=compress_config)
+raw_model = AutoFMZipModelForCausalLM.from_pretrained(
+    raw_model, compress_config=compress_config
+)
 raw_model = raw_model.half()
 raw_model = raw_model.to(torch.device("cuda"))
-lm_head = torch.nn.Parameter(raw_model.state_dict()['lm_head.weight'].cuda().half())
-embed_token = torch.nn.Parameter(raw_model.state_dict()['model.embed_tokens.weight'].cuda().half())
+lm_head = torch.nn.Parameter(raw_model.state_dict()["lm_head.weight"].cuda().half())
+embed_token = torch.nn.Parameter(
+    raw_model.state_dict()["model.embed_tokens.weight"].cuda().half()
+)
+
 
 def generate(args):
     print(args)
     # just placeholder, we don't need it for base model...
     # (todo:xiaozhe) remove the need of compress_config
-    
+
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=False)
     tokenizer.pad_token = tokenizer.bos_token
     tokenizer.pad_token_id = tokenizer.bos_token_id
@@ -61,8 +68,10 @@ def generate(args):
         if args.delta == "subtract":
             print(f"Subtracting")
             for name, param in base_model.named_parameters():
-                delta_model.state_dict()[name].copy_(param + delta_model.state_dict()[name])
-           
+                delta_model.state_dict()[name].copy_(
+                    param + delta_model.state_dict()[name]
+                )
+
         elif args.delta == "xor":
             raise NotImplementedError
         with open(args.input_file, "r") as f:
@@ -71,13 +80,15 @@ def generate(args):
         # patch delta model
         delta_model.lm_head.weight = lm_head
         delta_model.model.embed_tokens.weight = embed_token
-        
+
         print(f"Verifying...")
         for name, param in delta_model.named_parameters():
             if "mlp" in name:
-                print(f"[{name}], diff: {torch.max(param - raw_model.state_dict()[name])}")
+                print(
+                    f"[{name}], diff: {torch.max(param - raw_model.state_dict()[name])}"
+                )
                 # param.copy_(raw_model.state_dict()[name])
-        
+
         # for name, param in delta_model.named_parameters():
         #     print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
         torch.cuda.synchronize()
@@ -85,7 +96,7 @@ def generate(args):
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
         logger.info("Pipeline Ready")
-        prompts = [datum[args.input_field]+"\n" for datum in data]
+        prompts = [datum[args.input_field] + "\n" for datum in data]
         outputs = pipe(
             prompts,
             max_new_tokens=args.max_length,

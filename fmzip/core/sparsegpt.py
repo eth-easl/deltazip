@@ -13,6 +13,7 @@ DEBUG = False
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
 
+
 def calculate_sparsity(tensor: torch.Tensor):
     return (tensor == 0).sum().item() / tensor.numel()
 
@@ -49,9 +50,7 @@ class SparseGPT:
         inp = math.sqrt(2 / self.nsamples) * inp.float()
         self.H += inp.matmul(inp.t())
 
-    def fasterprune(
-        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01
-    ):
+    def fasterprune(self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01):
         W = self.layer.weight.data.clone()
         W = W.float()
         group_size = 128
@@ -94,7 +93,6 @@ class SparseGPT:
                 if percdamp >= 0.05:
                     raise ValueError("percdamp too high (>=0.05), aborting")
 
-        
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
             count = i2 - i1
@@ -113,7 +111,9 @@ class SparseGPT:
                     if sparsity == 0:
                         thresh = -9999
                     else:
-                        thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
+                        thresh = torch.sort(tmp.flatten())[0][
+                            int(tmp.numel() * sparsity)
+                        ]
                     mask1 = tmp < thresh
             else:
                 mask1 = torch.zeros_like(W1) == 1
@@ -124,8 +124,10 @@ class SparseGPT:
                 q = w.clone()
                 q[mask1[:, i]] = 0
                 if hasattr(self, "quantizer"):
-                    if (i1+i) % group_size == 0:
-                        self.quantizer.find_params(W[:, (i1 + i):(i1 + i + group_size)], weight=True)
+                    if (i1 + i) % group_size == 0:
+                        self.quantizer.find_params(
+                            W[:, (i1 + i) : (i1 + i + group_size)], weight=True
+                        )
 
                     if ((i1 + i) // group_size) - now_idx == -1:
                         scale.append(self.quantizer.scale)
@@ -147,7 +149,7 @@ class SparseGPT:
 
             W[:, i1:i2] = Q1
             Losses += torch.sum(Losses1, 1) / 2
-            
+
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
             # if DEBUG:

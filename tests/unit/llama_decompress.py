@@ -17,11 +17,15 @@ compress_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
-raw_model = AutoFMZipModelForCausalLM.from_pretrained(target_model, compress_config=compress_config)
+raw_model = AutoFMZipModelForCausalLM.from_pretrained(
+    target_model, compress_config=compress_config
+)
 raw_model = raw_model.half()
 raw_model = raw_model.to(torch.device("cuda"))
-lm_head = torch.nn.Parameter(raw_model.state_dict()['lm_head.weight'].cuda().half())
-embed_token = torch.nn.Parameter(raw_model.state_dict()['model.embed_tokens.weight'].cuda().half())
+lm_head = torch.nn.Parameter(raw_model.state_dict()["lm_head.weight"].cuda().half())
+embed_token = torch.nn.Parameter(
+    raw_model.state_dict()["model.embed_tokens.weight"].cuda().half()
+)
 del raw_model
 
 with torch.inference_mode():
@@ -32,20 +36,20 @@ with torch.inference_mode():
     base_model = base_model.half()
     base_model = base_model.to(torch.device("cuda"))
 
-    print(f'Loading target model...')
+    print(f"Loading target model...")
     target_model = AutoFMZipModelForCausalLM.from_pretrained(
         target_model, compress_config=compress_config
     )
     target_model = target_model.half()
     target_model = target_model.to(torch.device("cuda"))
-    
+
     print(f"Loading delta model...")
     delta_model = AutoFMZipModelForCausalLM.from_compressed(
         delta_model, strict=True, device="cpu", unpack=True
     )
     delta_model = delta_model.half()
     delta_model = delta_model.to(torch.device("cuda"))
-    
+
     delta_model = subtract_inverse(base_model, delta_model)
     delta_model.lm_head.weight = lm_head
     delta_model.model.embed_tokens.weight = embed_token

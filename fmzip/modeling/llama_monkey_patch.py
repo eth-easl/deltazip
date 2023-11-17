@@ -23,6 +23,7 @@ use_flash_attn = True
 if use_flash_attn:
     torch.backends.cuda.enable_flash_sdp(True)
 
+
 def llama_mlp_forward(self, x):
     hidden_states = self.up_proj(x.to(BASE_DEVICE, non_blocking=True))
     gate_hidden_states = self.gate_proj(x.to(BASE_DEVICE, non_blocking=True))
@@ -85,6 +86,7 @@ def llama_mlp_forward(self, x):
             [x.to(BASE_DEVICE, non_blocking=True) for x in delta_down_hss], dim=0
         )
     return hidden_states
+
 
 def llama_attention_forward(
     self,
@@ -174,13 +176,13 @@ def llama_attention_forward(
             query_states,
             key_states,
             value_states,
-            dropout_p = 0.0,
+            dropout_p=0.0,
             attn_mask=attention_mask,
         )
     else:
-        attn_weights = torch.matmul(query_states, key_states.transpose(2, 3)) / math.sqrt(
-            self.head_dim
-        )
+        attn_weights = torch.matmul(
+            query_states, key_states.transpose(2, 3)
+        ) / math.sqrt(self.head_dim)
 
         if attn_weights.size() != (bsz, self.num_heads, q_len, kv_seq_len):
             raise ValueError(
@@ -196,9 +198,9 @@ def llama_attention_forward(
             attn_weights = attn_weights + attention_mask
 
         # upcast attention to fp32
-        attn_weights = nn.functional.softmax(attn_weights, dim=-1, dtype=torch.float32).to(
-            query_states.dtype
-        )
+        attn_weights = nn.functional.softmax(
+            attn_weights, dim=-1, dtype=torch.float32
+        ).to(query_states.dtype)
         attn_output = torch.matmul(attn_weights, value_states)
 
     if attn_output.size() != (bsz, self.num_heads, q_len, self.head_dim):
