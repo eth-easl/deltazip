@@ -54,10 +54,11 @@ class SparseGPT:
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
+        group_size = 128
 
-        if hasattr(self, "quantizer"):
-            if not self.quantizer.ready():
-                self.quantizer.find_params(W, weight=True)
+        # if hasattr(self, "quantizer"):
+        #     if not self.quantizer.ready():
+        #         self.quantizer.find_params(W, weight=True)
 
         tick = time.time()
 
@@ -66,6 +67,12 @@ class SparseGPT:
         dead = torch.diag(H) == 0
         H[dead, dead] = 1
         W[:, dead] = 0
+
+        g_idx = []
+        scale = []
+        zero = []
+        now_idx = 1
+        mask = None
 
         Losses = torch.zeros(self.rows, device=self.dev)
         # we repeat the process and find percdamp that doesn't cause instability
@@ -87,10 +94,7 @@ class SparseGPT:
                 if percdamp >= 0.05:
                     raise ValueError("percdamp too high (>=0.05), aborting")
 
-        g_idx = []
-        scale = []
-        zero = []
-        mask = None
+        
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
             count = i2 - i1
@@ -118,8 +122,16 @@ class SparseGPT:
                 d = Hinv1[i, i]
 
                 q = w.clone()
-                # q[mask1[:, i]] = 0
+                q[mask1[:, i]] = 0
                 if hasattr(self, "quantizer"):
+                    if (i1+i) % group_size == 0:
+                        self.quantizer.find_params(W[:, (i1 + i):(i1 + i + group_size)], weight=True)
+
+                    if ((i1 + i) // group_size) - now_idx == -1:
+                        scale.append(self.quantizer.scale)
+                        zero.append(self.quantizer.zero)
+                        now_idx += 1
+
                     q = quantize(
                         q.unsqueeze(1),
                         self.quantizer.scale,
@@ -152,11 +164,10 @@ class SparseGPT:
         if calculate_sparsity(W) == 1:
             logger.warning("sparsity is 1")
             print(W)
-        g_idx = [i // self.columns for i in range(self.columns)]
+        g_idx = [i // group_size for i in range(self.columns)]
+        # g_idx = [i // self.columns for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
 
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
         self.layer.weight.data = W.reshape(self.layer.weight.shape).to(
             self.layer.weight.data.dtype
         )
