@@ -14,7 +14,6 @@ def main(args):
 
     compress_config = BaseCompressionConfig(
         bits=args.bits,
-        group_size=args.group_size,
         sparsity=args.sparsity,
         prunen=args.prunen,
         block_size=args.block_size,
@@ -80,7 +79,6 @@ if __name__ == "__main__":
     parser.add_argument("--sparsity", type=float, default=0.5)
     parser.add_argument("--bits", type=int, default=4)
     parser.add_argument("--block-size", type=int, default=128)
-    parser.add_argument("--group-size", type=int, default=-1)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
     parser.add_argument(
