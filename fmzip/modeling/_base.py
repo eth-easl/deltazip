@@ -452,7 +452,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             f"Search Compression {name} in layer {i+1}/{len(layers)} - sparsity: {config['sparsity']}, bits: {config['bit']}"
                         )
                         scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
-                            config["sparsity"],
+                            sparsity = config["sparsity"],
                             prunen=self.compress_config.prunen,
                             prunem=self.compress_config.prunem,
                             percdamp=self.compress_config.damp_percent,
@@ -537,7 +537,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     )
 
                     scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
-                        self.compress_config.final_sparsity[
+                        sparsity = self.compress_config.final_sparsity[
                             f"{self.layers_block_name}.{i}.{name}"
                         ],
                         prunen=self.compress_config.prunen,
@@ -786,7 +786,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
                     scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
-                        self.compress_config.sparsity,
+                        sparsity = self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,

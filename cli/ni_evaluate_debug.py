@@ -69,9 +69,8 @@ def generate(args):
             print(f"Subtracting")
             for name, param in base_model.named_parameters():
                 delta_model.state_dict()[name].copy_(
-                    param + delta_model.state_dict()[name]
+                    param + delta_model.state_dict()[name]/10
                 )
-
         elif args.delta == "xor":
             raise NotImplementedError
         with open(args.input_file, "r") as f:

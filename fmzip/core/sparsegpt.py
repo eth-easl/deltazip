@@ -23,12 +23,7 @@ class SparseGPT:
         self.layer = layer
         self.dev = self.layer.weight.device
         W = layer.weight.data.clone()
-        if isinstance(self.layer, nn.Conv2d):
-            W = W.flatten(1)
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
-        self.rows = W.shape[0]
-        self.columns = W.shape[1]
+        self.rows, self.columns = W.shape[0], W.shape[1]
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
         self.nsamples = 0
 
@@ -39,9 +34,7 @@ class SparseGPT:
         if len(inp.shape) == 2:
             inp = inp.unsqueeze(0)
         tmp = inp.shape[0]
-        if isinstance(self.layer, nn.Linear) or isinstance(
-            self.layer, transformers.Conv1D
-        ):
+        if isinstance(self.layer, nn.Linear):
             if len(inp.shape) == 3:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
@@ -53,7 +46,7 @@ class SparseGPT:
     def fasterprune(self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01):
         W = self.layer.weight.data.clone()
         W = W.float()
-        group_size = 128
+        group_size = 1
 
         # if hasattr(self, "quantizer"):
         #     if not self.quantizer.ready():
