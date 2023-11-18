@@ -56,3 +56,6 @@ if __name__=="__main__":
     if PRINT_JOB:
         for job in jobs:
             print(job)
+
+    for job in jobs:
+        os.system(f"ts --gpus 1 {job}")
