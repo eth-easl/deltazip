@@ -27,10 +27,8 @@ compress_config = BaseCompressionConfig(
 
 def generate(args):
     print(args)
-    # just placeholder, we don't need it for base model...
-    # (todo:xiaozhe) remove the need of compress_config
     tokenizer = AutoTokenizer.from_pretrained(
-        args.base_model, use_fast=False
+        args.base_model, use_fast=args.fast_tokenizer
     )
     tokenizer.pad_token = tokenizer.bos_token
     tokenizer.pad_token_id = tokenizer.bos_token_id
@@ -41,31 +39,23 @@ def generate(args):
             args.base_model, compress_config=compress_config
         )
         base_model = base_model.half()
-        base_model = base_model.to(torch.device("cuda"))
         logger.info("Loading target model")
         delta_model = AutoFMZipModelForCausalLM.from_compressed(
             args.target_model, strict=True, device="cpu", unpack=True
         )
         delta_model = delta_model.half()
-        delta_model = delta_model.to(torch.device("cuda"))
+        compressed_modules = []
+        for x in base_model.inside_layer_modules:
+            compressed_modules.extend(x)
         if args.delta == "subtract":
-            for name, param in base_model.named_parameters():
-                if "layernorm" not in name:
-                    delta_model.state_dict()[name].copy_(
-                        param + delta_model.state_dict()[name]
+            for name, param in base_model.model.named_parameters():
+                if any([modules in name for modules in compressed_modules]):
+                    delta_model.model.state_dict()[name].copy_(
+                        param + delta_model.model.state_dict()[name]
                     )
-        elif args.delta == "xor":
-            raise NotImplementedError
+        delta_model = delta_model.to(torch.device("cuda"))
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f][:10]
-        torch.cuda.empty_cache()
-        # patch delta model
-        delta_model.lm_head.weight = lm_head
-        delta_model.model.embed_tokens.weight = embed_token
-
-        for name, param in delta_model.named_parameters():
-            print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
-        torch.cuda.synchronize()
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
@@ -86,11 +76,12 @@ def generate(args):
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]
             result["raw_prediction"] = [o["generated_text"] for o in output]
             results.append(result)
-        for result in results:
-            print(f"output: {result['output']} prediction: {result['prediction']}")
-        # with open(args.output_file, "w") as f:
-        #     for datum in data:
-        #         f.write(json.dumps(datum) + "\n")
+        # create output dir if not exists
+        if not os.path.exists(os.path.dirname(args.output_file)):
+            os.makedirs(os.path.dirname(args.output_file))
+        with open(args.output_file, "w") as f:
+            for datum in results:
+                f.write(json.dumps(datum) + "\n")
 
 
 if __name__ == "__main__":
@@ -102,6 +93,7 @@ if __name__ == "__main__":
     parser.add_argument("--input-field", type=str, default="input")
     parser.add_argument("--output-file", type=str, default="")
     parser.add_argument("--do-sample", action="store_true", default=False)
+    parser.add_argument("--fast-tokenizer", action="store_true", default=False)
     parser.add_argument("--top-p", type=float, default=0.9)
     parser.add_argument("--top-k", type=int, default=50)
     parser.add_argument("--temperature", type=float, default=0.6)
