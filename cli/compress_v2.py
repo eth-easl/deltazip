@@ -46,11 +46,17 @@ def main(args):
         # examples = random.sample(examples, args.n_samples)
         examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
-    target_model.lossy_compress(
-        examples,
-        batch_size=2,
-        base_model=base_model,
-    )
+    if args.base_model != "" and args.delta != "":
+        target_model.lossy_compress(
+            examples,
+            batch_size=2,
+            base_model = base_model,
+        )
+    else:
+        target_model.lossy_compress(
+            examples,
+            batch_size=2,
+        )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
     target_model.save_compressed(args.outdir)

@@ -421,16 +421,17 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     logger.debug(
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
-                    base_weight = base_model.state_dict()[
-                        f"{self.layers_block_name}.{i}.{name}.weight"
-                    ]
+                    if base_model is not None:
+                        base_weight = base_model.state_dict()[
+                            f"{self.layers_block_name}.{i}.{name}.weight"
+                        ]
                     scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
                         sparsity=self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
                         blocksize=self.compress_config.block_size,
-                        base_weight=base_weight,
+                        base_weight=base_weight if base_model is not None else None,
                     )
                     if self.compress_config.bits < 16:
                         self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
