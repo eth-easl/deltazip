@@ -384,9 +384,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             sym=self.compress_config.sym,
                             mse=False,
                         )
+
                 def add_batch(name):
                     def tmp(_, inp, out):
                         sparsegpt[name].add_batch(inp[0].data, out.data)
+
                     return tmp
 
                 handles = []

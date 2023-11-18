@@ -50,7 +50,7 @@ def main(args):
         target_model.lossy_compress(
             examples,
             batch_size=2,
-            base_model = base_model,
+            base_model=base_model,
         )
     else:
         target_model.lossy_compress(

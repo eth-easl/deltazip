@@ -153,7 +153,7 @@ class SparseGPT:
                 W1[:, i:] -= err1.unsqueeze(1).matmul(Hinv1[i, i:].unsqueeze(0))
                 Err1[:, i] = err1
             W[:, i1:i2] = Q1
-            
+
             Losses += torch.sum(Losses1, 1) / 2
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
@@ -168,7 +168,9 @@ class SparseGPT:
         logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples}")
         logger.info(f"sparsity: {after_sparsity}")
         if after_sparsity - before_sparsity > 0.5:
-            logger.warning(f"high sparsity change detected: {before_sparsity} -> {after_sparsity}")
+            logger.warning(
+                f"high sparsity change detected: {before_sparsity} -> {after_sparsity}"
+            )
         avg_loss = torch.sum(Losses).item() / self.nsamples
 
         g_idx = [i // self.columns for i in range(self.columns)]
