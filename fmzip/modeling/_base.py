@@ -341,7 +341,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 example[k] = move_to_device(v, cur_layer_device)
             try:
                 self.model(**example)
-            except ValueError:
+            except ValueError as e:
                 pass
         layers[0] = layers[0].module
 
@@ -384,11 +384,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             sym=self.compress_config.sym,
                             mse=False,
                         )
-
                 def add_batch(name):
                     def tmp(_, inp, out):
                         sparsegpt[name].add_batch(inp[0].data, out.data)
-
                     return tmp
 
                 handles = []
