@@ -7,6 +7,7 @@ from transformers import AutoTokenizer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import subtract, xor
 
+
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
@@ -29,7 +30,7 @@ def main(args):
     if args.base_model != "" and args.delta != "":
         print("[info] base model is defined, delta mode enabled")
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
-            args.base_model, compress_config=compress_config,torch_dtype=torch.float16
+            args.base_model, compress_config=compress_config, torch_dtype=torch.float16
         )
         base_model.requires_grad_(False)
         base_model = base_model.to(torch.device("cuda"))
@@ -43,7 +44,7 @@ def main(args):
         # import random
         # # random.seed(42)
         # examples = random.sample(examples, args.n_samples)
-        examples = examples[:args.n_samples]
+        examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
     target_model.lossy_compress(
         examples,
@@ -53,6 +54,7 @@ def main(args):
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
     target_model.save_compressed(args.outdir)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

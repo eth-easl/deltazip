@@ -1,4 +1,3 @@
-
 import math
 import time
 
@@ -9,6 +8,7 @@ from loguru import logger
 
 from .quant import quantize, Quantizer
 from .sparsity_utils import calculate_sparsity
+
 DEBUG = False
 
 torch.backends.cuda.matmul.allow_tf32 = False
@@ -49,14 +49,22 @@ class SparseGPT:
             print(self.H)
 
     def fasterprune(
-        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01, actorder=False,
-        base_weight = None
+        self,
+        sparsity,
+        prunen=0,
+        prunem=0,
+        blocksize=128,
+        percdamp=0.01,
+        actorder=False,
+        base_weight=None,
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
         if base_weight is not None:
             base_weight = base_weight.float()
-            assert base_weight.shape == W.shape, "base_weight shape should be the same as W"
+            assert (
+                base_weight.shape == W.shape
+            ), "base_weight shape should be the same as W"
             W = W - base_weight
         if hasattr(self, "quantizer"):
             if not self.quantizer.ready():
@@ -68,9 +76,6 @@ class SparseGPT:
         dead = torch.diag(H) == 0
         H[dead, dead] = 1
         W[:, dead] = 0
-        new_sparsity = calculate_sparsity(W)
-        if new_sparsity ==1:
-            print(H)
         logger.info(f"before fasterprune sparsity: {calculate_sparsity(W)}")
         if actorder:
             perm = torch.argsort(torch.diag(H), descending=True)
@@ -144,7 +149,7 @@ class SparseGPT:
                         self.quantizer.zero,
                         self.quantizer.maxq,
                     ).flatten()
-                
+
                 Q1[:, i] = q
                 Losses1[:, i] = (w - q) ** 2 / d**2
 

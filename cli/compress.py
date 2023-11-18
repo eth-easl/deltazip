@@ -54,15 +54,13 @@ def main(args):
         # import random
         # # random.seed(42)
         # examples = random.sample(examples, args.n_samples)
-        examples = examples[:args.n_samples]
+        examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
-    target_model.lossy_compress(
-        examples,
-        batch_size=2
-    )
+    target_model.lossy_compress(examples, batch_size=2)
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
     target_model.save_compressed(args.outdir)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

@@ -31,16 +31,16 @@ compress_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
-# raw_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
-# raw_model = AutoFMZipModelForCausalLM.from_pretrained(
-#     raw_model, compress_config=compress_config
-# )
-# raw_model = raw_model.half()
-# raw_model = raw_model.to(torch.device("cuda"))
-# lm_head = torch.nn.Parameter(raw_model.state_dict()["lm_head.weight"].cuda().half())
-# embed_token = torch.nn.Parameter(
-#     raw_model.state_dict()["model.embed_tokens.weight"].cuda().half()
-# )
+raw_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
+raw_model = AutoFMZipModelForCausalLM.from_pretrained(
+    raw_model, compress_config=compress_config
+)
+raw_model = raw_model.half()
+raw_model = raw_model.to(torch.device("cuda"))
+lm_head = torch.nn.Parameter(raw_model.state_dict()["lm_head.weight"].cuda().half())
+embed_token = torch.nn.Parameter(
+    raw_model.state_dict()["model.embed_tokens.weight"].cuda().half()
+)
 
 
 def generate(args):
@@ -48,7 +48,7 @@ def generate(args):
     # just placeholder, we don't need it for base model...
     # (todo:xiaozhe) remove the need of compress_config
 
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=False)
     tokenizer.pad_token = tokenizer.bos_token
     tokenizer.pad_token_id = tokenizer.bos_token_id
     tokenizer.padding_side = "left"
@@ -77,19 +77,19 @@ def generate(args):
             data = [json.loads(line) for line in f][:10]
         torch.cuda.empty_cache()
         # patch delta model
-        # delta_model.lm_head.weight = lm_head
-        # delta_model.model.embed_tokens.weight = embed_token
+        delta_model.lm_head.weight = lm_head
+        delta_model.model.embed_tokens.weight = embed_token
 
-        # print(f"Verifying...")
-        # for name, param in delta_model.named_parameters():
-        #     if "mlp" in name:
-        #         print(
-        #             f"[{name}], diff: {torch.max(param - raw_model.state_dict()[name])}"
-        #         )
-                # param.copy_(raw_model.state_dict()[name])
+        print(f"Verifying...")
+        for name, param in delta_model.named_parameters():
+            if "mlp" in name:
+                print(
+                    f"[{name}], diff: {torch.max(param - raw_model.state_dict()[name])}"
+                )
+                param.copy_(raw_model.state_dict()[name])
 
-        # for name, param in delta_model.named_parameters():
-        #     print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
+        for name, param in delta_model.named_parameters():
+            print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
         torch.cuda.synchronize()
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
