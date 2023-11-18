@@ -49,15 +49,18 @@ class SparseGPT:
             print(self.H)
 
     def fasterprune(
-        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01, actorder=False
+        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01, actorder=False,
+        base_weight = None
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
-        
+        if base_weight is not None:
+            base_weight = base_weight.float()
+            assert base_weight.shape == W.shape, "base_weight shape should be the same as W"
+            W = W - base_weight
         if hasattr(self, "quantizer"):
             if not self.quantizer.ready():
                 self.quantizer.find_params(W, weight=True)
-
         tick = time.time()
 
         H = self.H
@@ -69,12 +72,10 @@ class SparseGPT:
         if new_sparsity ==1:
             print(H)
         logger.info(f"before fasterprune sparsity: {calculate_sparsity(W)}")
-
         if actorder:
             perm = torch.argsort(torch.diag(H), descending=True)
             W = W[:, perm]
             H = H[perm][:, perm]
-
         Losses = torch.zeros(self.rows, device=self.dev)
         # we repeat the process and find percdamp that doesn't cause instability
         success_damp = False
