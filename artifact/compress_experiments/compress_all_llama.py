@@ -8,6 +8,7 @@ in_folder = os.path.join(
 )
 include_nodelta = True
 include_delta = False
+
 poi_tasks = [
     "task151_tomqa_find_location_easy_clean",
     "task152_tomqa_find_location_easy_noise",

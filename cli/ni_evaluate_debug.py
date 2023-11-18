@@ -31,7 +31,7 @@ compress_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
-raw_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
+raw_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/open_llama_3b_v2/task372_synthetic_palindrome_numbers/global_step105/"
 raw_model = AutoFMZipModelForCausalLM.from_pretrained(
     raw_model, compress_config=compress_config
 )
