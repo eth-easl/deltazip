@@ -5,8 +5,8 @@ compressed_model_dir = os.path.join(
     cache_folder, "experiments", "fmzip", "compressed_models_new"
 )
 fast_tokenizer = {
-    "openlm-research/open_llama_3b_v2": False,
-    "EleutherAI/pythia-2.8b-deduped": True
+    "open_llama_3b_v2": False,
+    "pythia-2.8b-deduped": True
 }
 base_models = [
     "open_llama_3b_v2",
@@ -20,12 +20,12 @@ OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "generation_resu
 
 PRINT_JOB = True
 
-def render_job(base_model, target_model_dir, task, step,is_delta, config):
+def render_job(base_model, target_model_dir, task, step,is_delta, config, fast_tokenizer):
     input_file = os.path.join(cache_folder, "datasets", "qi", "test", task + ".test.jsonl")
     output_dir = os.path.join(OUTPUT_DIR, f"{base_model}", f"{task}-{step}", f"{config}.jsonl")
     job = None
     if not os.path.exists(output_dir):
-        job = f"python cli/ni_eval_v2.py --base-model {hf_id[base_model]} --target-model {target_model_dir} {'--delta subtract' if is_delta else ''} --input-file {input_file} --input-field input --max-length 64 --output-file {output_dir}"
+        job = f"python cli/ni_eval_v2.py --base-model {hf_id[base_model]} --target-model {target_model_dir} {'--delta subtract' if is_delta else ''} --input-file {input_file} --input-field input --max-length 64 --output-file {output_dir} {'--fast-tokenizer' if fast_tokenizer else ''}"
     return job
 
 if __name__=="__main__":
@@ -49,6 +49,7 @@ if __name__=="__main__":
                     step = step,
                     is_delta=True if method == "fmzip" else False,
                     config = config,
+                    fast_tokenizer=fast_tokenizer[base_model]
                 )
                 jobs.append(job)
     

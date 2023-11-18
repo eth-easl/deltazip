@@ -55,7 +55,7 @@ def generate(args):
                     )
         delta_model = delta_model.to(torch.device("cuda"))
         with open(args.input_file, "r") as f:
-            data = [json.loads(line) for line in f][:10]
+            data = [json.loads(line) for line in f]
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
