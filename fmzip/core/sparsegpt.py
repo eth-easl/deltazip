@@ -36,9 +36,7 @@ class SparseGPT:
         if len(inp.shape) == 2:
             inp = inp.unsqueeze(0)
         tmp = inp.shape[0]
-        if isinstance(self.layer, nn.Linear) or isinstance(
-            self.layer, transformers.Conv1D
-        ):
+        if isinstance(self.layer, nn.Linear):
             if len(inp.shape) == 3:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
@@ -46,17 +44,16 @@ class SparseGPT:
         self.nsamples += tmp
         inp = math.sqrt(2 / self.nsamples) * inp.float()
         self.H += inp.matmul(inp.t())
+        sparsity_H = calculate_sparsity(self.H)
+        if sparsity_H == 1:
+            print(self.H)
 
     def fasterprune(
         self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01, actorder=False
     ):
         W = self.layer.weight.data.clone()
-        if isinstance(self.layer, nn.Conv2d):
-            W = W.flatten(1)
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
         W = W.float()
-
+        
         if hasattr(self, "quantizer"):
             if not self.quantizer.ready():
                 self.quantizer.find_params(W, weight=True)
@@ -68,6 +65,10 @@ class SparseGPT:
         dead = torch.diag(H) == 0
         H[dead, dead] = 1
         W[:, dead] = 0
+        new_sparsity = calculate_sparsity(W)
+        if new_sparsity ==1:
+            print(H)
+        logger.info(f"before fasterprune sparsity: {calculate_sparsity(W)}")
 
         if actorder:
             perm = torch.argsort(torch.diag(H), descending=True)
@@ -101,6 +102,7 @@ class SparseGPT:
             i2 = min(i1 + blocksize, self.columns)
             count = i2 - i1
             W1 = W[:, i1:i2].clone()
+            before_sparsity = calculate_sparsity(W1)
             Q1 = torch.zeros_like(W1)
             Err1 = torch.zeros_like(W1)
             Losses1 = torch.zeros_like(W1)
@@ -141,16 +143,18 @@ class SparseGPT:
                         self.quantizer.zero,
                         self.quantizer.maxq,
                     ).flatten()
+                
                 Q1[:, i] = q
                 Losses1[:, i] = (w - q) ** 2 / d**2
 
                 err1 = (w - q) / d
                 W1[:, i:] -= err1.unsqueeze(1).matmul(Hinv1[i, i:].unsqueeze(0))
                 Err1[:, i] = err1
-
             W[:, i1:i2] = Q1
+            after_sparsity = calculate_sparsity(Q1)
+            if after_sparsity == 1:
+                logger.info(f"sparsity: {before_sparsity} -> {after_sparsity}")
             Losses += torch.sum(Losses1, 1) / 2
-
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
 
             # if DEBUG:
@@ -182,12 +186,12 @@ class SparseGPT:
         if DEBUG:
             print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
 
-        if scale == []:
+        if scale == [] and hasattr(self, "quantizer"):
             scale.append(self.quantizer.scale)
             zero.append(self.quantizer.zero)
-
-        scale = torch.cat(scale, dim=1)
-        zero = torch.cat(zero, dim=1)
+        if hasattr(self, "quantizer"):
+            scale = torch.cat(scale, dim=1)
+            zero = torch.cat(zero, dim=1)
         return scale, zero, g_idx, avg_loss
 
     def free(self):
