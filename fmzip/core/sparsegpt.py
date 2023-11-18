@@ -1,3 +1,4 @@
+
 import math
 import time
 
@@ -7,15 +8,11 @@ import transformers
 from loguru import logger
 
 from .quant import quantize, Quantizer
-
+from .sparsity_utils import calculate_sparsity
 DEBUG = False
 
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
-
-
-def calculate_sparsity(tensor: torch.Tensor):
-    return (tensor == 0).sum().item() / tensor.numel()
 
 
 class SparseGPT:
@@ -23,7 +20,12 @@ class SparseGPT:
         self.layer = layer
         self.dev = self.layer.weight.device
         W = layer.weight.data.clone()
-        self.rows, self.columns = W.shape[0], W.shape[1]
+        if isinstance(self.layer, nn.Conv2d):
+            W = W.flatten(1)
+        if isinstance(self.layer, transformers.Conv1D):
+            W = W.t()
+        self.rows = W.shape[0]
+        self.columns = W.shape[1]
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
         self.nsamples = 0
 
@@ -34,7 +36,9 @@ class SparseGPT:
         if len(inp.shape) == 2:
             inp = inp.unsqueeze(0)
         tmp = inp.shape[0]
-        if isinstance(self.layer, nn.Linear):
+        if isinstance(self.layer, nn.Linear) or isinstance(
+            self.layer, transformers.Conv1D
+        ):
             if len(inp.shape) == 3:
                 inp = inp.reshape((-1, inp.shape[-1]))
             inp = inp.t()
@@ -43,14 +47,19 @@ class SparseGPT:
         inp = math.sqrt(2 / self.nsamples) * inp.float()
         self.H += inp.matmul(inp.t())
 
-    def fasterprune(self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01):
+    def fasterprune(
+        self, sparsity, prunen=0, prunem=0, blocksize=128, percdamp=0.01, actorder=False
+    ):
         W = self.layer.weight.data.clone()
+        if isinstance(self.layer, nn.Conv2d):
+            W = W.flatten(1)
+        if isinstance(self.layer, transformers.Conv1D):
+            W = W.t()
         W = W.float()
-        group_size = 1
 
-        # if hasattr(self, "quantizer"):
-        #     if not self.quantizer.ready():
-        #         self.quantizer.find_params(W, weight=True)
+        if hasattr(self, "quantizer"):
+            if not self.quantizer.ready():
+                self.quantizer.find_params(W, weight=True)
 
         tick = time.time()
 
@@ -60,11 +69,10 @@ class SparseGPT:
         H[dead, dead] = 1
         W[:, dead] = 0
 
-        g_idx = []
-        scale = []
-        zero = []
-        now_idx = 1
-        mask = None
+        if actorder:
+            perm = torch.argsort(torch.diag(H), descending=True)
+            W = W[:, perm]
+            H = H[perm][:, perm]
 
         Losses = torch.zeros(self.rows, device=self.dev)
         # we repeat the process and find percdamp that doesn't cause instability
@@ -82,10 +90,13 @@ class SparseGPT:
                 success_damp = True
             else:
                 logger.warning(f"NaN in Hinv, increasing percdamp to {percdamp + 0.01}")
-                percdamp = percdamp + 0.01
-                if percdamp >= 0.05:
-                    raise ValueError("percdamp too high (>=0.05), aborting")
-
+                percdamp += 0.01
+                if percdamp >= 0.1:
+                    raise ValueError("percdamp too high (>=0.1), aborting")
+        g_idx = []
+        scale = []
+        zero = []
+        mask = None
         for i1 in range(0, self.columns, blocksize):
             i2 = min(i1 + blocksize, self.columns)
             count = i2 - i1
@@ -101,32 +112,29 @@ class SparseGPT:
                     tmp = W1**2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
                     # sparsity: mask1 is a boolean mask, True means the weight is pruned
                     # the larger the sparsity, the more weights are pruned (higher compression ratio)
-                    if sparsity == 0:
-                        thresh = -9999
-                    else:
-                        thresh = torch.sort(tmp.flatten())[0][
-                            int(tmp.numel() * sparsity)
-                        ]
-                    mask1 = tmp < thresh
+                    thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
+                    mask1 = tmp <= thresh
+                    ## debug: check how many weights are pruned
+                    ## logger.debug(f"sparsity: {torch.sum(mask1).item() / mask1.numel()}")
             else:
                 mask1 = torch.zeros_like(W1) == 1
             for i in range(count):
                 w = W1[:, i]
                 d = Hinv1[i, i]
 
+                if prunen != 0 and i % prunem == 0:
+                    tmp = (
+                        W1[:, i : (i + prunem)] ** 2
+                        / (torch.diag(Hinv1)[i : (i + prunem)].reshape((1, -1))) ** 2
+                    )
+                    mask1.scatter_(
+                        1, i + torch.topk(tmp, prunen, dim=1, largest=False)[1], True
+                    )
+
                 q = w.clone()
                 q[mask1[:, i]] = 0
+
                 if hasattr(self, "quantizer"):
-                    if (i1 + i) % group_size == 0:
-                        self.quantizer.find_params(
-                            W[:, (i1 + i) : (i1 + i + group_size)], weight=True
-                        )
-
-                    if ((i1 + i) // group_size) - now_idx == -1:
-                        scale.append(self.quantizer.scale)
-                        zero.append(self.quantizer.zero)
-                        now_idx += 1
-
                     q = quantize(
                         q.unsqueeze(1),
                         self.quantizer.scale,
@@ -152,28 +160,34 @@ class SparseGPT:
             #     print(torch.sum(Losses))
 
         torch.cuda.synchronize()
-        avg_loss = torch.sum(Losses).item() / self.nsamples
         logger.info(f"duration: {(time.time() - tick)}")
-        logger.info(f"avg loss: {avg_loss}")
+        logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples}")
         logger.info(f"sparsity: {calculate_sparsity(W)}")
-        if calculate_sparsity(W) == 1:
-            logger.warning("sparsity is 1")
-            print(W)
-        g_idx = [i // group_size for i in range(self.columns)]
-        # g_idx = [i // self.columns for i in range(self.columns)]
-        g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
+        avg_loss = torch.sum(Losses).item() / self.nsamples
 
+        g_idx = [i // self.columns for i in range(self.columns)]
+        g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
+        if actorder:
+            invperm = torch.argsort(perm)
+            Q = Q[:, invperm]
+            g_idx = g_idx[invperm]
+
+        if isinstance(self.layer, transformers.Conv1D):
+            W = W.t()
         self.layer.weight.data = W.reshape(self.layer.weight.shape).to(
             self.layer.weight.data.dtype
         )
+        # check how many zeros in the weight data
+        # logger.debug(f"sparsity: {torch.sum(self.layer.weight.data == 0).item() / self.layer.weight.data.numel()}")
         if DEBUG:
             print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
-        if scale == [] and hasattr(self, "quantizer"):
+
+        if scale == []:
             scale.append(self.quantizer.scale)
             zero.append(self.quantizer.zero)
-        if hasattr(self, "quantizer"):
-            scale = torch.cat(scale, dim=1)
-            zero = torch.cat(zero, dim=1)
+
+        scale = torch.cat(scale, dim=1)
+        zero = torch.cat(zero, dim=1)
         return scale, zero, g_idx, avg_loss
 
     def free(self):

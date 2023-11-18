@@ -12,7 +12,7 @@ def calculate_sparsity(tensor: torch.Tensor):
 def subtract(base: AutoFMZipModelForCausalLM, target: AutoFMZipModelForCausalLM):
     with torch.no_grad():
         for name, param in target.named_parameters():
-            param.copy_(10 * (param - base.state_dict()[name]))
+            param.copy_(param - base.state_dict()[name])
     return target
 
 

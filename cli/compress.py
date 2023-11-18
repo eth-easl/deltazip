@@ -20,7 +20,7 @@ def main(args):
         prunem=args.prunem,
         lossless=args.lossless,
         damp_percent=args.perc_damp,
-        sym=True,
+        sym=False,
     )
     print("[info] compress config:", compress_config)
     target_model = AutoFMZipModelForCausalLM.from_pretrained(
@@ -48,21 +48,21 @@ def main(args):
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)["text"] for line in fp.readlines()]
-
     if args.n_samples <= 0:
         examples = examples
     else:
-        import random
-
-        random.seed(42)
-        examples = random.sample(examples, args.n_samples)
-
+        # import random
+        # # random.seed(42)
+        # examples = random.sample(examples, args.n_samples)
+        examples = examples[:args.n_samples]
     examples = [tokenizer(x) for x in examples]
-    target_model.lossy_compress(examples)
+    target_model.lossy_compress(
+        examples,
+        batch_size=2
+    )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
     target_model.save_compressed(args.outdir)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
