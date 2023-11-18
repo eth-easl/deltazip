@@ -39,18 +39,21 @@ def render_job(
         output_dir = os.path.join(OUTPUT_DIR, f"{base_model.split('/')[-1]}-{bits}b{sparsity}s_sparsegpt", task, f'global_step{step}')
     if not os.path.exists(output_dir):
         job = f"python cli/compress_v2.py --base-model {base_model} --target-model {target_model_dir} --dataset {dataset_file} --bits {bits} --sparsity {sparsity} --outdir {output_dir} {'--delta subtract' if is_delta else ''} --lossless gdeflate --n-samples {n_samples} --block-size {block_size}"
-    return job
+        return job
+    else:
+        return None
 
 if __name__=="__main__":
     os.system("ts -S 1")
     jobs = []
     for base_model in supported_base_models:
-        for task in poi_tasks:
-            for step in poi_steps[base_model]:
-                for bit in bits:
-                    for sp in sparsity:
-                        jobs.append(render_job(False, base_model, task, str(step), bit, sp))
-                        jobs.append(render_job(True, base_model, task, str(step), bit, sp))
+        for i, task in enumerate(poi_tasks):
+            step = poi_steps[base_model][i]
+            for bit in bits:
+                for sp in sparsity:
+                    jobs.append(render_job(False, base_model, task, str(step), bit, sp))
+                    jobs.append(render_job(True, base_model, task, str(step), bit, sp))
+    jobs = [job for job in jobs if job is not None]
     if PRINT_JOB:
         for job in jobs:
             print(job)
