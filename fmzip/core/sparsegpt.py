@@ -114,8 +114,8 @@ class SparseGPT:
                     mask1 = mask[:, i1:i2]
                 else:
                     tmp = W1**2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
-                    # sparsity: mask1 is a boolean mask, True means the weight is pruned
-                    # the larger the sparsity, the more weights are pruned (higher compression ratio)
+                    # sparsity: mask1 is a boolean mask, True == weight pruned
+                    # the larger the sparsity, the more weights are pruned (=> higher compression ratio)
                     thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
                     mask1 = tmp <= thresh
                     ## debug: check how many weights are pruned

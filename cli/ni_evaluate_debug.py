@@ -68,9 +68,10 @@ def generate(args):
         if args.delta == "subtract":
             print(f"Subtracting")
             for name, param in base_model.named_parameters():
-                delta_model.state_dict()[name].copy_(
-                    param + delta_model.state_dict()[name]
-                )
+                if "layernorm" not in name:
+                    delta_model.state_dict()[name].copy_(
+                        param + delta_model.state_dict()[name]
+                    )
         elif args.delta == "xor":
             raise NotImplementedError
         with open(args.input_file, "r") as f:
@@ -79,14 +80,6 @@ def generate(args):
         # patch delta model
         delta_model.lm_head.weight = lm_head
         delta_model.model.embed_tokens.weight = embed_token
-
-        print(f"Verifying...")
-        for name, param in delta_model.named_parameters():
-            if "mlp" in name:
-                print(
-                    f"[{name}], diff: {torch.max(param - raw_model.state_dict()[name])}"
-                )
-                param.copy_(raw_model.state_dict()[name])
 
         for name, param in delta_model.named_parameters():
             print(f"{name}, {torch.max(param - raw_model.state_dict()[name])}")
