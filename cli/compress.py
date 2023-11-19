@@ -46,13 +46,13 @@ def main(args):
     if args.base_model != "" and args.delta != "":
         target_model.lossy_compress(
             examples,
-            batch_size=2,
+            batch_size=1,
             base_model=base_model,
         )
     else:
         target_model.lossy_compress(
             examples,
-            batch_size=4,
+            batch_size=1,
         )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
@@ -86,6 +86,6 @@ if __name__ == "__main__":
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
-    parser.add_argument("--fast-tokenizer", action="store_true", default=True)
+    parser.add_argument("--fast-tokenizer", action="store_true")
     args = parser.parse_args()
     main(args)

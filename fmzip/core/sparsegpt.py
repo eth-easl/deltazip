@@ -56,6 +56,7 @@ class SparseGPT:
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
+        
         if base_weight is not None:
             base_weight = base_weight.float()
             logger.info(f"compression operates on delta...")
@@ -63,6 +64,7 @@ class SparseGPT:
                 base_weight.shape == W.shape
             ), "base_weight shape should be the same as W"
             W = W - base_weight
+        
         before_sparsity = calculate_sparsity(W)
         if hasattr(self, "quantizer"):
             if not self.quantizer.ready():
@@ -90,14 +92,13 @@ class SparseGPT:
             H = torch.linalg.cholesky(H, upper=True)
             Hinv = H
             # check if Hinv contains nan
-            success_damp = True
             if not torch.isnan(Hinv).any():
                 success_damp = True
             else:
                 logger.warning(f"NaN in Hinv, increasing percdamp to {percdamp + 0.01}")
                 percdamp += 0.01
-                if percdamp >= 0.1:
-                    raise ValueError("percdamp too high (>=0.1), aborting")
+                if percdamp >= 0.05:
+                    raise ValueError("percdamp too high (>=0.05), aborting")
         g_idx = []
         scale = []
         zero = []
