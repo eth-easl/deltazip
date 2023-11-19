@@ -1,0 +1,158 @@
+[
+    {
+        "system": {
+            "name": "fmzip",
+            "args": {
+                "lossless_only": false,
+                "placement_strategy": "addback",
+                "batch_size": 1,
+                "max_num_deltas": 1,
+                "offload_base_model": false
+            },
+            "order": 0
+        },
+        "gen_configs": {
+            "min_length": 64,
+            "max_new_tokens": 64
+        },
+        "results": [
+            {
+                "response": {
+                    "id": 0,
+                    "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:",
+                    "model": "xzyao/openllama-3b-chat",
+                    "response": {
+                        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to a city government representative:\n\nSubject: Noise Complaint\n\nDear [City Government Representative],\n\nI am writing to express my concern about the noise level in our city. Recently, I have been experiencing frequent and severe noise pollution from various sources, including",
+                        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+                        "measure": {
+                            "tokenize_time": 0.0017796889878809452,
+                            "loading_time": 2.1641916900116485,
+                            "prepare_time": 0.1493259919952834,
+                            "inference_time": 1.4299799330037786,
+                            "total_time": 3.745416635996662
+                        }
+                    },
+                    "timestamp": 0.0
+                },
+                "time_elapsed": 4.153301504004048,
+                "relative_start_at": 6.41410006210208e-05
+            }
+        ]
+    },
+    {
+        "system": {
+            "name": "hf",
+            "args": {
+                "batch_size": 1,
+                "max_num_models": 1
+            },
+            "order": 1
+        },
+        "gen_configs": {
+            "min_length": 64,
+            "max_new_tokens": 64
+        },
+        "results": [
+            {
+                "response": {
+                    "id": 0,
+                    "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:",
+                    "model": "xzyao/openllama-3b-chat",
+                    "response": {
+                        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email complaining about noise pollution in the city:\n\nDear [City Council/Noise Officer's Name],\n\nI am writing to express my concern about the excessive noise pollution that has been a recurring issue in our community. Recently, I have been staying awake at night",
+                        "model": "xzyao/openllama-3b-chat",
+                        "measure": {
+                            "tokenize_time": 0.0006221310031833127,
+                            "loading_time": 7.20167519399547,
+                            "prepare_time": 0,
+                            "inference_time": 0.8146297579951352,
+                            "total_time": 8.016948201999185
+                        }
+                    },
+                    "timestamp": 0.0
+                },
+                "time_elapsed": 8.144908261994715,
+                "relative_start_at": 5.4773001465946436e-05
+            }
+        ]
+    },
+    {
+        "system": {
+            "name": "fmzip",
+            "args": {
+                "lossless_only": true,
+                "placement_strategy": "addback",
+                "batch_size": 1,
+                "max_num_deltas": 1
+            },
+            "order": 2
+        },
+        "gen_configs": {
+            "min_length": 64,
+            "max_new_tokens": 64
+        },
+        "results": [
+            {
+                "response": {
+                    "id": 0,
+                    "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:",
+                    "model": "xzyao/openllama-3b-chat",
+                    "response": {
+                        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email complaining about noise pollution in the city:\n\nDear [City Council/Noise Officer's Name],\n\nI am writing to express my concern about the excessive noise pollution that has been a recurring issue in our community. Recently, I have been staying awake at night",
+                        "model": ".cache/compressed_models/3b-parameters/openllama-chat-delta-lossless-1",
+                        "measure": {
+                            "tokenize_time": 0.0004956929915351793,
+                            "loading_time": 4.277312174992403,
+                            "prepare_time": 0.15142466900579166,
+                            "inference_time": 0.8399332699918887,
+                            "total_time": 5.269271215991466
+                        }
+                    },
+                    "timestamp": 0.0
+                },
+                "time_elapsed": 5.477721440998721,
+                "relative_start_at": 5.2279006922617555e-05
+            }
+        ]
+    },
+    {
+        "system": {
+            "name": "fmzip",
+            "args": {
+                "lossless_only": false,
+                "placement_strategy": "colocate",
+                "batch_size": 1,
+                "max_num_deltas": 1,
+                "warmup_model": ".cache/compressed_models/3b-parameters/openllama-chat-1"
+            },
+            "order": 3
+        },
+        "gen_configs": {
+            "min_length": 64,
+            "max_new_tokens": 64
+        },
+        "results": [
+            {
+                "response": {
+                    "id": 0,
+                    "prompt": "<human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>:",
+                    "model": "xzyao/openllama-3b-chat",
+                    "response": {
+                        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to a city government representative:\n\nSubject: Noise Complaint\n\nDear [City Government Representative],\n\nI am writing to express my concern about the noise level in our city. Recently, I have been experiencing frequent and severe noise pollution from various sources, including",
+                        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+                        "measure": {
+                            "tokenize_time": 0.0003171069984091446,
+                            "loading_time": 1.973711683996953,
+                            "prepare_time": 0.040792783998767845,
+                            "inference_time": 3.8788690119981766,
+                            "total_time": 5.8938686110050185
+                        }
+                    },
+                    "timestamp": 0.0
+                },
+                "time_elapsed": 5.978972017997876,
+                "relative_start_at": 6.471200322266668e-05
+            }
+        ]
+    }
+]

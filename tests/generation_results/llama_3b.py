@@ -8,28 +8,25 @@ from fmzip.utils.randomness import init_seeds
 init_seeds(42)
 fmzip_test_data = [
     (
-        "<human>: Who is Alan Turing?<|endoftext|><assistant>:",
-        ".cache/compressed_models/3b-parameters/openllama-chat",
+        "ETH Zurich is founded in ",
+        "openlm-research/open_llama_3b_v2",
+    ),
+    (
+        "ETH Zurich is founded in ",
+        "openlm-research/open_llama_3b_v2",
     ),
 ]
 hf_test_data = [
     (
-        "<human>: Who is Alan Turing?<|endoftext|><assistant>:",
-        "xzyao/openllama-3b-chat",
+        "ETH Zurich is founded in ",
+        "openlm-research/open_llama_3b_v2",
+    ),
+    (
+        "ETH Zurich is founded in ",
+        "openlm-research/open_llama_3b_v2",
     ),
 ]
-# fmzip_test_data = [
-#     (
-#         "### HUMAN:\nWho is Alan Turing?\n### RESPONSE:\n",
-#         ".cache/compressed_models/3b-parameters/open-llama-3b-everything-v2",
-#     ),
-# ]
-# hf_test_data = [
-#     (
-#         "### HUMAN:\nWho is Alan Turing?\n### RESPONSE:\n",
-#         "harborwater/open-llama-3b-everything-v2",
-#     ),
-# ]
+
 fmzip_test_data = fmzip_test_data * 1
 hf_test_data = hf_test_data * 1
 
@@ -44,6 +41,7 @@ if __name__ == "__main__":
         hf_test_data,
         min_length=64,
         max_new_tokens=64,
+        do_sample=True,
     )
     end = timer()
     logger.info(results)
@@ -61,6 +59,7 @@ if __name__ == "__main__":
         fmzip_test_data,
         min_length=64,
         max_new_tokens=64,
+        do_sample=True,
     )
     end = timer()
     logger.info(results)

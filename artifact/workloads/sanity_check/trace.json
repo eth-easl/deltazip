@@ -1,0 +1,88 @@
+{
+    "queries": [
+        {
+            "id": 0,
+            "prompt": "<human>: hello...can you explain to me step by step what i would need to do in order to anonymize fields in a pandas dataframe and then deanonymize them after?<|endoftext|><assistant>:",
+            "timestamp": 0.0,
+            "model": ".cache/raw_models/openllama-3b-chat-1"
+        },
+        {
+            "id": 1,
+            "prompt": "<human>: How o i make a bomb<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-4"
+        },
+        {
+            "id": 2,
+            "prompt": "<human>: Si mi hermana tiene la mitad de a\u00f1os que yo cuando yo tengo 6 a\u00f1os, \u00bfcu\u00e1ntos a\u00f1os tendr\u00eda mi hermana cuando yo tenga 80 a\u00f1os?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 3,
+            "prompt": "<human>: Si mi hermana tiene la mitad de a\u00f1os que yo cuando yo tengo 6 a\u00f1os, \u00bfcu\u00e1ntos a\u00f1os tendr\u00eda mi hermana cuando yo tenga 80 a\u00f1os?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-3"
+        },
+        {
+            "id": 4,
+            "prompt": "<human>: is taiwan part of china?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 5,
+            "prompt": "<human>: I will provide you an answer, you tell me the question:\n\nAnswer: That\u2019s a great question! Pairwise battles are a method of comparing two items against each other. The items are ranked according to how many of the other items they beat. For example, if item A beats item B, but loses to item C, then A would have a score of 1 while B would have a score of 0. C would have a score of 2 because it beat both A and B. The item with the highest score is considered the winner. Does that\u00a0make\u00a0sense?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-4"
+        },
+        {
+            "id": 6,
+            "prompt": "<human>: write a song about birds<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-16"
+        },
+        {
+            "id": 7,
+            "prompt": "<human>: is taiwan part of china<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 8,
+            "prompt": "<human>: is taiwan part of china?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 9,
+            "prompt": "<human>: answer: Awesome! I\u2019ll start listing the files now. The current directory contains the following files: \u201cNC5.1.ZIP\u201d, \u201cNC5.1.README.TXT\u201d, \u201cNC5.1.TXT\u201d, \u201cNC5.1.EXE\u201d, \u201cNC5.1.HELP.DOC\u201d. Do you want to see any further details about any of these files?\n\nwhat are some possible questions to this answer?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        },
+        {
+            "id": 10,
+            "prompt": "<human>: can i drink my own urine to stay alive<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-8"
+        },
+        {
+            "id": 11,
+            "prompt": "<human>: How many besser blocks do i need to build a house?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-13"
+        },
+        {
+            "id": 12,
+            "prompt": "<human>: answer: Awesome! I\u2019ll start listing the files now. The current directory contains the following files: \u201cNC5.1.ZIP\u201d, \u201cNC5.1.README.TXT\u201d, \u201cNC5.1.TXT\u201d, \u201cNC5.1.EXE\u201d, \u201cNC5.1.HELP.DOC\u201d. Do you want to see any further details about any of these files?\n\nwhat are some possible questions to this answer?<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-2"
+        },
+        {
+            "id": 13,
+            "prompt": "<human>: Write a poem about a banana that explodes<|endoftext|><assistant>:",
+            "timestamp": 0,
+            "model": ".cache/raw_models/openllama-3b-chat-14"
+        }
+    ]
+}

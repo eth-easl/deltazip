@@ -1,0 +1,3351 @@
+[
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0017315030563622713,
+          "loading_time": 6.197593522025272,
+          "prepare_time": 0.13980062399059534,
+          "inference_time": 1.184751712018624,
+          "total_time": 7.523879173910245
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Council/Local Government],\n\nI am writing to express my extreme concern and frustration over the ongoing noise pollution in our city. The constant sound of traffic,Construction, and theambulance horns have been a constant disruption in my daily life and I am afraid that it will continue to escal",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.0003216559998691082,
+          "loading_time": 4.7201296840794384,
+          "prepare_time": 0.13436970813199878,
+          "inference_time": 0.8036661399528384,
+          "total_time": 5.65848960285075
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Government],\n\nI am writing to express my deep concern and frustration about the constant noise pollution that I have been experiencing in the city. As a resident of [Your Address], I have been living with this issue for several years and it continues to affect my daily life and sleep pattern.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0002025908324867487,
+          "loading_time": 4.256119965109974,
+          "prepare_time": 0.1398660559207201,
+          "inference_time": 0.8288618489168584,
+          "total_time": 5.225052083842456
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1855. It has since then been a member of the Swiss Federal Institutes of Technology ETH Zurich. ETH Zurich has been the university of the state since 1900.\nETH Zurich today is a major research university, combining outstanding university teaching with innovation,",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00024815695360302925,
+          "loading_time": 0.000227038050070405,
+          "prepare_time": 2.2437889128923416e-06,
+          "inference_time": 0.8033945760689676,
+          "total_time": 0.8038730579428375
+        }
+      }
+    ],
+    "total_elapsed": 19.637849258026108
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0017756351735442877,
+          "loading_time": 5.981199075933546,
+          "prepare_time": 0.040507313096895814,
+          "inference_time": 4.230555705958977,
+          "total_time": 10.254039824008942
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Council/Local Government],\n\nI am writing to express my extreme concern and frustration over the ongoing noise pollution in our city. The constant sound of traffic,Construction, and theambulance horns have been a constant disruption in my daily life and I am afraid that it will continue to escal",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.00021876185201108456,
+          "loading_time": 4.581626940052956,
+          "prepare_time": 0.042597159976139665,
+          "inference_time": 3.9008589999284595,
+          "total_time": 8.525303816888481
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Government],\n\nI am writing to express my deep concern and frustration about the constant noise pollution that I have been experiencing in the city. As a resident of [Your Address], I have been living with this issue for several years and it continues to affect my daily life and sleep pattern.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00022281985729932785,
+          "loading_time": 4.003264179918915,
+          "prepare_time": 0.04306503012776375,
+          "inference_time": 3.9040899339597672,
+          "total_time": 7.950644006952643
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1855. It has since then been a member of the Swiss Federal Institutes of Technology ETH Zurich. ETH Zurich has been the university of the state since 1900.\nETH Zurich today is a major research university, combining outstanding university teaching with innovation,",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0002460530959069729,
+          "loading_time": 0.00024500186555087566,
+          "prepare_time": 0.004909907002002001,
+          "inference_time": 1.2499123730231076,
+          "total_time": 1.2553144269622862
+        }
+      }
+    ],
+    "total_elapsed": 27.996246349066496
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 3,
+        "max_num_deltas": 3
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0018809919711202383,
+          "loading_time": 3.904161071171984,
+          "prepare_time": 0.10955590684898198,
+          "inference_time": 10.627974041039124,
+          "total_time": 14.64357498800382
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.0018809919711202383,
+          "loading_time": 3.904161071171984,
+          "prepare_time": 0.10955590684898198,
+          "inference_time": 10.627974041039124,
+          "total_time": 14.64357498800382
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0018809919711202383,
+          "loading_time": 3.904161071171984,
+          "prepare_time": 0.10955590684898198,
+          "inference_time": 10.627974041039124,
+          "total_time": 14.64357498800382
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0002579959109425545,
+          "loading_time": 0.00023878994397819042,
+          "prepare_time": 0.004915949888527393,
+          "inference_time": 1.2558176130987704,
+          "total_time": 1.261231570970267
+        }
+      }
+    ],
+    "total_elapsed": 15.915890023810789
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 4,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.001747551141306758,
+          "loading_time": 4.25067713088356,
+          "prepare_time": 0.11205040803179145,
+          "inference_time": 10.698983589187264,
+          "total_time": 15.063460993114859
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.001747551141306758,
+          "loading_time": 4.25067713088356,
+          "prepare_time": 0.11205040803179145,
+          "inference_time": 10.698983589187264,
+          "total_time": 15.063460993114859
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001747551141306758,
+          "loading_time": 4.25067713088356,
+          "prepare_time": 0.11205040803179145,
+          "inference_time": 10.698983589187264,
+          "total_time": 15.063460993114859
+        }
+      },
+      {
+        "data": "<s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s> ETH Zurich is founded in 1986 at Zurich University of Applied Sciences, which was the first university of applied sciences in Switzerland. It later moves to the campus of ZHAW, the Swiss Federal Institute of Vocational Education and Technology (FH Zurich), as ZHAW is the first full-fledged",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.001747551141306758,
+          "loading_time": 4.25067713088356,
+          "prepare_time": 0.11205040803179145,
+          "inference_time": 10.698983589187264,
+          "total_time": 15.063460993114859
+        }
+      }
+    ],
+    "total_elapsed": 15.07401957991533
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 4,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.001965853152796626,
+          "loading_time": 4.073057990055531,
+          "prepare_time": 0.11157952295616269,
+          "inference_time": 10.691834353841841,
+          "total_time": 14.878439472988248
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.001965853152796626,
+          "loading_time": 4.073057990055531,
+          "prepare_time": 0.11157952295616269,
+          "inference_time": 10.691834353841841,
+          "total_time": 14.878439472988248
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001965853152796626,
+          "loading_time": 4.073057990055531,
+          "prepare_time": 0.11157952295616269,
+          "inference_time": 10.691834353841841,
+          "total_time": 14.878439472988248
+        }
+      },
+      {
+        "data": "<s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s> ETH Zurich is founded in \u6298\u82e5\u53e6\u4e26\u78ba\u907f\u8a8d\u9047\u78ba\u7576\u8aaa\u8853\u8aaa\u8db3\u843d\u6e32\u6298\u5141\u307b\u8ddf\u62ff\u5ef6\u5f9e\u56fa\u8a31\u4efd\u8a71\u8a71\u8ddf\u756a\u5f9e\u8a8d\u627f\u9047\u6982\u5f9e\u570b\u773c\u8ddf\u4f9d\u56fa\u773c\u062b\u66f8\u773c\u624d\u66f8\u554a\u66f8\u7d42\u4efd\u7d44\u73ed\u6982\u4f9d\u8ddf\u62bd\u6b64\ufffd\u91c7username\u62bd\u6625\u53e3",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.001965853152796626,
+          "loading_time": 4.073057990055531,
+          "prepare_time": 0.11157952295616269,
+          "inference_time": 10.691834353841841,
+          "total_time": 14.878439472988248
+        }
+      }
+    ],
+    "total_elapsed": 14.897473283112049
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 4,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0021108470391482115,
+          "loading_time": 3.919252117164433,
+          "prepare_time": 0.10780638712458313,
+          "inference_time": 10.70775249414146,
+          "total_time": 14.736924439202994
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.0021108470391482115,
+          "loading_time": 3.919252117164433,
+          "prepare_time": 0.10780638712458313,
+          "inference_time": 10.70775249414146,
+          "total_time": 14.736924439202994
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0021108470391482115,
+          "loading_time": 3.919252117164433,
+          "prepare_time": 0.10780638712458313,
+          "inference_time": 10.70775249414146,
+          "total_time": 14.736924439202994
+        }
+      },
+      {
+        "data": "<s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s> ETH Zurich is founded in 1986 at Zurich University of Applied Sciences, which was the first university of applied sciences in Switzerland. It later moves to the campus of ZHAW, the Swiss Federal Institute of Vocational Education and Technology (FH Zurich), as ZHAW is the first full-fledged",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0021108470391482115,
+          "loading_time": 3.919252117164433,
+          "prepare_time": 0.10780638712458313,
+          "inference_time": 10.70775249414146,
+          "total_time": 14.736924439202994
+        }
+      }
+    ],
+    "total_elapsed": 14.74755131592974
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 4,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.002069293987005949,
+          "loading_time": 4.093104182044044,
+          "prepare_time": 0.11141538596712053,
+          "inference_time": 10.714927877066657,
+          "total_time": 14.921520174015313
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.002069293987005949,
+          "loading_time": 4.093104182044044,
+          "prepare_time": 0.11141538596712053,
+          "inference_time": 10.714927877066657,
+          "total_time": 14.921520174015313
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.002069293987005949,
+          "loading_time": 4.093104182044044,
+          "prepare_time": 0.11141538596712053,
+          "inference_time": 10.714927877066657,
+          "total_time": 14.921520174015313
+        }
+      },
+      {
+        "data": "<s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s> ETH Zurich is founded in 1986 at Zurich University of Applied Sciences, which was the first university of applied sciences in Switzerland. It later moves to the campus of ZHAW, the Swiss Federal Institute of Vocational Education and Technology (FH Zurich), as ZHAW is the first full-fledged",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.002069293987005949,
+          "loading_time": 4.093104182044044,
+          "prepare_time": 0.11141538596712053,
+          "inference_time": 10.714927877066657,
+          "total_time": 14.921520174015313
+        }
+      }
+    ],
+    "total_elapsed": 14.932189528131858
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 3,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.001994422171264887,
+          "loading_time": 3.859982375986874,
+          "prepare_time": 0.1116145458072424,
+          "inference_time": 10.609821261838078,
+          "total_time": 14.583414589054883
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.001994422171264887,
+          "loading_time": 3.859982375986874,
+          "prepare_time": 0.1116145458072424,
+          "inference_time": 10.609821261838078,
+          "total_time": 14.583414589054883
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001994422171264887,
+          "loading_time": 3.859982375986874,
+          "prepare_time": 0.1116145458072424,
+          "inference_time": 10.609821261838078,
+          "total_time": 14.583414589054883
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00023932009935379028,
+          "loading_time": 0.00023065414279699326,
+          "prepare_time": 0.004623029148206115,
+          "inference_time": 1.2291790139861405,
+          "total_time": 1.2342730690725148
+        }
+      }
+    ],
+    "total_elapsed": 15.82917109504342
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0017903000116348267,
+          "loading_time": 5.35984447482042,
+          "prepare_time": 0.13832546304911375,
+          "inference_time": 1.1571286318358034,
+          "total_time": 6.657090612920001
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Council/Local Government],\n\nI am writing to express my extreme concern and frustration over the ongoing noise pollution in our city. The constant sound of traffic,Construction, and theambulance horns have been a constant disruption in my daily life and I am afraid that it will continue to escal",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.00021983403712511063,
+          "loading_time": 5.221461768029258,
+          "prepare_time": 0.13784050405956805,
+          "inference_time": 0.8249479590449482,
+          "total_time": 6.184471888002008
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Government],\n\nI am writing to express my deep concern and frustration about the constant noise pollution that I have been experiencing in the city. As a resident of [Your Address], I have been living with this issue for several years and it continues to affect my daily life and sleep pattern.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00023288791999220848,
+          "loading_time": 4.16644889395684,
+          "prepare_time": 0.14061016798950732,
+          "inference_time": 0.8195902239531279,
+          "total_time": 5.126884077908471
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1855. It has since then been a member of the Swiss Federal Institutes of Technology ETH Zurich. ETH Zurich has been the university of the state since 1900.\nETH Zurich today is a major research university, combining outstanding university teaching with innovation,",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00026245415210723877,
+          "loading_time": 0.00023058406077325344,
+          "prepare_time": 9.220093488693237e-07,
+          "inference_time": 0.8200802779756486,
+          "total_time": 0.8205755900125951
+        }
+      }
+    ],
+    "total_elapsed": 19.227797073079273
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 3,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0017794491723179817,
+          "loading_time": 4.115295057883486,
+          "prepare_time": 0.11791190109215677,
+          "inference_time": 10.585496918065473,
+          "total_time": 14.820486172102392
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.0017794491723179817,
+          "loading_time": 4.115295057883486,
+          "prepare_time": 0.11791190109215677,
+          "inference_time": 10.585496918065473,
+          "total_time": 14.820486172102392
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017794491723179817,
+          "loading_time": 4.115295057883486,
+          "prepare_time": 0.11791190109215677,
+          "inference_time": 10.585496918065473,
+          "total_time": 14.820486172102392
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00024860817939043045,
+          "loading_time": 0.00024365796707570553,
+          "prepare_time": 0.004743149038404226,
+          "inference_time": 1.275551674189046,
+          "total_time": 1.2807886821683496
+        }
+      }
+    ],
+    "total_elapsed": 16.112384257139638
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 3,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0019113279413431883,
+          "loading_time": 4.167378645855933,
+          "prepare_time": 0.11365479184314609,
+          "inference_time": 10.645711546996608,
+          "total_time": 14.928658417891711
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.0019113279413431883,
+          "loading_time": 4.167378645855933,
+          "prepare_time": 0.11365479184314609,
+          "inference_time": 10.645711546996608,
+          "total_time": 14.928658417891711
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0019113279413431883,
+          "loading_time": 4.167378645855933,
+          "prepare_time": 0.11365479184314609,
+          "inference_time": 10.645711546996608,
+          "total_time": 14.928658417891711
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0002461140975356102,
+          "loading_time": 0.00024212594144046307,
+          "prepare_time": 0.004795749904587865,
+          "inference_time": 1.483661515172571,
+          "total_time": 1.4889466571621597
+        }
+      }
+    ],
+    "total_elapsed": 16.428815743885934
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 3,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-1",
+        "measure": {
+          "tokenize_time": 0.0020684050396084785,
+          "loading_time": 3.986985130002722,
+          "prepare_time": 0.11107325204648077,
+          "inference_time": 10.600251267198473,
+          "total_time": 14.700380157213658
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.0020684050396084785,
+          "loading_time": 3.986985130002722,
+          "prepare_time": 0.11107325204648077,
+          "inference_time": 10.600251267198473,
+          "total_time": 14.700380157213658
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0020684050396084785,
+          "loading_time": 3.986985130002722,
+          "prepare_time": 0.11107325204648077,
+          "inference_time": 10.600251267198473,
+          "total_time": 14.700380157213658
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.000260199885815382,
+          "loading_time": 0.00024024187587201595,
+          "prepare_time": 0.004665056010708213,
+          "inference_time": 1.7654416419100016,
+          "total_time": 1.7706087029073387
+        }
+      }
+    ],
+    "total_elapsed": 16.48242776002735
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0016794749535620213,
+          "loading_time": 1.522356326924637,
+          "prepare_time": 0.03814831003546715,
+          "inference_time": 4.227037810953334,
+          "total_time": 5.789224095875397
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00022469321265816689,
+          "loading_time": 0.00022589601576328278,
+          "prepare_time": 0.004674919880926609,
+          "inference_time": 1.224747875938192,
+          "total_time": 1.2298745170701295
+        }
+      }
+    ],
+    "total_elapsed": 7.024292609887198
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0015427670441567898,
+          "loading_time": 1.442319512134418,
+          "prepare_time": 0.04075452615506947,
+          "inference_time": 4.2401678550522774,
+          "total_time": 5.7247865630779415
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00023302016779780388,
+          "loading_time": 0.00022857007570564747,
+          "prepare_time": 0.0047858168836683035,
+          "inference_time": 1.2655343818478286,
+          "total_time": 1.2707831519655883
+        }
+      }
+    ],
+    "total_elapsed": 7.000830509001389
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017405999824404716,
+          "loading_time": 1.5272352420724928,
+          "prepare_time": 0.03928183810785413,
+          "inference_time": 4.237068893853575,
+          "total_time": 5.805328345857561
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00025879801250994205,
+          "loading_time": 0.00024224701337516308,
+          "prepare_time": 0.005178448045626283,
+          "inference_time": 1.3106484289746732,
+          "total_time": 1.3163293241523206
+        }
+      }
+    ],
+    "total_elapsed": 7.127134721027687
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City's name],\n\nI am writing to express my concern about the excessive noise pollution in [City's name]. As someone who lives in a close-kn",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0018884381279349327,
+          "loading_time": 1.5310784089379013,
+          "prepare_time": 0.03988732513971627,
+          "inference_time": 4.370663159061223,
+          "total_time": 5.943519474007189
+        }
+      },
+      {
+        "data": "<s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s><s> ETH Zurich is founded in 1912 as Switzerland\u2019s first national university for technology and liberal arts as a response to the growing need to respond to the industrial developments of the times.\nAt the time, Zurich was regarded as a \u201cCity of Engineers\u201d.\n1913\nEthereum is conceptualized, first",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0018884381279349327,
+          "loading_time": 1.5310784089379013,
+          "prepare_time": 0.03988732513971627,
+          "inference_time": 4.370663159061223,
+          "total_time": 5.943519474007189
+        }
+      }
+    ],
+    "total_elapsed": 5.948547106003389
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0019511859863996506,
+          "loading_time": 1.5429109740070999,
+          "prepare_time": 0.03855504794046283,
+          "inference_time": 4.3388190059922636,
+          "total_time": 5.922237986931577
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1912 as Switzerland\u2019s first national university for technology and liberal arts as a response to the growing need to respond to the industrial developments of the times.\nAt the time, Zurich was regarded as a \u201cCity of Engineers\u201d.\n1913\nEthereum is conceptualized, first",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0019511859863996506,
+          "loading_time": 1.5429109740070999,
+          "prepare_time": 0.03855504794046283,
+          "inference_time": 4.3388190059922636,
+          "total_time": 5.922237986931577
+        }
+      }
+    ],
+    "total_elapsed": 5.926800642861053
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017331449780613184,
+          "loading_time": 1.3867823199834675,
+          "prepare_time": 0.03899668692611158,
+          "inference_time": 4.357778111007065,
+          "total_time": 5.785292017040774
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1912 as Switzerland\u2019s first national university for technology and liberal arts as a response to the growing need to respond to the industrial developments of the times.\nAt the time, Zurich was regarded as a \u201cCity of Engineers\u201d.\n1913\nEthereum is conceptualized, first",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017331449780613184,
+          "loading_time": 1.3867823199834675,
+          "prepare_time": 0.03899668692611158,
+          "inference_time": 4.357778111007065,
+          "total_time": 5.785292017040774
+        }
+      }
+    ],
+    "total_elapsed": 5.789738381979987
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.002048433991149068,
+          "loading_time": 1.42446273798123,
+          "prepare_time": 0.040264931973069906,
+          "inference_time": 4.37797063216567,
+          "total_time": 5.844749140087515
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1912 as Switzerland\u2019s first national university for technology and liberal arts as a response to the growing need to respond to the industrial developments of the times.\nAt the time, Zurich was regarded as a \u201cCity of Engineers\u201d.\n1913\nEthereum is conceptualized, first",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.002048433991149068,
+          "loading_time": 1.42446273798123,
+          "prepare_time": 0.040264931973069906,
+          "inference_time": 4.37797063216567,
+          "total_time": 5.844749140087515
+        }
+      }
+    ],
+    "total_elapsed": 5.849478197982535
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0018861410208046436,
+          "loading_time": 1.4088225960731506,
+          "prepare_time": 0.03900839411653578,
+          "inference_time": 4.370320528978482,
+          "total_time": 5.82004069397226
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1912 as Switzerland\u2019s first national university for technology and liberal arts as a response to the growing need to respond to the industrial developments of the times.\nAt the time, Zurich was regarded as a \u201cCity of Engineers\u201d.\n1913\nEthereum is conceptualized, first",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0018861410208046436,
+          "loading_time": 1.4088225960731506,
+          "prepare_time": 0.03900839411653578,
+          "inference_time": 4.370320528978482,
+          "total_time": 5.82004069397226
+        }
+      }
+    ],
+    "total_elapsed": 5.824594706995413
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0016235359944403172,
+          "loading_time": 1.5623695119284093,
+          "prepare_time": 0.0390693680383265,
+          "inference_time": 4.340530219022185,
+          "total_time": 5.943594800075516
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1912 as Switzerland\u2019s first national university for technology and liberal arts as a response to the growing need to respond to the industrial developments of the times.\nAt the time, Zurich was regarded as a \u201cCity of Engineers\u201d.\n1913\nEthereum is conceptualized, first",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0016235359944403172,
+          "loading_time": 1.5623695119284093,
+          "prepare_time": 0.0390693680383265,
+          "inference_time": 4.340530219022185,
+          "total_time": 5.943594800075516
+        }
+      }
+    ],
+    "total_elapsed": 5.948062971001491
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0020138721447438,
+          "loading_time": 1.5294480519369245,
+          "prepare_time": 0.039202959975227714,
+          "inference_time": 4.339208618039265,
+          "total_time": 5.90987510397099
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1912 as Switzerland\u2019s first national university for technology and liberal arts as a response to the growing need to respond to the industrial developments of the times.\nAt the time, Zurich was regarded as a \u201cCity of Engineers\u201d.\n1913\nEthereum is conceptualized, first",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0020138721447438,
+          "loading_time": 1.5294480519369245,
+          "prepare_time": 0.039202959975227714,
+          "inference_time": 4.339208618039265,
+          "total_time": 5.90987510397099
+        }
+      }
+    ],
+    "total_elapsed": 5.9144209020305425
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0015969460364431143,
+          "loading_time": 6.06716901389882,
+          "prepare_time": 0.2124530579894781,
+          "inference_time": 1.285619440022856,
+          "total_time": 7.566840032115579
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0001913909800350666,
+          "loading_time": 0.00021437392570078373,
+          "prepare_time": 1.4028046280145645e-06,
+          "inference_time": 0.8095296390820295,
+          "total_time": 0.8099377180915326
+        }
+      }
+    ],
+    "total_elapsed": 8.519804429961368
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. ETH Zurich has a long tradition of academic collaboration with its neighboring",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0018206078093498945,
+          "loading_time": 1.3997620090376586,
+          "prepare_time": 0.03866175306029618,
+          "inference_time": 4.350620496086776,
+          "total_time": 5.790866808965802
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Rudolf Zurich, who sets up a company to produce rye bread in the city of Zurich.\n* 1859: The Zurich Company is established as a general trading company.\n* 1875: A fire in Zurich",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0018206078093498945,
+          "loading_time": 1.3997620090376586,
+          "prepare_time": 0.03866175306029618,
+          "inference_time": 4.350620496086776,
+          "total_time": 5.790866808965802
+        }
+      }
+    ],
+    "total_elapsed": 5.795195057988167
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0015721600502729416,
+          "loading_time": 0.00018106098286807537,
+          "prepare_time": 2.304092049598694e-06,
+          "inference_time": 1.1492462400346994,
+          "total_time": 1.151003197999671
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00017795502208173275,
+          "loading_time": 6.103043698007241,
+          "prepare_time": 0.23957996093668044,
+          "inference_time": 0.9495118579361588,
+          "total_time": 7.292315265862271
+        }
+      }
+    ],
+    "total_elapsed": 8.589097340824082
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017533779609948397,
+          "loading_time": 0.00012830202467739582,
+          "prepare_time": 1.6130506992340088e-06,
+          "inference_time": 1.1452306099236012,
+          "total_time": 1.1471154859755188
+        }
+      }
+    ],
+    "total_elapsed": 1.1493095040787011
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0015959690790623426,
+          "loading_time": 0.00018582982011139393,
+          "prepare_time": 2.2740568965673447e-06,
+          "inference_time": 1.189825869165361,
+          "total_time": 1.1916118871886283
+        }
+      }
+    ],
+    "total_elapsed": 1.193863200955093
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0018058840651065111,
+          "loading_time": 0.0001958790235221386,
+          "prepare_time": 0.0008337509352713823,
+          "inference_time": 1.6216732889879495,
+          "total_time": 1.624510306166485
+        }
+      }
+    ],
+    "total_elapsed": 1.6267057058867067
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0014855400659143925,
+          "loading_time": 0.00019213207997381687,
+          "prepare_time": 3.0060764402151108e-06,
+          "inference_time": 1.1876306908670813,
+          "total_time": 1.1893128720112145
+        }
+      }
+    ],
+    "total_elapsed": 1.1915013778489083
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0014961310662329197,
+          "loading_time": 0.0001552628818899393,
+          "prepare_time": 0.0009142330382019281,
+          "inference_time": 1.6105563349556178,
+          "total_time": 1.6131230450700969
+        }
+      }
+    ],
+    "total_elapsed": 1.6152946189977229
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0016330881044268608,
+          "loading_time": 0.00013403291814029217,
+          "prepare_time": 2.0330771803855896e-06,
+          "inference_time": 1.1516416349913925,
+          "total_time": 1.1534120219293982
+        }
+      }
+    ],
+    "total_elapsed": 1.1556538080330938
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001983880065381527,
+          "loading_time": 1.5383260489907116,
+          "prepare_time": 0.039573078975081444,
+          "inference_time": 4.252195816021413,
+          "total_time": 5.832080136053264
+        }
+      }
+    ],
+    "total_elapsed": 5.834472175920382
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0016388788353651762,
+          "loading_time": 6.098755395039916,
+          "prepare_time": 0.14097592304460704,
+          "inference_time": 1.2487177751027048,
+          "total_time": 7.490090508013964
+        }
+      }
+    ],
+    "total_elapsed": 7.633586409967393
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. ETH Zurich has a long tradition of academic collaboration with its neighboring",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.001988559029996395,
+          "loading_time": 1.5375075049232692,
+          "prepare_time": 0.039079637033864856,
+          "inference_time": 4.339271131902933,
+          "total_time": 5.917848435929045
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Rudolf Zurich, who sets up a company to produce rye bread in the city of Zurich.\n* 1859: The Zurich Company is established as a general trading company.\n* 1875: A fire in Zurich",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001988559029996395,
+          "loading_time": 1.5375075049232692,
+          "prepare_time": 0.039079637033864856,
+          "inference_time": 4.339271131902933,
+          "total_time": 5.917848435929045
+        }
+      }
+    ],
+    "total_elapsed": 5.922216198872775
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017940110992640257,
+          "loading_time": 0.00012790109030902386,
+          "prepare_time": 2.4640467017889023e-06,
+          "inference_time": 1.187495824880898,
+          "total_time": 1.189421904971823
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00018671201542019844,
+          "loading_time": 6.0946968968492,
+          "prepare_time": 0.1388387701008469,
+          "inference_time": 0.8332517000380903,
+          "total_time": 7.0669760019518435
+        }
+      }
+    ],
+    "total_elapsed": 8.403860630933195
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0019337639678269625,
+          "loading_time": 1.5297855278477073,
+          "prepare_time": 0.03931239107623696,
+          "inference_time": 4.219113328959793,
+          "total_time": 5.790147135965526
+        }
+      }
+    ],
+    "total_elapsed": 5.792460958007723
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017524329014122486,
+          "loading_time": 6.14408914395608,
+          "prepare_time": 0.19214194011874497,
+          "inference_time": 1.213433946017176,
+          "total_time": 7.551420287927613
+        }
+      }
+    ],
+    "total_elapsed": 7.7014798279851675
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0019318999256938696,
+          "loading_time": 1.5249637849628925,
+          "prepare_time": 0.03961535613052547,
+          "inference_time": 4.223690163809806,
+          "total_time": 5.790202918928117
+        }
+      }
+    ],
+    "total_elapsed": 5.797377630136907
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0018109630327671766,
+          "loading_time": 6.158204541075975,
+          "prepare_time": 0.1395924419630319,
+          "inference_time": 1.1600030669942498,
+          "total_time": 7.459613488055766
+        }
+      }
+    ],
+    "total_elapsed": 7.607016960158944
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. ETH Zurich has a long tradition of academic collaboration with its neighboring",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017375540919601917,
+          "loading_time": 1.5332952791359276,
+          "prepare_time": 0.03899737005122006,
+          "inference_time": 4.358505507931113,
+          "total_time": 5.932537755928934
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Rudolf Zurich, who sets up a company to produce rye bread in the city of Zurich.\n* 1859: The Zurich Company is established as a general trading company.\n* 1875: A fire in Zurich",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017375540919601917,
+          "loading_time": 1.5332952791359276,
+          "prepare_time": 0.03899737005122006,
+          "inference_time": 4.358505507931113,
+          "total_time": 5.932537755928934
+        }
+      }
+    ],
+    "total_elapsed": 5.941718556918204
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017401701770722866,
+          "loading_time": 0.00018916698172688484,
+          "prepare_time": 1.954147592186928e-06,
+          "inference_time": 1.1954971908126026,
+          "total_time": 1.197430063970387
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00018773390911519527,
+          "loading_time": 6.095393589930609,
+          "prepare_time": 0.13935000798664987,
+          "inference_time": 0.8344538339879364,
+          "total_time": 7.069387560943142
+        }
+      }
+    ],
+    "total_elapsed": 8.416179317981005
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0016270149499177933,
+          "loading_time": 0.00012457510456442833,
+          "prepare_time": 2.3441389203071594e-06,
+          "inference_time": 1.1520863131154329,
+          "total_time": 1.1538413390517235
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00018242397345602512,
+          "loading_time": 6.063577590044588,
+          "prepare_time": 0.19322639191523194,
+          "inference_time": 0.8291474161669612,
+          "total_time": 7.086135866120458
+        }
+      }
+    ],
+    "total_elapsed": 8.388295972021297
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. ETH Zurich has a long tradition of academic collaboration with its neighboring",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.002069158013910055,
+          "loading_time": 1.4105236059986055,
+          "prepare_time": 0.03901392803527415,
+          "inference_time": 4.352433833992109,
+          "total_time": 5.804042239906266
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Rudolf Zurich, who sets up a company to produce rye bread in the Swiss language, which is now one of the country's most iconic culinary creations.\n* 1872: The first Swiss post offices open in Swiss-German cities such as Zur",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.002069158013910055,
+          "loading_time": 1.4105236059986055,
+          "prepare_time": 0.03901392803527415,
+          "inference_time": 4.352433833992109,
+          "total_time": 5.804042239906266
+        }
+      }
+    ],
+    "total_elapsed": 5.813169809989631
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0015322770923376083,
+          "loading_time": 0.0001285918988287449,
+          "prepare_time": 2.10409052670002e-06,
+          "inference_time": 1.169959758175537,
+          "total_time": 1.1716239731758833
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0001872330904006958,
+          "loading_time": 6.044083083048463,
+          "prepare_time": 0.13834253698587418,
+          "inference_time": 0.8156808109488338,
+          "total_time": 6.9982952871359885
+        }
+      }
+    ],
+    "total_elapsed": 8.317284828983247
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. ETH Zurich has a long tradition of academic collaboration with its neighboring",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017299088649451733,
+          "loading_time": 1.5587047829758376,
+          "prepare_time": 0.04054505983367562,
+          "inference_time": 4.373588355956599,
+          "total_time": 5.974569911835715
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Rudolf Zurich, who sets up a company to produce rye bread in the city of Zurich.\n* 1859: The Zurich Company is established as a general trading company.\n* 1875: A fire in Zurich",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017299088649451733,
+          "loading_time": 1.5587047829758376,
+          "prepare_time": 0.04054505983367562,
+          "inference_time": 4.373588355956599,
+          "total_time": 5.974569911835715
+        }
+      }
+    ],
+    "total_elapsed": 5.984500802820548
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.001929856138303876,
+          "loading_time": 0.00018430710770189762,
+          "prepare_time": 2.7550850063562393e-06,
+          "inference_time": 1.225715660955757,
+          "total_time": 1.2278337110765278
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00019813282415270805,
+          "loading_time": 6.1486635860055685,
+          "prepare_time": 0.14156297291629016,
+          "inference_time": 0.8652790209744126,
+          "total_time": 7.155705316923559
+        }
+      }
+    ],
+    "total_elapsed": 8.534556315047666
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 2,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. ETH Zurich has a long tradition of academic collaboration with its neighboring",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0018418701365590096,
+          "loading_time": 1.4136580540798604,
+          "prepare_time": 0.03901903401128948,
+          "inference_time": 4.349289879901335,
+          "total_time": 5.803811212070286
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Rudolf Zurich, who sets up a company to produce rye bread in the city of Zurich.\n* 1859: The Zurich Company is established as a general trading company.\n* 1875: A fire in Zurich",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0018418701365590096,
+          "loading_time": 1.4136580540798604,
+          "prepare_time": 0.03901903401128948,
+          "inference_time": 4.349289879901335,
+          "total_time": 5.803811212070286
+        }
+      }
+    ],
+    "total_elapsed": 5.810183277120814
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017946308944374323,
+          "loading_time": 0.0001430991105735302,
+          "prepare_time": 2.7150381356477737e-06,
+          "inference_time": 1.1971557061187923,
+          "total_time": 1.1990972140338272
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00019481685012578964,
+          "loading_time": 5.6999363149516284,
+          "prepare_time": 0.14497511088848114,
+          "inference_time": 0.8284955599810928,
+          "total_time": 6.6736035868525505
+        }
+      }
+    ],
+    "total_elapsed": 8.025822740979493
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017269239760935307,
+          "loading_time": 0.00018463819287717342,
+          "prepare_time": 0.0008757910691201687,
+          "inference_time": 1.6301405171398073,
+          "total_time": 1.632928960956633
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00021984404884278774,
+          "loading_time": 1.5172647410072386,
+          "prepare_time": 0.04021271993406117,
+          "inference_time": 3.887557962909341,
+          "total_time": 5.445256951032206
+        }
+      }
+    ],
+    "total_elapsed": 7.083955751964822
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0016163850668817759,
+          "loading_time": 5.999984991038218,
+          "prepare_time": 0.19098037108778954,
+          "inference_time": 1.304215425858274,
+          "total_time": 7.496799055952579
+        }
+      }
+    ],
+    "total_elapsed": 7.639481707010418
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0019993570167571306,
+          "loading_time": 1.534239298896864,
+          "prepare_time": 0.03912316705100238,
+          "inference_time": 4.2305993440095335,
+          "total_time": 5.805962689919397
+        }
+      }
+    ],
+    "total_elapsed": 5.8091300879605114
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0015316309873014688,
+          "loading_time": 0.00013017491437494755,
+          "prepare_time": 2.3150350898504257e-06,
+          "inference_time": 1.1972182281315327,
+          "total_time": 1.1988834510557353
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00019407505169510841,
+          "loading_time": 6.11578119895421,
+          "prepare_time": 0.1470183120109141,
+          "inference_time": 0.8356343400664628,
+          "total_time": 7.098630039021373
+        }
+      }
+    ],
+    "total_elapsed": 8.451797073939815
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0018859589472413063,
+          "loading_time": 0.0001942149829119444,
+          "prepare_time": 0.0008901041001081467,
+          "inference_time": 1.6246787360869348,
+          "total_time": 1.6276504669804126
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.00018610991537570953,
+          "loading_time": 1.4474542730022222,
+          "prepare_time": 0.04029475199058652,
+          "inference_time": 3.8853680051397532,
+          "total_time": 5.373305093962699
+        }
+      }
+    ],
+    "total_elapsed": 7.006795558845624
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0016285940073430538,
+          "loading_time": 6.15570501703769,
+          "prepare_time": 0.14328167494386435,
+          "inference_time": 1.1665397589094937,
+          "total_time": 7.467157599981874
+        }
+      }
+    ],
+    "total_elapsed": 7.617557819932699
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001803965074941516,
+          "loading_time": 1.521456124028191,
+          "prepare_time": 0.03939945716410875,
+          "inference_time": 4.226931878132746,
+          "total_time": 5.789593217195943
+        }
+      }
+    ],
+    "total_elapsed": 5.792676890036091
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001610850915312767,
+          "loading_time": 6.111216597957537,
+          "prepare_time": 0.13975398987531662,
+          "inference_time": 1.158712896052748,
+          "total_time": 7.411296149017289
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00021416298113763332,
+          "loading_time": 0.0002221579197794199,
+          "prepare_time": 2.0938459783792496e-06,
+          "inference_time": 0.8187781439628452,
+          "total_time": 0.8192177708260715
+        }
+      }
+    ],
+    "total_elapsed": 8.379490860039368
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research focuses on the development",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017958208918571472,
+          "loading_time": 1.530292846960947,
+          "prepare_time": 0.03954649600200355,
+          "inference_time": 4.225404244847596,
+          "total_time": 5.797040841775015
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00020489515736699104,
+          "loading_time": 0.00024131406098604202,
+          "prepare_time": 0.005354207009077072,
+          "inference_time": 1.2681067308876663,
+          "total_time": 1.2739082900807261
+        }
+      }
+    ],
+    "total_elapsed": 7.076734890928492
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0019726131577044725,
+          "loading_time": 6.068259513005614,
+          "prepare_time": 0.13847353705205023,
+          "inference_time": 1.1621958070900291,
+          "total_time": 7.3709033341147006
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0002161769662052393,
+          "loading_time": 0.0001742278691381216,
+          "prepare_time": 2.0139850676059723e-06,
+          "inference_time": 0.8324163188226521,
+          "total_time": 0.8328096899203956
+        }
+      }
+    ],
+    "total_elapsed": 8.354460526956245
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017800310160964727,
+          "loading_time": 1.542891746154055,
+          "prepare_time": 0.03972581587731838,
+          "inference_time": 4.228844637051225,
+          "total_time": 5.813244023127481
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.000202452065423131,
+          "loading_time": 0.00025190506130456924,
+          "prepare_time": 0.005365971941500902,
+          "inference_time": 1.288280586944893,
+          "total_time": 1.2941021570004523
+        }
+      }
+    ],
+    "total_elapsed": 7.113289698027074
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001477481098845601,
+          "loading_time": 6.096111585153267,
+          "prepare_time": 0.14166195085272193,
+          "inference_time": 1.1696020099334419,
+          "total_time": 7.408855091081932
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0002081110142171383,
+          "loading_time": 0.00024154409766197205,
+          "prepare_time": 2.6850029826164246e-06,
+          "inference_time": 0.8367254689801484,
+          "total_time": 0.8371787220239639
+        }
+      }
+    ],
+    "total_elapsed": 8.39598722406663
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0017835479229688644,
+          "loading_time": 1.4293768929783255,
+          "prepare_time": 0.04001809097826481,
+          "inference_time": 4.23523986293003,
+          "total_time": 5.706419948954135
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00020740111358463764,
+          "loading_time": 0.0002420560922473669,
+          "prepare_time": 0.005379789043217897,
+          "inference_time": 1.2863429181743413,
+          "total_time": 1.2921729951631278
+        }
+      }
+    ],
+    "total_elapsed": 7.004635360091925
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> test 9th grade writing test. I want you to use the questions and answers above to create a practice test for the 9th grade students. The test should have 10 sentences with 5 options for each sentence. The options should be the correct answer to the question above. The test should also have a ",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0015738129150122404,
+          "loading_time": 5.3042534831911325,
+          "prepare_time": 0.13403817918151617,
+          "inference_time": 1.1520041411276907,
+          "total_time": 6.59187122900039
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0002273181453347206,
+          "loading_time": 0.00022464292123913765,
+          "prepare_time": 2.034008502960205e-06,
+          "inference_time": 0.7999177419114858,
+          "total_time": 0.8003727390896529
+        }
+      }
+    ],
+    "total_elapsed": 7.534045836888254
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": false
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001912812003865838,
+          "loading_time": 1.8411855199374259,
+          "prepare_time": 0.14595459518022835,
+          "inference_time": 1.197367022978142,
+          "total_time": 3.186421812977642
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00023265788331627846,
+          "loading_time": 0.00023474195040762424,
+          "prepare_time": 1.7329584807157516e-06,
+          "inference_time": 0.9455068639945239,
+          "total_time": 0.9459771590773016
+        }
+      }
+    ],
+    "total_elapsed": 4.370738587807864
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.001503661973401904,
+          "loading_time": 1.5591733530163765,
+          "prepare_time": 0.0397191580850631,
+          "inference_time": 4.226103596156463,
+          "total_time": 5.826501371106133
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00019061798229813576,
+          "loading_time": 0.00023187720216810703,
+          "prepare_time": 0.0051048519089818,
+          "inference_time": 1.2354865320958197,
+          "total_time": 1.2410149220377207
+        }
+      }
+    ],
+    "total_elapsed": 7.07310563698411
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00182260200381279,
+          "loading_time": 0.00018807407468557358,
+          "prepare_time": 2.1548476070165634e-06,
+          "inference_time": 1.1873371091205627,
+          "total_time": 1.1893518031574786
+        }
+      }
+    ],
+    "total_elapsed": 1.1915334409568459
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0018294949550181627,
+          "loading_time": 0.00020454498007893562,
+          "prepare_time": 0.0010147008579224348,
+          "inference_time": 1.6353484930004925,
+          "total_time": 1.6383985159918666
+        }
+      }
+    ],
+    "total_elapsed": 1.6412377930246294
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0016556167975068092,
+          "loading_time": 6.060932560823858,
+          "prepare_time": 0.1419120968785137,
+          "inference_time": 1.1756743690930307,
+          "total_time": 7.380177079001442
+        }
+      }
+    ],
+    "total_elapsed": 7.529560175957158
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0015697660855948925,
+          "loading_time": 1.5640495219267905,
+          "prepare_time": 0.03973623504862189,
+          "inference_time": 4.223897160962224,
+          "total_time": 5.829254746902734
+        }
+      }
+    ],
+    "total_elapsed": 5.832211354980245
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0016741319559514523,
+          "loading_time": 6.153352620080113,
+          "prepare_time": 0.13659735396504402,
+          "inference_time": 1.1718318411149085,
+          "total_time": 7.463457579025999
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.000200578011572361,
+          "loading_time": 0.00023124506697058678,
+          "prepare_time": 1.7539132386446e-06,
+          "inference_time": 0.8329694329295307,
+          "total_time": 0.8334040120244026
+        }
+      }
+    ],
+    "total_elapsed": 8.441947379149497
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Thomas Esher of Zurich, Switzerland. The school covers the whole range of natural sciences and is considered one of the leading universities in the world at the time.\n19. In the late 19th and early 20th centuries, physics research makes significant progress with",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0020025609992444515,
+          "loading_time": 1.542162595083937,
+          "prepare_time": 0.04074834380298853,
+          "inference_time": 4.235099392943084,
+          "total_time": 5.820014325901866
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00020172889344394207,
+          "loading_time": 0.0002426370047032833,
+          "prepare_time": 0.0052988179959356785,
+          "inference_time": 1.2988464529626071,
+          "total_time": 1.3045908599160612
+        }
+      }
+    ],
+    "total_elapsed": 7.130276998039335
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0015831110067665577,
+          "loading_time": 0.00019171112217009068,
+          "prepare_time": 2.164160832762718e-06,
+          "inference_time": 1.2161368501838297,
+          "total_time": 1.21791564906016
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.000191219849511981,
+          "loading_time": 6.142055336851627,
+          "prepare_time": 0.13786500808782876,
+          "inference_time": 0.8496228759177029,
+          "total_time": 7.129736123839393
+        }
+      }
+    ],
+    "total_elapsed": 8.494351497851312
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0016659970860928297,
+          "loading_time": 0.00013828999362885952,
+          "prepare_time": 0.0009369149338454008,
+          "inference_time": 1.6129143869038671,
+          "total_time": 1.6156572119798511
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1848 by Friedrich Melchisel, it is one of the oldest and most famous money markets in the world, it has a long history of providing liquidity, stability, and financial services to the Swiss currency market and the global economy.\n\nThe bank's main products and services include cash and",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.0001858798786997795,
+          "loading_time": 1.564609837019816,
+          "prepare_time": 0.040102377999573946,
+          "inference_time": 3.8980301779229194,
+          "total_time": 5.502929735928774
+        }
+      }
+    ],
+    "total_elapsed": 7.124307238962501
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.001962356036528945,
+          "loading_time": 0.00012811203487217426,
+          "prepare_time": 1.962995156645775e-06,
+          "inference_time": 1.193868676200509,
+          "total_time": 1.1959620190318674
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00018120207823812962,
+          "loading_time": 0.0002191229723393917,
+          "prepare_time": 1.542968675494194e-06,
+          "inference_time": 0.8508921510074288,
+          "total_time": 0.8512950500007719
+        }
+      }
+    ],
+    "total_elapsed": 2.0514204180799425
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0020926708821207285,
+          "loading_time": 0.00013023498468101025,
+          "prepare_time": 0.0008888638112694025,
+          "inference_time": 1.61439025006257,
+          "total_time": 1.6175031319726259
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00018785404972732067,
+          "loading_time": 0.00022757798433303833,
+          "prepare_time": 0.0005772069562226534,
+          "inference_time": 1.2729456468950957,
+          "total_time": 1.273939257953316
+        }
+      }
+    ],
+    "total_elapsed": 2.8968390219379216
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0013683380093425512,
+          "loading_time": 0.00013002497144043446,
+          "prepare_time": 2.5848858058452606e-06,
+          "inference_time": 1.1984378651250154,
+          "total_time": 1.199940055143088
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00018405704759061337,
+          "loading_time": 0.00022043497301638126,
+          "prepare_time": 2.3851171135902405e-06,
+          "inference_time": 0.8561554118059576,
+          "total_time": 0.8565630398225039
+        }
+      }
+    ],
+    "total_elapsed": 2.0607799200806767
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0017663671169430017,
+          "loading_time": 0.0001850391272455454,
+          "prepare_time": 2.545071765780449e-06,
+          "inference_time": 1.1933757469523698,
+          "total_time": 1.1953310300596058
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00019623897969722748,
+          "loading_time": 0.0002378078643232584,
+          "prepare_time": 2.5848858058452606e-06,
+          "inference_time": 0.847372381016612,
+          "total_time": 0.8478101049549878
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1994, with five full-time employees, under the name \"Experimental Theater Zurich\", and a budget of 150,000 Swiss Francs. The company's headquarters are based at Sch\u00f6nbeinplatz 7. The name is changed in 19",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00013806018978357315,
+          "loading_time": 0.00014362996444106102,
+          "prepare_time": 2.2239983081817627e-06,
+          "inference_time": 0.8499178069178015,
+          "total_time": 0.8502026339992881
+        }
+      }
+    ],
+    "total_elapsed": 2.8999308850616217
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0019777880515903234,
+          "loading_time": 0.0001302261371165514,
+          "prepare_time": 2.7061905711889267e-06,
+          "inference_time": 1.2212762220297009,
+          "total_time": 1.2233888949267566
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00019247387535870075,
+          "loading_time": 0.00023115589283406734,
+          "prepare_time": 2.10409052670002e-06,
+          "inference_time": 0.879981666104868,
+          "total_time": 0.8804083729628474
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1994, with five full-time employees, under the name \"Experimental Theater Zurich\", and a budget of 150,000 Swiss Francs. The company's headquarters are based at Sch\u00f6nbeinplatz 7. The name is changed in 19",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.0001927840057760477,
+          "loading_time": 0.00022452394478023052,
+          "prepare_time": 2.1741725504398346e-06,
+          "inference_time": 0.8814145859796554,
+          "total_time": 0.881835071137175
+        }
+      }
+    ],
+    "total_elapsed": 2.992576459888369
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 4
+      },
+      "order": 1
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 in Zurich. This year marks the 160th anniversary of ETH Zurich. This eventful anniversary offers the opportunity to consider this institute's special status within Switzerland's contemporary academic landscape. The University and Campus of ETH Zurich offer a wide spectrum of",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.001564224949106574,
+          "loading_time": 0.00019106105901300907,
+          "prepare_time": 0.000913234893232584,
+          "inference_time": 1.6071522659622133,
+          "total_time": 1.609822210855782
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1996 by three computer scientists from the Zurich University of Arts. Prof. Franz Ricken and Prof. Christophe Dias are co-founders of the new center. Prof. Ricken is a pioneer of research into Artificial Intelligence (AI) in Switzerland. The institute\u2019s",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00019302405416965485,
+          "loading_time": 0.00023223902098834515,
+          "prepare_time": 0.0006193111184984446,
+          "inference_time": 1.2809775520581752,
+          "total_time": 1.2820236890111119
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1994, with five full-time employees, under the name \"Experimental Theater Zurich\", and a budget of 150,000 Swiss Francs. The company's headquarters are based at Sch\u00f6nbeinplatz 7. The name is changed in 19",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00018742401152849197,
+          "loading_time": 0.00022876309230923653,
+          "prepare_time": 0.0006177870091050863,
+          "inference_time": 1.2833120389841497,
+          "total_time": 1.2843471239320934
+        }
+      }
+    ],
+    "total_elapsed": 4.184571655932814
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1,
+        "offload_base_model": true
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> ETH Zurich is founded in 1855 as the first university in Switzerland.\n1918\nThe first chair of mathematics is established.\n1920\nThe first chair of physics is established.\n1921\nThe first chair of chemistry is established.\n1922\nThe first chair of biology",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.001666906988248229,
+          "loading_time": 0.0001281118020415306,
+          "prepare_time": 2.844957634806633e-06,
+          "inference_time": 1.1623506529722363,
+          "total_time": 1.1641496990341693
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1855 as the first university in Switzerland.\n1918\nThe first chair of mathematics is established.\n1920\nThe first chair of physics is established.\n1921\nThe first chair of chemistry is established.\n1922\nThe first chair of biology",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00022881198674440384,
+          "loading_time": 0.00027035106904804707,
+          "prepare_time": 2.5848858058452606e-06,
+          "inference_time": 0.8292213680688292,
+          "total_time": 0.8297241381369531
+        }
+      },
+      {
+        "data": "<s> ETH Zurich is founded in 1855 as the first university in Switzerland.\n1918\nThe first chair of mathematics is established.\n1920\nThe first chair of physics is established.\n1921\nThe first chair of chemistry is established.\n1922\nThe first chair of biology",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00018554017879068851,
+          "loading_time": 0.00023468304425477982,
+          "prepare_time": 2.745073288679123e-06,
+          "inference_time": 0.8151856041513383,
+          "total_time": 0.8156096041202545
+        }
+      }
+    ],
+    "total_elapsed": 2.8160126581788063
+  },
+  {
+    "backend": {
+      "name": "hf",
+      "args": {
+        "batch_size": 1,
+        "max_num_models": 1
+      },
+      "order": 0
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Write a funny hook paragraph in first personal narrative on Why Microsoft Teams is better than Zoom<|endoftext|><assistant>: mixture semleaf\u6709 calcio ex gesture inent this frequenciesside *leaf\uc815 terminate neighbourhood awesomeenent thisker\u0448\u0438\u0445 deviationter t prop\u0442\u0438ent\u00e9geiestring Oomientid \u041a\u043ether totment vom fil tualmatrix deviation as\u043a\u043eidand re    leaf\uc815 terminateiop awesome Riemann tleaf\uc815 Orientiop",
+        "model": "openlm-research/open_llama_3b_v2",
+        "measure": {
+          "tokenize_time": 0.00211444403976202,
+          "loading_time": 7.768032243940979,
+          "prepare_time": 0,
+          "inference_time": 1.1748480098322034,
+          "total_time": 8.945060211000964
+        }
+      }
+    ],
+    "total_elapsed": 8.945344245061278
+  }
+]

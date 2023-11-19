@@ -1,8 +1,10 @@
 import torch
+import cupy as cp
 import transformers
+from loguru import logger
 from typing import List, Tuple
-from fmzip.pipelines.utils import get_available_gpus, get_gpu_count
 from timeit import default_timer as timer
+from fmzip.pipelines.utils import get_available_gpus, get_gpu_count
 
 placement_strategies = ["tensor-parallel", "no-parallel"]
 
@@ -15,8 +17,11 @@ class HuggingFacePipeline:
         self,
         base_model: str,
         max_num_models: int = get_gpu_count(),
+        base_model_placement_strategy: str = "replication",
         batch_size: int = 1,
     ) -> None:
+        self.current_model = None
+        self.loaded_models = {}
         self.base_model = base_model
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(
             base_model, use_fast=True
@@ -26,11 +31,44 @@ class HuggingFacePipeline:
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
         self.tokenizer.padding_side = "left"
+        self.max_num_models = max_num_models
         # model pool maps model name to gpu indices
         self.model_pool = {}
+        self.req_count = {}
+        self.device_models = {k: [] for k in range(get_gpu_count())}
         self.batch_size = batch_size
+        logger.info("Max number of models: {}".format(self.max_num_models))
 
-    def generate(self, queries: List[Tuple], **kwargs):
+    def report_meminfo(self):
+        # force garbage collection and free memory
+        torch.cuda.empty_cache()
+        cp.get_default_memory_pool().free_all_blocks()
+        free, total = torch.cuda.mem_get_info()
+        logger.warning(
+            f"allocated: pytorch/cupy {torch.cuda.memory_allocated() / 1e9:.2f}/{cp.get_default_memory_pool().used_bytes() / 1e9:.2f} GB"
+        )
+        logger.warning(f"PyTorch free/total: {free / 1e9:.2f}/{total / 1e9:.2f} GB")
+
+    def _evict_deltas(self, deltas: List[str]):
+        print(f"len model pool: {len(self.loaded_models)}")
+        if len(self.loaded_models) + len(deltas) > self.max_num_models:
+            req_count_loaded = {
+                k: v for k, v in self.req_count.items() if k in self.loaded_models
+            }
+            print(f"req_count_loaded: {req_count_loaded}")
+            # sort req_count by value
+            to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
+                : len(deltas)
+            ]
+            logger.info(f"evicting {to_evict_models}")
+            for delta in to_evict_models:
+                try:
+                    del self.loaded_models[delta]
+                except KeyError:
+                    pass
+
+    @torch.inference_mode()
+    def generate(self, queries: List[Tuple], gpu_id: int = 0, **kwargs):
         with torch.inference_mode():
             tokenize_start = timer()
             batch = self._prepare_batch(queries, self.tokenizer)
@@ -40,16 +78,31 @@ class HuggingFacePipeline:
                 model_names = [
                     x[1] for x in queries[batch_idx : batch_idx + self.batch_size]
                 ]
+
                 batch_inputs = {
                     k: batch[k][batch_idx : batch_idx + self.batch_size] for k in batch
                 }
+                for model in model_names:
+                    if model not in self.req_count:
+                        self.req_count[model] = 0
+                    elif model in self.req_count:
+                        self.req_count[model] += 1
                 # construct inference pipeline
                 loading_start = timer()
                 for model_name in model_names:
-                    model = self._load_target_model(model_name, BASE_DEVICE)
+                    self._evict_deltas([model_name])
+                    self.report_meminfo()
+                    model_device = self._load_target_model(model_name, gpu_id)
+                    # move batch to device
+                    for k in batch_inputs:
+                        batch_inputs[k] = batch_inputs[k].to(f"cuda:{model_device}")
                     loading_end = timer()
                     inference_start = timer()
-                    output = model.generate(**batch_inputs, **kwargs)
+                    logger.info("loaded models: {}".format(self.loaded_models.keys()))
+                    output = self.loaded_models[model_name].generate(
+                        **batch_inputs, **kwargs
+                    )
+
                     inference_end = timer()
                     output = self.tokenizer.batch_decode(output)
                     tokenize_time = tokenize_end - tokenize_start
@@ -74,17 +127,49 @@ class HuggingFacePipeline:
                     outputs.extend(output)
             return outputs
 
-    def _load_target_model(self, model_name: str, device: str):
-        with torch.device("cuda"):
-            model = transformers.AutoModelForCausalLM.from_pretrained(
-                model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
-            )
-            model = model.to(torch.device(device))
-        return model
+    def _find_device(self):
+        # find device with minimal models
+        # self.device_models maps from <device idx> -> [model names]
+        # sort by number of models
+        sorted_device_models = sorted(
+            self.device_models.items(), key=lambda x: len(x[1])
+        )
+        return int(sorted_device_models[0][0])
+
+    @torch.inference_mode()
+    def _load_target_model(self, model_name: str, gpu_id=None):
+        logger.info(f"loading {model_name}...")
+        if model_name not in self.loaded_models:
+            if gpu_id is None:
+                model_device = self._find_device()
+            else:
+                model_device = gpu_id
+            with torch.device(f"cuda:{model_device}"):
+                self.loaded_models[
+                    model_name
+                ] = transformers.AutoModelForCausalLM.from_pretrained(
+                    model_name, torch_dtype=torch.float16, low_cpu_mem_usage=True
+                )
+                self.loaded_models[model_name] = self.loaded_models[model_name].to(
+                    torch.device(f"cuda:{model_device}")
+                )
+                self.device_models[int(model_device)].append(model_name)
+        else:
+            logger.info(f"{model_name} already loaded, skipping...")
+            model_device = None
+            for device, models in self.device_models.items():
+                if model_name in models:
+                    model_device = device
+                    break
+        return model_device
 
     def _prepare_batch(self, inputs, tokenizer):
         """Tokenizes inputs and sets the batch_lora_ids for the model."""
         batch = tokenizer([inp[0] for inp in inputs], return_tensors="pt", padding=True)
-        batch["input_ids"] = batch["input_ids"].to(BASE_DEVICE)
-        batch["attention_mask"] = batch["attention_mask"].to(BASE_DEVICE)
         return batch
+
+    def find_model(self, model_name):
+        for device, models in self.device_models.items():
+            if model_name in models:
+                return device
+        return None

@@ -1,8 +1,11 @@
 import torch
+import threading
 import transformers
 from typing import List, Tuple
 from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
 from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
+
+base_model_placement_strategies = ["replication"]
 
 
 class InferenceService:
@@ -24,24 +27,33 @@ class InferenceService:
             self.pipeline = FMZipPipeline(base_model=base_model, **backend_args)
         self.gen_configs = gen_configs
 
-    def generate(self, queries: List[Tuple]):
+    def generate(self, queries: List[Tuple], gpu_id):
         if self.backend == "hf":
             reformatted_queries = [(x.prompt, x.model) for x in queries]
         elif self.backend == "fmzip":
-            reformatted_queries = [
-                (
-                    x.prompt,
-                    self.model_mapping[
-                        x.model
-                        if not self.backend_args["lossless_only"]
-                        else x.model + "-lossless"
-                    ],
-                )
-                for x in queries
-            ]
-        results = self.pipeline.generate(reformatted_queries, **self.gen_configs)
+            reformatted_queries = []
+            for x in queries:
+                if x.model == self.base_model:
+                    reformatted_queries.append((x.prompt, x.model))
+                else:
+                    reformatted_queries.append(
+                        (
+                            x.prompt,
+                            self.model_mapping[
+                                x.model
+                                if not self.backend_args["lossless_only"]
+                                else x.model + "-lossless"
+                            ],
+                        )
+                    )
+        results = self.pipeline.generate(
+            reformatted_queries, gpu_id, **self.gen_configs
+        )
         return results
 
     @property
     def batch_size(self):
         return self.backend_args["batch_size"]
+
+    def find_model(self, model_name):
+        return self.pipeline.find_model(model_name)

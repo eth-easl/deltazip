@@ -1,10 +1,8 @@
-import builtins
 import math
 import time
-from typing import Dict
-
 import triton
-
+import builtins
+from typing import Dict
 
 #  code based https://github.com/fpgaminer/GPTQ-triton
 """
@@ -82,9 +80,9 @@ class CustomizedTritonAutoTuner(triton.KernelInterface):
             # In testings using only 40 reps seems to be close enough and it appears to be what PyTorch uses
             # PyTorch also sets fast_flush to True, but I didn't see any speedup so I'll leave the default
             return triton.testing.do_bench(
-                kernel_call, percentiles=(0.5, 0.2, 0.8), rep=40
+                kernel_call, quantiles=(0.5, 0.2, 0.8), rep=40
             )
-        except triton.compiler.OutOfResources:
+        except triton.OutOfResources:
             return (float("inf"), float("inf"), float("inf"))
 
     def run(self, *args, **kwargs):
@@ -105,6 +103,7 @@ class CustomizedTritonAutoTuner(triton.KernelInterface):
                     config: self._bench(*args, config=config, **kwargs)
                     for config in pruned_configs
                 }
+                # str_timings = {str(config): timings[config] for config in timings}
                 bench_end = time.time()
                 self.bench_time = bench_end - bench_start
                 self.cache[key] = builtins.min(timings, key=timings.get)
@@ -219,6 +218,73 @@ def matmul248_kernel_config_pruner(configs, nargs):
                 "BLOCK_SIZE_N": block_size_n,
                 "BLOCK_SIZE_K": block_size_k,
                 "GROUP_SIZE_M": group_size_m,
+            },
+            num_stages=config.num_stages,
+            num_warps=config.num_warps,
+        )
+
+
+def autotune(
+    configs, key, prune_configs_by=None, reset_to_zero=None, nearest_power_of_two=False
+):
+    def decorator(fn):
+        return CustomizedTritonAutoTuner(
+            fn,
+            fn.arg_names,
+            configs,
+            key,
+            reset_to_zero,
+            prune_configs_by,
+            nearest_power_of_two,
+        )
+
+    return decorator
+
+
+def bmm248_kernel_config_pruner(configs, nargs):
+    """
+    The main purpose of this function is to shrink BLOCK_SIZE_* when the corresponding dimension is smaller.
+    """
+    m = max(2 ** int(math.ceil(math.log2(nargs["M"]))), 16)
+    n = max(2 ** int(math.ceil(math.log2(nargs["N"]))), 16)
+    k = max(2 ** int(math.ceil(math.log2(nargs["K"]))), 16)
+
+    used = set()
+    for config in configs:
+        block_size_m = min(m, config.kwargs["BLOCK_SIZE_M"])
+        block_size_n = min(n, config.kwargs["BLOCK_SIZE_N"])
+        block_size_k = min(k, config.kwargs["BLOCK_SIZE_K"])
+        group_size_m = config.kwargs["GROUP_SIZE_M"]
+        batch_size_b = config.kwargs["BATCH_SIZE_B"]
+        if (
+            block_size_m,
+            block_size_n,
+            block_size_k,
+            group_size_m,
+            config.num_stages,
+            config.num_warps,
+            batch_size_b,
+        ) in used:
+            continue
+
+        used.add(
+            (
+                block_size_m,
+                block_size_n,
+                block_size_k,
+                group_size_m,
+                batch_size_b,
+                config.num_stages,
+                config.num_warps,
+            )
+        )
+        yield triton.Config(
+            {
+                "BLOCK_SIZE_M": block_size_m,
+                "BLOCK_SIZE_N": block_size_n,
+                "BLOCK_SIZE_K": block_size_k,
+                "GROUP_SIZE_M": group_size_m,
+                "BATCH_SIZE_B": batch_size_b,
             },
             num_stages=config.num_stages,
             num_warps=config.num_warps,

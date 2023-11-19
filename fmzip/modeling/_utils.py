@@ -1,5 +1,4 @@
-from typing import Union
-
+from typing import Union, Optional
 import torch
 import transformers
 import torch.nn as nn
@@ -9,6 +8,8 @@ from transformers import AutoConfig
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
 from ..utils.attr_utils import rsetattr
 from fmzip.nn_modules.qlinear_cuda import QuantLinear
+
+EXLLAMA_DEFAULT_MAX_INPUT_LENGTH = 2048
 
 
 def get_device(obj: Union[torch.Tensor, nn.Module]):
@@ -45,7 +46,14 @@ def get_module_by_name(model, module_name: str):
 
 
 def make_quant(
-    module, names, bits, name="", use_triton=False, use_cuda_fp16=True, desc_act=False
+    module,
+    names,
+    bits,
+    name="",
+    use_triton=False,
+    use_cuda_fp16=True,
+    desc_act=False,
+    use_exllama: bool = False,
 ):
     from ..nn_modules.qlinear_cuda import QuantLinear
 
@@ -60,18 +68,17 @@ def make_quant(
             if type(tmp) == nn.Linear:
                 in_features = tmp.in_features
                 out_features = tmp.out_features
-            elif type(tmp) == nn.Conv2d:
-                in_features = tmp.in_channels
-                out_features = tmp.out_channels
-            elif type(tmp) == transformers.pytorch_utils.Conv1D:
-                in_features = tmp.weight.shape[0]
-                out_features = tmp.weight.shape[1]
             if isinstance(bits, dict):
                 real_bits = bits[name1]
             else:
                 real_bits = bits
             new_layer = QuantLinear(
-                real_bits, in_features, out_features, tmp.bias is not None
+                real_bits,
+                in_features,
+                out_features,
+                tmp.bias is not None,
+                use_triton=use_triton,
+                use_exllama=use_exllama,
             )
             new_layer.device = ori_layer_device
             setattr(module, attr, new_layer.to(ori_layer_device))
@@ -85,7 +92,42 @@ def make_quant(
             use_triton=use_triton,
             use_cuda_fp16=use_cuda_fp16,
             desc_act=desc_act,
+            use_exllama=use_exllama,
         )
+
+
+def fmzip_post_init(model, use_act_order: bool, max_input_length: Optional[int] = None):
+    """
+    The max_input_length argument is specific to the exllama backend, that requires to initialize a buffer temp_state.
+    """
+    ## exllamav2
+    fixed_bytes = {}
+    model_uses_exllamav2 = False
+
+    for _, submodule in model.named_modules():
+        if hasattr(submodule, "QUANT_TYPE"):
+            model_uses_exllamav2 = True
+            device = submodule.qweight.device
+            scratch_fixed = submodule.scratch_space_fixed()
+            fixed_bytes[device] = max(scratch_fixed, fixed_bytes.get(device, 0))
+
+    if model_uses_exllamav2:
+        from fmzip.nn_modules.exllama_utils import ExLlamaV2DeviceTensors
+
+        device_tensors = {}
+        for device, scratch_bytes in fixed_bytes.items():
+            device_tensors[device] = ExLlamaV2DeviceTensors(device.index, scratch_bytes)
+
+        # have persistent buffers, otherwise we will get OOM
+        model.device_tensors = device_tensors
+
+        for _, submodule in model.named_modules():
+            if hasattr(submodule, "QUANT_TYPE"):
+                device = submodule.qweight.device
+                submodule.post_init(temp_dq=model.device_tensors[device])
+    torch.cuda.empty_cache()
+
+    return model
 
 
 def unpack_model(model):

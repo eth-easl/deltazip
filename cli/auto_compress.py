@@ -91,7 +91,6 @@ if __name__ == "__main__":
     )
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
     parser.add_argument("--tolerance", type=float, default=1e-10)
-    parser.add_argument("--group-size", type=int, default=-1)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
     parser.add_argument(

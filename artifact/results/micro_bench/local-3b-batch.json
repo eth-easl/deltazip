@@ -1,0 +1,153 @@
+[
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": true,
+        "placement_strategy": "addback",
+        "batch_size": 1,
+        "max_num_deltas": 1
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise pollution in the city:\n\nSubject: Noise pollution from [Location]\n\nDear [City or Street Name],\n\nI am writing to express my concern about the excessive noise pollution emanating from [Location].\n\nAs a resident",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3bit-delta-lossless",
+        "measure": {
+          "tokenize_time": 0.011510684038512409,
+          "loading_time": 5.099727384047583,
+          "prepare_time": 0.1569360870635137,
+          "inference_time": 1.4942728079622611,
+          "total_time": 6.762673260993324
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Council/Neighborhood Development Team],\n\nI am writing to express my deep concern about the ongoing noise pollution in my neighborhood. As someone who lives on the same street as the Lime Ridge neighborhood, I have been experiencing chronic hearing discomfort and sleep disturbances due to the constant noise from the",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3bit-delta-lossless",
+        "measure": {
+          "tokenize_time": 0.011510684038512409,
+          "loading_time": 3.989847503020428,
+          "prepare_time": 0.15016860491596162,
+          "inference_time": 0.8696304819313809,
+          "total_time": 11.9364457949996
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Government],\n\nI am writing to express my deep concern and frustration about the constant noise pollution that I have been experiencing in the city. As a resident of [Your Address], I have been living with this issue for several years and it continues to affect my daily life and sleep.\n\nThe noise",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3bit-delta-lossless",
+        "measure": {
+          "tokenize_time": 0.011510684038512409,
+          "loading_time": 3.805247032898478,
+          "prepare_time": 0.15128314204048365,
+          "inference_time": 0.8719038109993562,
+          "total_time": 16.922348811058328
+        }
+      }
+    ],
+    "total_elapsed": 17.07821672700811
+  },
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 3,
+        "max_num_deltas": 3
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to send to the management of a property where you are currently living:\n\nSubject: Noise Nuisance at [Property Name]\n\nDear [Managing Company or Management Name],\n\nI am writing to bring to your attention a growing noise problem at [",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3bit",
+        "measure": {
+          "tokenize_time": 0.011432971921749413,
+          "loading_time": 5.099035253981128,
+          "prepare_time": 0.1141783690545708,
+          "inference_time": 10.881360023049638,
+          "total_time": 16.106235779006965
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear City Administrator,\n\nI am writing to express my disappointment with the level of noise pollution that has been present in the city for the past few weeks. As a resident and frequent commuter, I have been subjected to a significant level of noise that has been a constant source of stress and discomfort.\n\nThe",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.011432971921749413,
+          "loading_time": 5.099035253981128,
+          "prepare_time": 0.1141783690545708,
+          "inference_time": 10.881360023049638,
+          "total_time": 16.106235779006965
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example of an email you could use to complain about noise in the city:\n\nSubject: Noise Complaint\n\nDear [City Mayor's Name],\n\nI am writing to express my concern about the loud noise that has been disturbing me and my family during our daily",
+        "model": ".cache/compressed_models/3b-parameters/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.011432971921749413,
+          "loading_time": 5.099035253981128,
+          "prepare_time": 0.1141783690545708,
+          "inference_time": 10.881360023049638,
+          "total_time": 16.106235779006965
+        }
+      }
+    ],
+    "total_elapsed": 16.11506983602885
+  },
+  {
+    "backend": {
+      "name": "hf",
+      "args": {
+        "batch_size": 1,
+        "max_num_models": 1
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Sure, here's an example email to complaint about noise pollution in the city:\n\nSubject: Noise pollution from [Location]\n\nDear [City or Street Name],\n\nI am writing to express my concern about the excessive noise pollution emanating from [Location].\n\nAs a resident",
+        "model": "xzyao/openllama-3b-chat",
+        "measure": {
+          "tokenize_time": 0.008696226985193789,
+          "loading_time": 9.514490254921839,
+          "prepare_time": 0,
+          "inference_time": 1.5908210759516805,
+          "total_time": 11.115468289004639
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Council/Neighborhood Association],\n\nI am writing to express my extreme dissatisfaction with the continuous noise pollution that has been taking place in the city. As a resident of this area, I have been living with this issue for several years and it has become a major source of stress and",
+        "model": "xzyao/openllama-chat-2",
+        "measure": {
+          "tokenize_time": 0.008696226985193789,
+          "loading_time": 9.088348723948002,
+          "prepare_time": 0,
+          "inference_time": 0.8452149470103905,
+          "total_time": 21.049272433039732
+        }
+      },
+      {
+        "data": "<s> <human>: Can you write an email complaining the noise in the city?<|endoftext|><assistant>: Dear [City Government],\n\nI am writing to express my deep concern and frustration about the constant noise pollution that I have been experiencing in the city. As a resident of [Your Address], I have been living with this issue for several years and it continues to affect my daily life and sleep.\n\nThe noise",
+        "model": "xzyao/openllama-chat-3",
+        "measure": {
+          "tokenize_time": 0.008696226985193789,
+          "loading_time": 8.531392429955304,
+          "prepare_time": 0,
+          "inference_time": 0.8830075449077412,
+          "total_time": 30.463920615962707
+        }
+      }
+    ],
+    "total_elapsed": 30.464569889009
+  }
+]
