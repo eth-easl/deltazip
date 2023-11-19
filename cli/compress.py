@@ -10,7 +10,7 @@ from fmzip.utils.delta_utils import subtract, xor
 
 def main(args):
     print(args)
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=args.fast_tokenizer)
 
     compress_config = BaseCompressionConfig(
         bits=args.bits,
@@ -41,9 +41,6 @@ def main(args):
     if args.n_samples <= 0:
         examples = examples
     else:
-        # import random
-        # # random.seed(42)
-        # examples = random.sample(examples, args.n_samples)
         examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
     if args.base_model != "" and args.delta != "":
@@ -55,7 +52,7 @@ def main(args):
     else:
         target_model.lossy_compress(
             examples,
-            batch_size=2,
+            batch_size=4,
         )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
@@ -89,5 +86,6 @@ if __name__ == "__main__":
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
+    parser.add_argument("--fast-tokenizer", action="store_true", default=True)
     args = parser.parse_args()
     main(args)

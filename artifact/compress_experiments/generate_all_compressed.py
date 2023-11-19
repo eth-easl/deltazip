@@ -25,7 +25,7 @@ def render_job(base_model, target_model_dir, task, step,is_delta, config, fast_t
     output_dir = os.path.join(OUTPUT_DIR, f"{base_model}", f"{task}-{step}", f"{config}.jsonl")
     job = None
     if not os.path.exists(output_dir):
-        job = f"python cli/ni_eval_v2.py --base-model {hf_id[base_model]} --target-model {target_model_dir} {'--delta subtract' if is_delta else ''} --input-file {input_file} --input-field input --max-length 64 --output-file {output_dir} {'--fast-tokenizer' if fast_tokenizer else ''}"
+        job = f"python cli/ni_eval.py --base-model {hf_id[base_model]} --target-model {target_model_dir} {'--delta subtract' if is_delta else ''} --input-file {input_file} --input-field input --max-length 64 --output-file {output_dir} {'--fast-tokenizer' if fast_tokenizer else ''}"
     return job
 
 if __name__=="__main__":

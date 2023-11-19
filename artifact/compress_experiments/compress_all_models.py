@@ -63,7 +63,7 @@ def render_job(
             f"global_step{step}",
         )
     if not os.path.exists(output_dir):
-        job = f"python cli/compress_v2.py --base-model {base_model} --target-model {target_model_dir} --dataset {dataset_file} --bits {bits} --sparsity {sparsity} --outdir {output_dir} {'--delta subtract' if is_delta else ''} --lossless gdeflate --n-samples {n_samples} --block-size {block_size}"
+        job = f"python cli/compress.py --base-model {base_model} --target-model {target_model_dir} --dataset {dataset_file} --bits {bits} --sparsity {sparsity} --outdir {output_dir} {'--delta subtract' if is_delta else ''} --lossless gdeflate --n-samples {n_samples} --block-size {block_size}"
         return job
     else:
         return None
@@ -82,5 +82,6 @@ if __name__ == "__main__":
     if PRINT_JOB:
         for job in jobs:
             print(job)
-    for job in jobs:
-        os.system(f"ts --gpus 1 {job}")
+    # for job in jobs:
+    #     os.system(f"ts --gpus 1 {job}")
+

@@ -90,6 +90,7 @@ class SparseGPT:
             H = torch.linalg.cholesky(H, upper=True)
             Hinv = H
             # check if Hinv contains nan
+            success_damp = True
             if not torch.isnan(Hinv).any():
                 success_damp = True
             else:
@@ -118,8 +119,6 @@ class SparseGPT:
                     # the larger the sparsity, the more weights are pruned (=> higher compression ratio)
                     thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
                     mask1 = tmp <= thresh
-                    ## debug: check how many weights are pruned
-                    ## logger.debug(f"sparsity: {torch.sum(mask1).item() / mask1.numel()}")
             else:
                 mask1 = torch.zeros_like(W1) == 1
             for i in range(count):
