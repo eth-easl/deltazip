@@ -2,6 +2,7 @@ import os
 import copy
 import json
 import torch
+import traceback
 import cupy as cp
 import accelerate
 import transformers
@@ -37,7 +38,6 @@ from ..nn_modules.qlinear_cuda import QuantLinear
 from fmzip.modeling._utils import fmzip_post_init
 
 triton_has_warmup = False
-
 
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
@@ -343,8 +343,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 self.model(**example)
             except ValueError as e:
                 pass
-        layers[0] = layers[0].module
 
+        layers[0] = layers[0].module
         move_to_device(layers[0], CPU if force_layer_back_to_cpu else cur_layer_device)
         for module_name in self.outside_layer_modules:
             module = get_module_by_name(self.model, module_name)
@@ -361,6 +361,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if not self.compress_config.true_sequential:
             inside_layer_modules = [sum(inside_layer_modules, [])]
         self.compressors = {}
+        
         for i in range(len(layers)):
             layer = layers[i]
             force_layer_back_to_cpu = False
@@ -388,7 +389,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 def add_batch(name):
                     def tmp(_, inp, out):
                         sparsegpt[name].add_batch(inp[0].data, out.data)
-
                     return tmp
 
                 handles = []

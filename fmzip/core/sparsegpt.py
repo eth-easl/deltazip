@@ -92,7 +92,7 @@ class SparseGPT:
             H = torch.linalg.cholesky(H, upper=True)
             Hinv = H
             # check if Hinv contains nan
-            if not torch.isnan(Hinv).any():
+            if not torch.isnan(torch.diag(Hinv)).any():
                 success_damp = True
             else:
                 logger.warning(f"NaN in Hinv, increasing percdamp to {percdamp + 0.01}")
@@ -164,9 +164,9 @@ class SparseGPT:
             #     print(torch.sum(Losses))
         after_sparsity = calculate_sparsity(W)
         torch.cuda.synchronize()
-        logger.info(f"duration: {(time.time() - tick)}")
-        logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples}")
-        logger.info(f"sparsity: {after_sparsity}")
+        logger.info(f"duration: {(time.time() - tick):.2f}s")
+        logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples:.8f}")
+        logger.info(f"sparsity: {after_sparsity:.8f}")
         if after_sparsity - before_sparsity > 0.5:
             logger.warning(
                 f"high sparsity change detected: {before_sparsity} -> {after_sparsity}"
@@ -180,8 +180,6 @@ class SparseGPT:
             Q = Q[:, invperm]
             g_idx = g_idx[invperm]
 
-        if isinstance(self.layer, transformers.Conv1D):
-            W = W.t()
         self.layer.weight.data = W.reshape(self.layer.weight.shape).to(
             self.layer.weight.data.dtype
         )

@@ -8,13 +8,13 @@ cache_folder = os.environ.get("YAO_CACHE")
 ar_dataset = os.path.join(cache_folder, "datasets", "qi", "ar")
 
 include_fmzip = True
-include_sparsegpt = False
-
+include_sparsegpt = True
+force = True
 poi_tasks = [
     "task151_tomqa_find_location_easy_clean",
-    "task152_tomqa_find_location_easy_noise",
-    "task372_synthetic_palindrome_numbers",
-    "task227_clariq_classification",
+    # "task152_tomqa_find_location_easy_noise",
+    # "task372_synthetic_palindrome_numbers",
+    # "task227_clariq_classification",
     # "task523_find_if_numbers_or_alphabets_are_more_in_list",
     # "task936_defeasible_nli_snli_classification",
     # "task380_boolq_yes_no_question",
@@ -38,7 +38,6 @@ PRINT_JOB = True
 OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models_new")
 bits = [4]
 sparsity = [0]
-
 
 def render_job(
     is_delta: False,
@@ -69,7 +68,7 @@ def render_job(
             task,
             f"global_step{step}",
         )
-    if not os.path.exists(output_dir):
+    if not os.path.exists(output_dir) or force:
         job = f"python cli/compress.py --base-model {base_model} --target-model {target_model_dir} --dataset {dataset_file} --bits {bits} --sparsity {sparsity} --outdir {output_dir} {'--delta subtract' if is_delta else ''} --lossless gdeflate --n-samples {n_samples} --block-size {block_size} --fast-tokenizer"
         return job
     else:

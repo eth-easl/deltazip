@@ -2,7 +2,7 @@ import os
 
 cache_folder = os.environ.get("YAO_CACHE")
 compressed_model_dir = os.path.join(
-    cache_folder, "experiments", "fmzip", "compressed_models_new"
+    cache_folder, "experiments", "fmzip", "compressed_models"
 )
 fast_tokenizer = {"open_llama_3b_v2": False, "pythia-2.8b-deduped": True}
 base_models = [
@@ -16,9 +16,8 @@ hf_id = {
 OUTPUT_DIR = os.path.join(
     cache_folder, "experiments", "fmzip", "generation_results_new"
 )
-
+FORCE = True
 PRINT_JOB = True
-
 
 def render_job(
     base_model, target_model_dir, task, step, is_delta, config, fast_tokenizer
