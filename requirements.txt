@@ -3,7 +3,7 @@ rouge-score
 safetensors
 py7zr
 zarr
-cupy-cuda11x
+cupy-cuda12x
 cchardet
 scikit-build
 pytest
@@ -15,3 +15,5 @@ gekko
 tokenizers
 parameterized
 pydantic
+accelerate
+ninja

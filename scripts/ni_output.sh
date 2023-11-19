@@ -1,1 +1,0 @@
-python cli/ni_eval.py --prediction_file=.cache/base_models/facebook/opt-1.3b/test_outputs/stance_detection.jsonl --reference_file=.cache/ni_calib/test_references/stance_detection.jsonl --output_file=.cache/eval/facebook-opt-1.3b.json

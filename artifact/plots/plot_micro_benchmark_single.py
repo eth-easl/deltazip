@@ -10,16 +10,16 @@ def plot(args):
         results = json.load(fp)
     plot_data = []
     for item in results:
-        backend = item["backend"]
+        backend = item["system"]
         backend_name = backend["name"]
         if backend_name == "hf":
             backend_name = f"{backend_name}<br>bsz={backend['args']['batch_size']}<br>max_models={backend['args']['max_num_models']}"
         elif backend_name == "fmzip":
             backend_name = f"{backend_name}<br>bsz={backend['args']['batch_size']}<br>max_deltas={backend['args']['max_num_deltas']}<br>strategy={backend['args']['placement_strategy']}<br>lossless_only={backend['args']['lossless_only']}"
 
-        min_length = item["gen_args"]["min_length"]
+        min_length = item["gen_configs"]["min_length"]
         for idx, query in enumerate(item["results"]):
-            print(query)
+            query = query["response"]["response"]
             # total_elapsed = query['total_elapsed']
             tokenize_time = query["measure"]["tokenize_time"]
             loading_time = query["measure"]["loading_time"]
@@ -64,8 +64,8 @@ def plot(args):
             )
     df = pd.DataFrame(plot_data)
     # reverse the order of the dataframe
-    df = df.iloc[::-1]
-
+    # order by name
+    df = df.sort_values(by=["backend"], ascending=False)
     fig = px.bar(df, x="backend", y="time_elapsed", color="Breakdown")
     fig.update_layout(
         width=800,

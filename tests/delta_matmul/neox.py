@@ -61,17 +61,14 @@ def forward(
 
     # Compute attention
     attn_output, attn_weights = self._attn(query, key, value, attention_mask, head_mask)
-
     # Reshape outputs
     attn_output = self._merge_heads(
         attn_output, self.num_attention_heads, self.head_size
     )
-
     attn_output = self.dense(attn_output)
     outputs = (attn_output, present)
     if output_attentions:
         outputs += (attn_weights,)
-
     return outputs
 
 
@@ -82,6 +79,7 @@ config = GPTNeoXConfig(
     hidden_size=6144,
     num_layers=2,
 )
+
 hidden_states = torch.rand(1, 1024, 6144)
 attention_masks = torch.ones(1, 1024)
 position_ids = torch.arange(1024).unsqueeze(0)
@@ -95,6 +93,7 @@ delta_dense_weight = torch.rand_like(base_dense)
 delta_attention = GPTNeoXAttention(config)
 delta_attention.query_key_value.weight = torch.nn.Parameter(delta_qkv_weight)
 delta_attention.dense.weight = torch.nn.Parameter(delta_dense_weight)
+
 ft_attention = GPTNeoXAttention(config)
 ft_attention.query_key_value.weight = torch.nn.Parameter(
     base_qkv_weights + delta_qkv_weight
@@ -112,5 +111,4 @@ parallel_attention_output, _ = base_attention(
 )
 
 print(parallel_attention_output)
-# print l2 norm of the difference
-print(torch.norm(ft_attention_output - parallel_attention_output))
+print(torch.allclose(ft_attention_output, parallel_attention_output))

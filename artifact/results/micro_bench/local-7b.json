@@ -1,0 +1,56 @@
+[
+  {
+    "backend": {
+      "name": "fmzip",
+      "args": {
+        "lossless_only": false,
+        "placement_strategy": "colocate",
+        "batch_size": 1,
+        "max_num_deltas": 1
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> USER:\nCan you write an email complaining the noise in the city?\nASSISTANT:\nSubject: Complaint about Noise in the City\n\nDear [City Manager/Mayor/Councilmember],\n\nI am writing to express my concern about the excessive noise in the city. I have been living in this neighborhood for several years and have noticed that the noise levels have been",
+        "model": ".cache/compressed_models/7b-parameters/bits-2/vicuna-7b-v1.5",
+        "measure": {
+          "tokenize_time": 0.011029693065211177,
+          "loading_time": 1.9673948630224913,
+          "prepare_time": 0.06200985598843545,
+          "inference_time": 7.067678358987905
+        }
+      }
+    ],
+    "total_elapsed": 9.108496714034118
+  },
+  {
+    "backend": {
+      "name": "hf",
+      "args": {
+        "batch_size": 1,
+        "max_num_models": 1
+      }
+    },
+    "gen_args": {
+      "min_length": 64,
+      "max_new_tokens": 64
+    },
+    "results": [
+      {
+        "data": "<s> USER:\nCan you write an email complaining the noise in the city?\nASSISTANT:\n\nSubject: Complaint about Noise in the City\n\nDear [City Council/Mayor],\n\nI am writing to express my concern about the noise levels in our city. As a resident, I have been experiencing excessive noise from traffic, construction, and other sources that make it difficult",
+        "model": "lmsys/vicuna-7b-v1.5",
+        "measure": {
+          "tokenize_time": 0.01014230097644031,
+          "loading_time": 11.311295695020817,
+          "prepare_time": 0,
+          "inference_time": 2.27025903807953
+        }
+      }
+    ],
+    "total_elapsed": 13.593835573992692
+  }
+]

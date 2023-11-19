@@ -1,3 +1,0 @@
-# python cli/benchmark_nvcomp.py --file .cache/model_delta.safetensors --model-type facebook/opt-1.3b --compressed-output .cache/model_delta.fmzip --tensor-shapes .cache/model_delta.shapes
-
-python cli/benchmark_nvcomp.py --file .cache/compressed_model/nlpulse-gpt-j-6b-english_quotes/compressed_model.safetensors --model-type nlpulse/gpt-j-6b-english_quotes --compressed-output .cache/7b_model_delta.fmzip --tensor-shapes .cache/7b_model_delta.shapes
