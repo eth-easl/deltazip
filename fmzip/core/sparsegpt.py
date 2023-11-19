@@ -56,7 +56,7 @@ class SparseGPT:
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
-
+        full_weight = W.clone()
         if base_weight is not None:
             base_weight = base_weight.float()
             logger.info(f"compression operates on delta...")
@@ -180,7 +180,7 @@ class SparseGPT:
             Q = Q[:, invperm]
             g_idx = g_idx[invperm]
 
-        self.layer.weight.data = W.reshape(self.layer.weight.shape).to(
+        self.layer.weight.data = full_weight.reshape(self.layer.weight.shape).to(
             self.layer.weight.data.dtype
         )
         if DEBUG:
@@ -192,7 +192,7 @@ class SparseGPT:
         if hasattr(self, "quantizer"):
             scale = torch.cat(scale, dim=1)
             zero = torch.cat(zero, dim=1)
-        return scale, zero, g_idx, avg_loss
+        return scale, zero, g_idx, avg_loss, W
 
     def free(self):
         if DEBUG:

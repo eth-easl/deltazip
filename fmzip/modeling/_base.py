@@ -361,8 +361,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if not self.compress_config.true_sequential:
             inside_layer_modules = [sum(inside_layer_modules, [])]
         self.compressors = {}
-        
+        compressed_ws = {}
         for i in range(len(layers)):
+            
             layer = layers[i]
             force_layer_back_to_cpu = False
 
@@ -417,7 +418,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     layer(layer_input, **additional_layer_inputs)
                 for h in handles:
                     h.remove()
-
+                
                 # starting compression
                 for name in subset:
                     logger.debug(
@@ -427,7 +428,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         base_weight = base_model.state_dict()[
                             f"{self.layers_block_name}.{i}.{name}.weight"
                         ]
-                    scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
+                    scale, zero, g_idx, avg_loss, compressed_w = sparsegpt[name].fasterprune(
                         sparsity=self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
@@ -453,6 +454,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                                 CPU if force_layer_back_to_cpu else cur_layer_device,
                             ),
                         )
+                        compressed_ws[f"{self.layers_block_name}.{i}.{name}"] = compressed_w
                         sparsegpt[name].free()
 
             for j in range(num_batches):
@@ -477,7 +479,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     cur_layer_device if cache_examples_on_gpu else CPU,
                 )
                 layer_outputs.append(layer_output)
-
+                
             layers[i] = move_to_device(
                 layer, CPU if force_layer_back_to_cpu else cur_layer_device
             )
@@ -497,6 +499,16 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             self.model = accelerate.dispatch_model(
                 self.model, device_map, offload_buffers=True
             )
+        logger.info("Compress finished... moving compressed weights back")
+        for i in range(len(layers)):
+            # move compressed weights back
+            for names in inside_layer_modules:
+                subset = {n: full[n] for n in names}
+                for name in subset:
+                    if self.compress_config.bits < 16:
+                        subset[name].weight.data = compressed_ws[
+                            f"{self.layers_block_name}.{i}.{name}"
+                        ]
 
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
