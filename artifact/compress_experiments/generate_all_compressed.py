@@ -37,7 +37,7 @@ if __name__=="__main__":
         elif "pythia-2.8b-deduped" in model:
             base_model = "pythia-2.8b-deduped"
         method = model.split("_")[-1]
-        config = model.replace(f"{base_model}", "").replace(f"_{method}", "")[1:]
+        config = model.replace(f"{base_model}", "")[1:]
         tasks = os.listdir(os.path.join(compressed_model_dir, model))
         for task in tasks:
             steps = os.listdir(os.path.join(compressed_model_dir, model, task))
