@@ -10,7 +10,7 @@ from fmzip.utils.delta_utils import subtract, xor
 
 def main(args):
     print(args)
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=args.fast_tokenizer)
 
     compress_config = BaseCompressionConfig(
         bits=args.bits,
@@ -30,39 +30,34 @@ def main(args):
     if args.base_model != "" and args.delta != "":
         print("[info] base model is defined, delta mode enabled")
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
-            args.base_model, compress_config=compress_config
+            args.base_model, compress_config=compress_config, torch_dtype=torch.float16
         )
         base_model.requires_grad_(False)
-        # now perform the delta op
-        if args.delta == "subtract":
-            target_model = subtract(base_model, target_model)
-        elif args.delta == "xor":
-            target_model = xor(base_model, target_model)
-        else:
-            raise ValueError(f"Unknown delta mode: {args.delta}")
+        base_model = base_model.to(torch.device("cuda"))
     torch.cuda.empty_cache()
-    for name, param in target_model.named_parameters():
-        # check if nan exists
-        if torch.isnan(param).any():
-            raise ValueError(f"NaN exists in {name}")
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)["text"] for line in fp.readlines()]
     if args.n_samples <= 0:
         examples = examples
     else:
-        # import random
-        # # random.seed(42)
-        # examples = random.sample(examples, args.n_samples)
-        examples = examples[:args.n_samples]
+        examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
-    target_model.lossy_compress(
-        examples,
-        batch_size=2
-    )
+    if args.base_model != "" and args.delta != "":
+        target_model.lossy_compress(
+            examples,
+            batch_size=1,
+            base_model=base_model,
+        )
+    else:
+        target_model.lossy_compress(
+            examples,
+            batch_size=1,
+        )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
     target_model.save_compressed(args.outdir)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -91,5 +86,6 @@ if __name__ == "__main__":
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
+    parser.add_argument("--fast-tokenizer", action="store_true")
     args = parser.parse_args()
     main(args)

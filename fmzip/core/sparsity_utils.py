@@ -17,5 +17,6 @@ def hard_threshold(x, fraction_of_zero=0.1):
     mask = x.abs().clone().gt(threshold).type(torch.cuda.HalfTensor)
     return mask * x
 
+
 def calculate_sparsity(tensor: torch.Tensor):
     return (tensor == 0).sum().item() / tensor.numel()

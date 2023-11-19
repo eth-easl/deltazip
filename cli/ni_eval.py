@@ -3,15 +3,11 @@ import json
 import torch
 import argparse
 from loguru import logger
-from timeit import default_timer as timer
 from transformers import AutoTokenizer, TextGenerationPipeline
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
-from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
-from tqdm import tqdm
-
 
 def postprocess(text):
-    # logic:
+    text = text.strip()
     # if starts with \n, take the remaining
     if text.startswith("\n"):
         text = text.split("\n")[1]
@@ -19,55 +15,56 @@ def postprocess(text):
     text = text.split("\n")[0]
     return text
 
+compress_config = BaseCompressionConfig(
+    bits=4,
+    group_size=128,
+    sparsity=1,
+    prunen=0,
+    prunem=0,
+    lossless="gdeflate",
+    damp_percent=0.02,
+)
 
 def generate(args):
     print(args)
-    # just placeholder, we don't need it for base model...
-    # (todo:xiaozhe) remove the need of compress_config
-    compress_config = BaseCompressionConfig(
-        bits=4,
-        group_size=128,
-        sparsity=1,
-        prunen=0,
-        prunem=0,
-        lossless="gdeflate",
-        damp_percent=0.02,
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.base_model, use_fast=args.fast_tokenizer
     )
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=True)
-    tokenizer.pad_token_id = tokenizer.eos_token_id
+    tokenizer.pad_token = tokenizer.bos_token
+    tokenizer.pad_token_id = tokenizer.bos_token_id
+    tokenizer.padding_side = "left"
+    tokenizer.skip_special_tokens = False
     with torch.inference_mode():
         base_model = AutoFMZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config
         )
-        base_model = base_model.to(torch.device("cpu"))
+        base_model = base_model.half()
         logger.info("Loading target model")
-        start = timer()
         delta_model = AutoFMZipModelForCausalLM.from_compressed(
-            args.target_model, strict=False, device="cpu", unpack=True
+            args.target_model, strict=True, device="cpu", unpack=True
         )
         delta_model = delta_model.half()
-        delta_model = delta_model.to(torch.device("cpu"))
-        if args.delta != "":
-            if args.delta == "subtract":
-                delta_model = subtract_inverse(base_model, delta_model)
-            elif args.delta == "xor":
-                delta_model = xor_inverse(base_model, delta_model)
-
+        compressed_modules = []
+        for x in base_model.inside_layer_modules:
+            compressed_modules.extend(x)
+        if args.delta == "subtract":
+            for name, param in base_model.model.named_parameters():
+                if any([modules in name for modules in compressed_modules]):
+                    delta_model.model.state_dict()[name].copy_(
+                        param + delta_model.model.state_dict()[name]
+                    )
         delta_model = delta_model.to(torch.device("cuda"))
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]
-        # to leave more memory for higher-throughput generation,
-        # put the base model to cpu
-        base_model = base_model.to(torch.device("cpu"))
-        torch.cuda.empty_cache()
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
         logger.info("Pipeline Ready")
-        prompts = [datum[args.input_field] for datum in data][:1000]
+        prompts = [datum[args.input_field] + "\n" for datum in data]
         outputs = pipe(
             prompts,
             max_new_tokens=args.max_length,
+            do_sample=True,
             temperature=args.temperature,
             top_k=args.top_k,
             top_p=args.top_p,
@@ -75,11 +72,15 @@ def generate(args):
         )
         results = []
         for datum, output in zip(data, outputs):
-            result = datum
-            result["prediction"] = [o["generated_text"] for o in output]
+            result = datum.copy()
+            result["prediction"] = [postprocess(o["generated_text"]) for o in output]
+            result["raw_prediction"] = [o["generated_text"] for o in output]
             results.append(result)
+        # create output dir if not exists
+        if not os.path.exists(os.path.dirname(args.output_file)):
+            os.makedirs(os.path.dirname(args.output_file))
         with open(args.output_file, "w") as f:
-            for datum in data:
+            for datum in results:
                 f.write(json.dumps(datum) + "\n")
 
 
@@ -92,9 +93,10 @@ if __name__ == "__main__":
     parser.add_argument("--input-field", type=str, default="input")
     parser.add_argument("--output-file", type=str, default="")
     parser.add_argument("--do-sample", action="store_true", default=False)
+    parser.add_argument("--fast-tokenizer", action="store_true", default=False)
     parser.add_argument("--top-p", type=float, default=0.9)
-    parser.add_argument("--top-k", type=int, default=1)
-    parser.add_argument("--temperature", type=float, default=0.1)
+    parser.add_argument("--top-k", type=int, default=50)
+    parser.add_argument("--temperature", type=float, default=0.6)
     parser.add_argument("--max-length", type=int, default=64)
     args = parser.parse_args()
     generate(args)
