@@ -56,7 +56,7 @@ class SparseGPT:
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
-        
+
         if base_weight is not None:
             base_weight = base_weight.float()
             logger.info(f"compression operates on delta...")
@@ -64,7 +64,7 @@ class SparseGPT:
                 base_weight.shape == W.shape
             ), "base_weight shape should be the same as W"
             W = W - base_weight
-        
+
         before_sparsity = calculate_sparsity(W)
         if hasattr(self, "quantizer"):
             if not self.quantizer.ready():

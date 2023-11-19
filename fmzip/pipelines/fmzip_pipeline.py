@@ -239,7 +239,7 @@ class FMZipPipeline:
         )
         logger.warning(f"PyTorch free memory: {free / 1e9} GB")
         logger.warning(f"PyTorch total memory: {total / 1e9} GB")
-    
+
     def _evict_deltas(self, deltas: List[str]):
         print(f"len model pool: {len(self.model_pool)}")
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:

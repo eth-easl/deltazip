@@ -21,24 +21,15 @@ poi_tasks = [
     # "task1308_amazonreview_category_classification"
 ]
 poi_steps = {
-    "openlm-research/open_llama_3b_v2": [
-        140, 
-        160, 
-        105, 
-        75, 
-        120, 
-        120, 
-        270, 
-        150
-    ],
+    "openlm-research/open_llama_3b_v2": [140, 160, 105, 75, 120, 120, 270, 150],
     "EleutherAI/pythia-2.8b-deduped": [
-        198, 
-        96, 
-        108, 
-        88, 
-        # 144, 
-        # 171, 
-        # 342, 
+        198,
+        96,
+        108,
+        88,
+        # 144,
+        # 171,
+        # 342,
         # 161
     ],
 }
@@ -93,9 +84,13 @@ if __name__ == "__main__":
             for bit in bits:
                 for sp in sparsity:
                     if include_fmzip:
-                        jobs.append(render_job(True, base_model, task, str(step), bit, sp))
+                        jobs.append(
+                            render_job(True, base_model, task, str(step), bit, sp)
+                        )
                     if include_sparsegpt:
-                        jobs.append(render_job(False, base_model, task, str(step), bit, sp))
+                        jobs.append(
+                            render_job(False, base_model, task, str(step), bit, sp)
+                        )
 
     jobs = [job for job in jobs if job is not None]
     if PRINT_JOB:
@@ -103,4 +98,3 @@ if __name__ == "__main__":
             print(job)
     for job in jobs:
         os.system(f"ts --gpus 1 {job}")
-
