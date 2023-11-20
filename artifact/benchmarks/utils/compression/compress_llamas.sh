@@ -4,7 +4,7 @@ python cli/chat.py --target-model .cache/compressed_models/7b-parameters/2bits/l
 
 python cli/compress.py --target-model xzyao/openllama-3b-chat --outdir .cache/compressed_models/3b-parameters/2bits/openllama-chat --dataset .cache/datasets/dialogs.jsonl --n-samples 256 --bits 4 --sparsity 0 --lossless gdeflate --delta subtract --base-model openlm-research/open_llama_3b_v2 --perc-damp 0.01 --block-size 128 --shuffle-dataset --fast-tokenizer
 
-python cli/chat.py --target-model .cache/compressed_models/3b-parameters/2bits/openllama-chat --base-model openlm-research/open_llama_3b_v2 --delta subtract --fast-tokenizer
+python cli/chat.py --target-model .cache/compressed_models/3b-parameters/2bits/openllama-chat-sparsegpt --base-model openlm-research/open_llama_3b_v2 --delta subtract --fast-tokenizer
 
 python cli/compress.py --target-model xzyao/openllama-3b-chat --outdir .cache/compressed_models/3b-parameters/2bits/openllama-chat-sparsegpt --dataset .cache/datasets/dialogs.jsonl --n-samples 256 --bits 4 --sparsity 0 --lossless gdeflate --base-model openlm-research/open_llama_3b_v2 --perc-damp 0.01 --block-size 128 --shuffle-dataset --fast-tokenizer
 

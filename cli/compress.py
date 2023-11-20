@@ -61,7 +61,6 @@ def main(args):
     os.makedirs(args.outdir, exist_ok=True)
     target_model.save_compressed(args.outdir)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="")

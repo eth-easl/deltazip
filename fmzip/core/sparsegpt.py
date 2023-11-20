@@ -19,9 +19,8 @@ class SparseGPT:
     def __init__(self, layer):
         self.layer = layer
         self.dev = self.layer.weight.device
-        W = layer.weight.data.clone()
-        self.rows = W.shape[0]
-        self.columns = W.shape[1]
+        self.rows = layer.weight.data.shape[0]
+        self.columns = layer.weight.data.shape[1]
         self.H = torch.zeros((self.columns, self.columns), device=self.dev)
         self.nsamples = 0
 
@@ -62,8 +61,7 @@ class SparseGPT:
             assert (
                 base_weight.shape == W.shape
             ), "base_weight shape should be the same as W"
-            W = W - base_weight
-
+            W -= base_weight
         before_sparsity = calculate_sparsity(W)
         if hasattr(self, "quantizer"):
             if not self.quantizer.ready():
@@ -142,11 +140,17 @@ class SparseGPT:
 
             Losses += torch.sum(Losses1, 1) / 2
             W[:, i2:] -= Err1.matmul(Hinv[i1:i2, i2:])
-            # if DEBUG:
-            #     self.layer.weight.data[:, :i2] = W[:, :i2]
-            #     self.layer.weight.data[:, i2:] = W[:, i2:]
-            #     print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
-            #     print(torch.sum(Losses))
+            if DEBUG:
+                if base_weight is not None:
+                    self.layer.weight.data[:, :i2] = W[:, :i2] + base_weight[:, :i2]
+                    self.layer.weight.data[:, i2:] = W[:, i2:] + base_weight[:, i2:]
+                else:
+                    self.layer.weight.data[:, :i2] = W[:, :i2]
+                    self.layer.weight.data[:, i2:] = W[:, i2:]
+                logger.debug(f"block {i1} - {i2}")
+                logger.debug(f"reconstruct loss: {torch.sum((self.layer(self.inp1) - self.out1) ** 2)}")
+                logger.debug(f"loss: {torch.sum(Losses1)}")
+
         torch.cuda.synchronize()
         g_idx = [i // self.columns for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
@@ -162,8 +166,8 @@ class SparseGPT:
             self.layer.weight.data = (W + base_weight).to(self.layer.weight.data.dtype)
         else:
             # if base_weight is None 
-            # -> we compress the whole model
-            # -> set the layer's weight to be compressed W
+            # --> we compress the whole model
+            # --> set the layer's weight to be compressed W
             self.layer.weight.data = W.to(self.layer.weight.data.dtype)
         after_sparsity = calculate_sparsity(W)
         logger.info(f"duration: {(time.time() - tick):.2f}s")

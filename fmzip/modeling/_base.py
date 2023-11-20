@@ -362,7 +362,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             inside_layer_modules = [sum(inside_layer_modules, [])]
         self.compressors = {}
         compressed_ws = {}
-        for i in range(len(layers)):
+        for i in range(2):
             layer = layers[i]
             force_layer_back_to_cpu = False
 
@@ -457,9 +457,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             ),
                         )
                         # move it back to cpu to save memory
+                        assert f"{self.layers_block_name}.{i}.{name}" not in compressed_ws
+
                         compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
-                        ] = compressed_w.to(CPU)
+                        ] = compressed_w.to(CPU).clone()
+                        
                         sparsegpt[name].free()
                         if base_model is not None:
                             del base_weight
@@ -506,19 +509,36 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             self.model = accelerate.dispatch_model(
                 self.model, device_map, offload_buffers=True
             )
-        logger.info("Compress finished... moving compressed weights back")
-        for i in range(len(layers)):
+        logger.info("Compress finished... moving compressed delta back")
+        print(compressed_ws)
+        for i in range(2):
             # move compressed weights back
             for names in inside_layer_modules:
                 subset = {n: full[n] for n in names}
                 for name in subset:
                     if self.compress_config.bits < 16:
                         logger.info(f"moving {self.layers_block_name}.{i}.{name}")
-                        subset[name].weight.data = compressed_ws[
+                        finetuned_weight = subset[name].weight
+                        delta_only = compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ]
-                        del compressed_ws[f"{self.layers_block_name}.{i}.{name}"]
-                        
+                        # subset[name].weight.data = compressed_ws[
+                        #     f"{self.layers_block_name}.{i}.{name}"
+                        # ]
+                        base_weight = base_model.model.state_dict()[
+                            f"{self.layers_block_name}.{i}.{name}.weight"
+                        ]
+                        print("finetuned")
+                        print(finetuned_weight)
+                        print("base")
+                        print(base_weight)
+                        print("delta")
+                        print(delta_only)
+                        assert torch.equal(
+                            finetuned_weight, base_weight+delta_only
+                        )
+
+
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
         torch.cuda.empty_cache()
@@ -598,14 +618,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             raise EnvironmentError(
                 "Load pretrained model to do quantization requires CUDA available."
             )
-
         def skip(*args, **kwargs):
             pass
-
         torch.nn.init.kaiming_uniform_ = skip
         torch.nn.init.uniform_ = skip
         torch.nn.init.normal_ = skip
-
         config = AutoConfig.from_pretrained(
             pretrained_model_name_or_path, trust_remote_code=True
         )
@@ -768,7 +785,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 torch_dtype=torch.float16,
             )
         # now load compressed data
-        losslesscompressor = LosslessCompressor(compress_config.lossless, device_id=0)
+        losslesscompressor = LosslessCompressor(
+            compress_config.lossless,
+            device_id=0
+        )
         metadata = None
         tensors = {}
 
