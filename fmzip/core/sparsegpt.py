@@ -114,10 +114,14 @@ class SparseGPT:
                 if mask is not None:
                     mask1 = mask[:, i1:i2]
                 else:
+
                     tmp = W1**2 / (torch.diag(Hinv1).reshape((1, -1))) ** 2
                     # sparsity: mask1 is a boolean mask, True == weight pruned
                     # the larger the sparsity, the more weights are pruned (=> higher compression ratio)
-                    thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
+                    if sparsity == 0:
+                        thresh = -9999
+                    else:
+                        thresh = torch.sort(tmp.flatten())[0][int(tmp.numel() * sparsity)]
                     mask1 = tmp <= thresh
             else:
                 mask1 = torch.zeros_like(W1) == 1
@@ -180,11 +184,12 @@ class SparseGPT:
             g_idx = g_idx[invperm]
         W = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
         if base_weight is not None:
+            # set the layer's weight to be (compressed) W + (uncompressed) base_weight
+            # such that the next layer has a signal of compressed delta
             self.layer.weight.data = (W + base_weight).to(self.layer.weight.data.dtype)
         else:
+            # if base_weight is None -> we compress the whole model -> set the layer's weight to be compressed W
             self.layer.weight.data = W.to(self.layer.weight.data.dtype)
-        if DEBUG:
-            print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
         if scale == [] and hasattr(self, "quantizer"):
             scale.append(self.quantizer.scale)
             zero.append(self.quantizer.zero)
