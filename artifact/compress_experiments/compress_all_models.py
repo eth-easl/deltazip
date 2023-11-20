@@ -1,7 +1,7 @@
 import os
 
 supported_base_models = [
-    # "openlm-research/open_llama_3b_v2",
+    "openlm-research/open_llama_3b_v2",
     "EleutherAI/pythia-2.8b-deduped",
 ]
 cache_folder = os.environ.get("YAO_CACHE")
@@ -12,13 +12,13 @@ include_sparsegpt = True
 force = True
 poi_tasks = [
     "task151_tomqa_find_location_easy_clean",
-    # "task152_tomqa_find_location_easy_noise",
-    # "task372_synthetic_palindrome_numbers",
-    # "task227_clariq_classification",
-    # "task523_find_if_numbers_or_alphabets_are_more_in_list",
-    # "task936_defeasible_nli_snli_classification",
-    # "task380_boolq_yes_no_question",
-    # "task1308_amazonreview_category_classification"
+    "task152_tomqa_find_location_easy_noise",
+    "task372_synthetic_palindrome_numbers",
+    "task227_clariq_classification",
+    "task523_find_if_numbers_or_alphabets_are_more_in_list",
+    "task936_defeasible_nli_snli_classification",
+    "task380_boolq_yes_no_question",
+    "task1308_amazonreview_category_classification"
 ]
 poi_steps = {
     "openlm-research/open_llama_3b_v2": [140, 160, 105, 75, 120, 120, 270, 150],
@@ -27,17 +27,17 @@ poi_steps = {
         96,
         108,
         88,
-        # 144,
-        # 171,
-        # 342,
-        # 161
+        144,
+        171,
+        342,
+        161
     ],
 }
 
 PRINT_JOB = True
-OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models_new")
-bits = [4]
-sparsity = [0]
+OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models")
+bits = [2, 4]
+sparsity = [0, 0.75]
 
 def render_job(
     is_delta: False,
@@ -46,7 +46,7 @@ def render_job(
     step: str,
     bits: int,
     sparsity: float,
-    n_samples: int = 128,
+    n_samples: int = 1024,
     block_size: int = 128,
 ):
     model_dir = os.path.join(
