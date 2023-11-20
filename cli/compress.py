@@ -32,7 +32,6 @@ def main(args):
             args.base_model, compress_config=compress_config, torch_dtype=torch.float16
         )
         base_model.requires_grad_(False)
-        base_model = base_model.to(torch.device("cuda"))
     torch.cuda.empty_cache()
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
@@ -40,6 +39,10 @@ def main(args):
     if args.n_samples <= 0:
         examples = examples
     else:
+        if args.shuffle_dataset:
+            import random
+            random.seed(42)
+            random.shuffle(examples)
         examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
     if args.base_model != "" and args.delta != "":
@@ -85,5 +88,6 @@ if __name__ == "__main__":
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     parser.add_argument("--fast-tokenizer", action="store_true")
+    parser.add_argument("--shuffle-dataset", action="store_true")
     args = parser.parse_args()
     main(args)

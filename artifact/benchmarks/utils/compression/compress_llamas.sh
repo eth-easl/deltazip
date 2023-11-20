@@ -1,4 +1,4 @@
-# python cli/compress.py --target-model FlagAlpha/Llama2-Chinese-7b-Chat --outdir .cache/compressed_models/bits-2/llama2-chinese-7b-chat --dataset .cache/datasets/meta.jsonl --n-samples 256 --bits 2 --group-size 128 --sparsity 0.3 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf
+python cli/compress.py --target-model FlagAlpha/Llama2-Chinese-7b-Chat --outdir .cache/compressed_models/7b-parameters/2bits/llama2-chinese-7b-chat --dataset .cache/datasets/meta.jsonl --n-samples 256 --bits 2 --sparsity 0 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf --shuffle-dataset
 
 # python cli/compress.py --target-model FlagAlpha/Llama2-Chinese-7b-Chat --outdir .cache/compressed_models/nodelta/llama2-chinese-7b-chat --dataset .cache/datasets/meta.jsonl --n-samples 256 --bits 2 --group-size 128 --sparsity 0.3 --lossless gdeflate --base-model meta-llama/Llama-2-7b-hf
 

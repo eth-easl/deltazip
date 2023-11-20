@@ -257,8 +257,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         cache_examples_on_gpu: bool = True,
         base_model=None,
     ):
-        for key in self.state_dict():
-            print(key)
         assert self.compressed == False, "Model is already compressed."
         device_map = self.hf_device_map
         if device_map:
@@ -425,9 +423,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
                     if base_model is not None:
-                        base_weight = base_model.state_dict()[
+                        base_weight = base_model.model.state_dict()[
                             f"{self.layers_block_name}.{i}.{name}.weight"
                         ]
+                        base_weight = move_to_device(
+                            base_weight,
+                            cur_layer_device
+                        )
                     scale, zero, g_idx, avg_loss, compressed_w = sparsegpt[name].fasterprune(
                         sparsity=self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
