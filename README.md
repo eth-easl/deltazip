@@ -9,11 +9,6 @@ It supports (or will support) the following algorithms:
 - [GPT-Zip](https://openreview.net/forum?id=hO0c2tG2xL)
 - [GDeflate (by nvcomp)](https://developer.nvidia.com/nvcomp)
 
-## Lossless Comression
-
-## Lossy Compression
-
-
 ## Acknowledgements
 
 Heavily inspired by
@@ -27,11 +22,11 @@ Heavily inspired by
 
 ```
 @inproceedings{
-isik2023gptzip,
-title={{GPT}-Zip: Deep Compression of Finetuned Large Language Models},
-author={Berivan Isik and Hermann Kumbong and Wanyi Ning and Xiaozhe Yao and Sanmi Koyejo and Ce Zhang},
-booktitle={Workshop on Efficient Systems for Foundation Models @ ICML2023},
-year={2023},
-url={https://openreview.net/forum?id=hO0c2tG2xL}
+    isik2023gptzip,
+    title={{GPT}-Zip: Deep Compression of Finetuned Large Language Models},
+    author={Berivan Isik and Hermann Kumbong and Wanyi Ning and Xiaozhe Yao and Sanmi Koyejo and Ce Zhang},
+    booktitle={Workshop on Efficient Systems for Foundation Models @ ICML2023},
+    year={2023},
+    url={https://openreview.net/forum?id=hO0c2tG2xL}
 }
 ```

@@ -456,8 +456,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                                 CPU if force_layer_back_to_cpu else cur_layer_device,
                             ),
                         )
-                        compressed_ws[f"{self.layers_block_name}.{i}.{name}"] = compressed_w
+                        # move it back to cpu to save memory 
+                        compressed_ws[f"{self.layers_block_name}.{i}.{name}"] = compressed_w.to(CPU)
                         sparsegpt[name].free()
+                        if base_model is not None:
+                            del base_weight
 
             for j in range(num_batches):
                 layer_input = move_to_device(layer_inputs[j], cur_layer_device)
@@ -512,8 +515,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         subset[name].weight.data = compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ]
-                        print(subset[name].weight.data)
-                        print(self.state_dict()[f"model.{self.layers_block_name}.{i}.{name}.weight"])
                         del compressed_ws[f"{self.layers_block_name}.{i}.{name}"]
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True

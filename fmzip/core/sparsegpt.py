@@ -198,4 +198,5 @@ class SparseGPT:
             self.inp1 = None
             self.out1 = None
         self.H = None
+        
         torch.cuda.empty_cache()
