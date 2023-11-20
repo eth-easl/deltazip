@@ -9,7 +9,7 @@ from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(
-        args.base_model, use_fast=False
+        args.base_model, use_fast=args.fast_tokenizer
     )
 
     compress_config = BaseCompressionConfig(

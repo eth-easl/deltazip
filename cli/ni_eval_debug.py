@@ -79,7 +79,6 @@ def generate(args):
             return_full_text=False,
         )
         results = []
-
         for datum, output in zip(data, outputs):
             result = datum.copy()
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]
