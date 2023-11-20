@@ -38,7 +38,7 @@ from ..nn_modules.qlinear_cuda import QuantLinear
 from fmzip.modeling._utils import fmzip_post_init
 
 triton_has_warmup = False
-
+NUM_DEBUG_LAYER = 2
 
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
@@ -362,7 +362,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             inside_layer_modules = [sum(inside_layer_modules, [])]
         self.compressors = {}
         compressed_ws = {}
-        for i in range(2):
+        for i in range(len(layers)):
             layer = layers[i]
             force_layer_back_to_cpu = False
 
@@ -510,33 +510,26 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 self.model, device_map, offload_buffers=True
             )
         logger.info("Compress finished... moving compressed delta back")
-        print(compressed_ws)
-        for i in range(2):
+        for i in range(len(layers)):
             # move compressed weights back
             for names in inside_layer_modules:
                 subset = {n: full[n] for n in names}
                 for name in subset:
                     if self.compress_config.bits < 16:
                         logger.info(f"moving {self.layers_block_name}.{i}.{name}")
-                        finetuned_weight = subset[name].weight
+                        finetuned_weight = self.model.state_dict()[f"{self.layers_block_name}.{i}.{name}.weight"]
                         delta_only = compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ]
-                        # subset[name].weight.data = compressed_ws[
-                        #     f"{self.layers_block_name}.{i}.{name}"
-                        # ]
                         base_weight = base_model.model.state_dict()[
                             f"{self.layers_block_name}.{i}.{name}.weight"
                         ]
-                        print("finetuned")
-                        print(finetuned_weight)
-                        print("base")
-                        print(base_weight)
-                        print("delta")
-                        print(delta_only)
                         assert torch.equal(
                             finetuned_weight, base_weight+delta_only
                         )
+                        self.model.state_dict()[f"{self.layers_block_name}.{i}.{name}.weight"] = compressed_ws[
+                            f"{self.layers_block_name}.{i}.{name}"
+                        ]
 
 
         self.model.config.use_cache = forward_pass_use_cache
