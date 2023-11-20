@@ -510,26 +510,27 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 self.model, device_map, offload_buffers=True
             )
         logger.info("Compress finished... moving compressed delta back")
-        for i in range(len(layers)):
-            # move compressed weights back
-            full = find_layers(layers[i])
-            for names in inside_layer_modules:
-                subset = {n: full[n] for n in names}
-                for name in subset:
-                    if self.compress_config.bits < 16:
-                        finetuned_weight = subset[name].weight.data
-                        delta_only = compressed_ws[
-                            f"{self.layers_block_name}.{i}.{name}"
-                        ]
-                        base_weight = base_model.model.state_dict()[
-                            f"{self.layers_block_name}.{i}.{name}.weight"
-                        ]
-                        assert torch.equal(
-                            finetuned_weight, base_weight+delta_only
-                        )
-                        subset[name].weight.data = compressed_ws[
-                            f"{self.layers_block_name}.{i}.{name}"
-                        ]
+        if base_model is not None:
+            for i in range(len(layers)):
+                # move compressed weights back
+                full = find_layers(layers[i])
+                for names in inside_layer_modules:
+                    subset = {n: full[n] for n in names}
+                    for name in subset:
+                        if self.compress_config.bits < 16:
+                            finetuned_weight = subset[name].weight.data
+                            delta_only = compressed_ws[
+                                f"{self.layers_block_name}.{i}.{name}"
+                            ]
+                            base_weight = base_model.model.state_dict()[
+                                f"{self.layers_block_name}.{i}.{name}.weight"
+                            ]
+                            assert torch.equal(
+                                finetuned_weight, base_weight+delta_only
+                            )
+                            subset[name].weight.data = compressed_ws[
+                                f"{self.layers_block_name}.{i}.{name}"
+                            ]
 
 
         self.model.config.use_cache = forward_pass_use_cache
