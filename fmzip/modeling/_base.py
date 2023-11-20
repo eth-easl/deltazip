@@ -38,7 +38,7 @@ from ..nn_modules.qlinear_cuda import QuantLinear
 from fmzip.modeling._utils import fmzip_post_init
 
 triton_has_warmup = False
-NUM_DEBUG_LAYER = 2
+NUM_DEBUG_LAYER = 5
 
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
@@ -512,12 +512,12 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         logger.info("Compress finished... moving compressed delta back")
         for i in range(len(layers)):
             # move compressed weights back
+            full = find_layers(layers[i])
             for names in inside_layer_modules:
                 subset = {n: full[n] for n in names}
                 for name in subset:
                     if self.compress_config.bits < 16:
-                        logger.info(f"moving {self.layers_block_name}.{i}.{name}")
-                        finetuned_weight = self.model.state_dict()[f"{self.layers_block_name}.{i}.{name}.weight"]
+                        finetuned_weight = subset[name].weight.data
                         delta_only = compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ]
@@ -527,7 +527,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         assert torch.equal(
                             finetuned_weight, base_weight+delta_only
                         )
-                        self.model.state_dict()[f"{self.layers_block_name}.{i}.{name}.weight"] = compressed_ws[
+                        subset[name].weight.data = compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ]
 
