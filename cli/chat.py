@@ -16,6 +16,7 @@ def postprocess(text):
     text = text.split("\n")[0]
     return text
 
+
 compress_config = BaseCompressionConfig(
     bits=4,
     group_size=128,
@@ -25,6 +26,7 @@ compress_config = BaseCompressionConfig(
     lossless="gdeflate",
     damp_percent=0.02,
 )
+
 
 def generate(args):
     print(args)
@@ -50,7 +52,10 @@ def generate(args):
             compressed_modules.extend(x)
         if args.delta == "subtract":
             for name, param in base_model.model.named_parameters():
-                if any([modules in name for modules in compressed_modules]) and 'bias' not in name:
+                if (
+                    any([modules in name for modules in compressed_modules])
+                    and ".bias" not in name
+                ):
                     print(f"adding {name}")
                     delta_model.model.state_dict()[name].copy_(
                         param + delta_model.model.state_dict()[name]
@@ -74,7 +79,8 @@ def generate(args):
         for i, output in enumerate(outputs):
             print(f"<prompt>: {prompts[i]}")
             print(f"<output>: {output}")
-    
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="gpt2")
@@ -84,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("--fast-tokenizer", action="store_true", default=False)
     parser.add_argument("--top-p", type=float, default=0.9)
     parser.add_argument("--top-k", type=int, default=50)
-    parser.add_argument("--temperature", type=float, default=0.6)
+    parser.add_argument("--temperature", type=float, default=0.1)
     parser.add_argument("--max-length", type=int, default=64)
     args = parser.parse_args()
     generate(args)

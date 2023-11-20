@@ -18,26 +18,18 @@ poi_tasks = [
     "task523_find_if_numbers_or_alphabets_are_more_in_list",
     "task936_defeasible_nli_snli_classification",
     "task380_boolq_yes_no_question",
-    "task1308_amazonreview_category_classification"
+    "task1308_amazonreview_category_classification",
 ]
 poi_steps = {
     "openlm-research/open_llama_3b_v2": [140, 160, 105, 75, 120, 120, 270, 150],
-    "EleutherAI/pythia-2.8b-deduped": [
-        198,
-        96,
-        108,
-        88,
-        144,
-        171,
-        342,
-        161
-    ],
+    "EleutherAI/pythia-2.8b-deduped": [198, 96, 108, 88, 144, 171, 342, 161],
 }
 
 PRINT_JOB = True
 OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models")
 bits = [2, 4]
 sparsity = [0, 0.75]
+
 
 def render_job(
     is_delta: False,

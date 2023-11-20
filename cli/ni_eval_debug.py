@@ -53,7 +53,10 @@ def generate(args):
         print(compressed_modules)
         if args.delta == "subtract":
             for name, param in base_model.model.named_parameters():
-                if any([modules in name for modules in compressed_modules]) and 'bias' not in name:
+                if (
+                    any([modules in name for modules in compressed_modules])
+                    and "bias" not in name
+                ):
                     print("adding back", name)
                     delta_model.model.state_dict()[name].copy_(
                         param + delta_model.model.state_dict()[name]

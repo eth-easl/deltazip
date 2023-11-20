@@ -39,6 +39,7 @@ from fmzip.modeling._utils import fmzip_post_init
 
 triton_has_warmup = False
 
+
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
     tolerance: float = field(default=1e-9)
@@ -278,6 +279,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             """
             hijack layer's forward pass to cache data
             """
+
             def __init__(self, m, device):
                 super().__init__()
                 self.module = m
@@ -361,7 +363,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self.compressors = {}
         compressed_ws = {}
         for i in range(len(layers)):
-            
             layer = layers[i]
             force_layer_back_to_cpu = False
 
@@ -388,6 +389,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 def add_batch(name):
                     def tmp(_, inp, out):
                         sparsegpt[name].add_batch(inp[0].data, out.data)
+
                     return tmp
 
                 handles = []
@@ -416,7 +418,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     layer(layer_input, **additional_layer_inputs)
                 for h in handles:
                     h.remove()
-                
+
                 # starting compression
                 for name in subset:
                     logger.debug(
@@ -426,11 +428,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         base_weight = base_model.model.state_dict()[
                             f"{self.layers_block_name}.{i}.{name}.weight"
                         ]
-                        base_weight = move_to_device(
-                            base_weight,
-                            cur_layer_device
-                        )
-                    scale, zero, g_idx, avg_loss, compressed_w = sparsegpt[name].fasterprune(
+                        base_weight = move_to_device(base_weight, cur_layer_device)
+                    scale, zero, g_idx, avg_loss, compressed_w = sparsegpt[
+                        name
+                    ].fasterprune(
                         sparsity=self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
@@ -456,8 +457,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                                 CPU if force_layer_back_to_cpu else cur_layer_device,
                             ),
                         )
-                        # move it back to cpu to save memory 
-                        compressed_ws[f"{self.layers_block_name}.{i}.{name}"] = compressed_w.to(CPU)
+                        # move it back to cpu to save memory
+                        compressed_ws[
+                            f"{self.layers_block_name}.{i}.{name}"
+                        ] = compressed_w.to(CPU)
                         sparsegpt[name].free()
                         if base_model is not None:
                             del base_weight
@@ -484,7 +487,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                     cur_layer_device if cache_examples_on_gpu else CPU,
                 )
                 layer_outputs.append(layer_output)
-                
+
             layers[i] = move_to_device(
                 layer, CPU if force_layer_back_to_cpu else cur_layer_device
             )
