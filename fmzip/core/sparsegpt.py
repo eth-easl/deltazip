@@ -6,7 +6,7 @@ import torch.nn as nn
 import transformers
 from loguru import logger
 
-from .quant import quantize, Quantizer
+from .quant import quantize
 from .sparsity_utils import calculate_sparsity
 
 DEBUG = False
@@ -136,6 +136,7 @@ class SparseGPT:
                 err1 = (w - q) / d
                 W1[:, i:] -= err1.unsqueeze(1).matmul(Hinv1[i, i:].unsqueeze(0))
                 Err1[:, i] = err1
+                
             W[:, i1:i2] = Q1
 
             Losses += torch.sum(Losses1, 1) / 2
@@ -145,7 +146,7 @@ class SparseGPT:
             #     self.layer.weight.data[:, i2:] = W[:, i2:]
             #     print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
             #     print(torch.sum(Losses))
-
+        torch.cuda.synchronize()
         g_idx = [i // self.columns for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
         if actorder:
@@ -161,14 +162,17 @@ class SparseGPT:
             # if base_weight is None -> we compress the whole model -> set the layer's weight to be compressed W
             self.layer.weight.data = W.to(self.layer.weight.data.dtype)
 
-        reconstruct_loss = torch.sum((self.layer(self.inp1) - self.out1) ** 2)
-        avg_loss = torch.sum(Losses).item() / self.nsamples
         after_sparsity = calculate_sparsity(W)
-        torch.cuda.synchronize()
         logger.info(f"duration: {(time.time() - tick):.2f}s")
-        logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples}")
         logger.info(f"sparsity: {after_sparsity}")
-        logger.info(f"rec loss: {reconstruct_loss}")
+
+        avg_loss = torch.sum(Losses).item() / self.nsamples
+        if avg_loss >= 0.5:
+            logger.info(f"High avg loss detected: {avg_loss}")
+        else:
+            logger.info(f"avg loss: {avg_loss}")
+        # reconstruct_loss = torch.mean((self.layer(self.inp1) - self.out1) ** 2)
+        # logger.info(f"rec loss: {reconstruct_loss}")
         if after_sparsity - before_sparsity > 0.5:
             logger.warning(
                 f"high sparsity change detected: {before_sparsity} -> {after_sparsity}"
