@@ -257,8 +257,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         cache_examples_on_gpu: bool = True,
         base_model=None,
     ):
-        if self.compressed:
-            raise EnvironmentError("Model is already compressed.")
+        for key in self.state_dict():
+            print(key)
+        assert self.compressed == False, "Model is already compressed."
         device_map = self.hf_device_map
         if device_map:
             for name, device in device_map.items():
@@ -279,7 +280,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             """
             hijack layer's forward pass to cache data
             """
-
             def __init__(self, m, device):
                 super().__init__()
                 self.module = m
@@ -506,10 +506,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 subset = {n: full[n] for n in names}
                 for name in subset:
                     if self.compress_config.bits < 16:
+                        logger.info(f"moving {self.layers_block_name}.{i}.{name}")
                         subset[name].weight.data = compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ]
-
+                        print(subset[name].weight.data)
+                        print(self.state_dict()[f"model.{self.layers_block_name}.{i}.{name}.weight"])
+                        del compressed_ws[f"{self.layers_block_name}.{i}.{name}"]
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
 

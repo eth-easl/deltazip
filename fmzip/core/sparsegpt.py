@@ -56,7 +56,6 @@ class SparseGPT:
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
-        full_weight = W.clone()
         if base_weight is not None:
             base_weight = base_weight.float()
             logger.info(f"compression operates on delta...")
@@ -165,8 +164,8 @@ class SparseGPT:
         after_sparsity = calculate_sparsity(W)
         torch.cuda.synchronize()
         logger.info(f"duration: {(time.time() - tick):.2f}s")
-        logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples:.8f}")
-        logger.info(f"sparsity: {after_sparsity:.8f}")
+        logger.info(f"avg loss: {torch.sum(Losses).item() / self.nsamples}")
+        logger.info(f"sparsity: {after_sparsity}")
         if after_sparsity - before_sparsity > 0.5:
             logger.warning(
                 f"high sparsity change detected: {before_sparsity} -> {after_sparsity}"
@@ -179,13 +178,13 @@ class SparseGPT:
             invperm = torch.argsort(perm)
             Q = Q[:, invperm]
             g_idx = g_idx[invperm]
-
-        self.layer.weight.data = full_weight.reshape(self.layer.weight.shape).to(
-            self.layer.weight.data.dtype
-        )
+        W = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
+        if base_weight is not None:
+            self.layer.weight.data = (W + base_weight).to(self.layer.weight.data.dtype)
+        else:
+            self.layer.weight.data = W.to(self.layer.weight.data.dtype)
         if DEBUG:
             print(torch.sum((self.layer(self.inp1) - self.out1) ** 2))
-
         if scale == [] and hasattr(self, "quantizer"):
             scale.append(self.quantizer.scale)
             zero.append(self.quantizer.zero)
