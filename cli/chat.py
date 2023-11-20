@@ -50,13 +50,13 @@ def generate(args):
         compressed_modules = []
         for x in base_model.inside_layer_modules:
             compressed_modules.extend(x)
+        print(compressed_modules)
         if args.delta == "subtract":
             for name, param in base_model.model.named_parameters():
                 if (
                     any([modules in name for modules in compressed_modules])
-                    and ".bias" not in name
-                ):
-                    print(f"adding {name}")
+                ) and ".bias" not in name:
+                    print(f"name: {name}")
                     delta_model.model.state_dict()[name].copy_(
                         param + delta_model.model.state_dict()[name]
                     )

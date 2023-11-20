@@ -518,9 +518,9 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             f"{self.layers_block_name}.{i}.{name}"
                         ]
                         del compressed_ws[f"{self.layers_block_name}.{i}.{name}"]
+                        
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
-
         torch.cuda.empty_cache()
 
     @property

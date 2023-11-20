@@ -41,7 +41,7 @@ class SparseGPT:
         self.H += inp.matmul(inp.t())
         sparsity_H = calculate_sparsity(self.H)
         if sparsity_H == 1:
-            logger.warning(f"sparsity of H == 1, something might be off")
+            raise ValueError("sparsity of H == 1, something is off, aborting")
 
     def fasterprune(
         self,
@@ -58,6 +58,7 @@ class SparseGPT:
         if base_weight is not None:
             base_weight = base_weight.float()
             logger.info(f"compression operates on delta...")
+
             assert (
                 base_weight.shape == W.shape
             ), "base_weight shape should be the same as W"
@@ -155,20 +156,22 @@ class SparseGPT:
             g_idx = g_idx[invperm]
         W = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
         if base_weight is not None:
+            logger.debug("adding base weight for correct forward...")
             # set the layer's weight to be (compressed) W + (uncompressed) base_weight
             # such that the next layer has a signal of compressed delta
             self.layer.weight.data = (W + base_weight).to(self.layer.weight.data.dtype)
         else:
-            # if base_weight is None -> we compress the whole model -> set the layer's weight to be compressed W
+            # if base_weight is None 
+            # -> we compress the whole model
+            # -> set the layer's weight to be compressed W
             self.layer.weight.data = W.to(self.layer.weight.data.dtype)
-
         after_sparsity = calculate_sparsity(W)
         logger.info(f"duration: {(time.time() - tick):.2f}s")
         logger.info(f"sparsity: {after_sparsity}")
 
         avg_loss = torch.sum(Losses).item() / self.nsamples
         if avg_loss >= 0.5:
-            logger.info(f"High avg loss detected: {avg_loss}")
+            logger.warning(f"High avg loss detected: {avg_loss}")
         else:
             logger.info(f"avg loss: {avg_loss}")
         # reconstruct_loss = torch.mean((self.layer(self.inp1) - self.out1) ** 2)

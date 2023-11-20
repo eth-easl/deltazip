@@ -9,7 +9,7 @@ from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(
-        args.base_model, use_fast=args.fast_tokenizer
+        args.base_model, use_fast=False
     )
 
     compress_config = BaseCompressionConfig(
@@ -42,7 +42,6 @@ def main(args):
     else:
         if args.shuffle_dataset:
             import random
-
             random.seed(42)
             random.shuffle(examples)
         examples = examples[: args.n_samples]
