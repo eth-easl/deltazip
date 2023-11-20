@@ -40,6 +40,7 @@ from fmzip.modeling._utils import fmzip_post_init
 triton_has_warmup = False
 NUM_DEBUG_LAYER = 5
 
+
 @dataclass
 class AutoCompressionConfig(PushToHubMixin):
     tolerance: float = field(default=1e-9)
@@ -389,6 +390,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 def add_batch(name):
                     def tmp(_, inp, out):
                         sparsegpt[name].add_batch(inp[0].data, out.data)
+
                     return tmp
 
                 handles = []
@@ -457,12 +459,14 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                             ),
                         )
                         # move it back to cpu to save memory
-                        assert f"{self.layers_block_name}.{i}.{name}" not in compressed_ws
+                        assert (
+                            f"{self.layers_block_name}.{i}.{name}" not in compressed_ws
+                        )
 
                         compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ] = compressed_w.to(CPU).clone()
-                        
+
                         sparsegpt[name].free()
                         if base_model is not None:
                             del base_weight
@@ -526,12 +530,11 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                                 f"{self.layers_block_name}.{i}.{name}.weight"
                             ]
                             assert torch.equal(
-                                finetuned_weight, base_weight+delta_only
+                                finetuned_weight, base_weight + delta_only
                             )
                             subset[name].weight.data = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
-
 
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
@@ -612,8 +615,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             raise EnvironmentError(
                 "Load pretrained model to do quantization requires CUDA available."
             )
+
         def skip(*args, **kwargs):
             pass
+
         torch.nn.init.kaiming_uniform_ = skip
         torch.nn.init.uniform_ = skip
         torch.nn.init.normal_ = skip
@@ -779,10 +784,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 torch_dtype=torch.float16,
             )
         # now load compressed data
-        losslesscompressor = LosslessCompressor(
-            compress_config.lossless,
-            device_id=0
-        )
+        losslesscompressor = LosslessCompressor(compress_config.lossless, device_id=0)
         metadata = None
         tensors = {}
 

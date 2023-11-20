@@ -135,7 +135,7 @@ class SparseGPT:
                 err1 = (w - q) / d
                 W1[:, i:] -= err1.unsqueeze(1).matmul(Hinv1[i, i:].unsqueeze(0))
                 Err1[:, i] = err1
-                
+
             W[:, i1:i2] = Q1
 
             Losses += torch.sum(Losses1, 1) / 2
@@ -148,7 +148,9 @@ class SparseGPT:
                     self.layer.weight.data[:, :i2] = W[:, :i2]
                     self.layer.weight.data[:, i2:] = W[:, i2:]
                 logger.debug(f"block {i1} - {i2}")
-                logger.debug(f"reconstruct loss: {torch.sum((self.layer(self.inp1) - self.out1) ** 2)}")
+                logger.debug(
+                    f"reconstruct loss: {torch.sum((self.layer(self.inp1) - self.out1) ** 2)}"
+                )
                 logger.debug(f"loss: {torch.sum(Losses1)}")
 
         torch.cuda.synchronize()
@@ -165,7 +167,7 @@ class SparseGPT:
             # such that the next layer has a signal of compressed delta
             self.layer.weight.data = (W + base_weight).to(self.layer.weight.data.dtype)
         else:
-            # if base_weight is None 
+            # if base_weight is None
             # --> we compress the whole model
             # --> set the layer's weight to be compressed W
             self.layer.weight.data = W.to(self.layer.weight.data.dtype)

@@ -60,7 +60,7 @@ def generate(args):
                     delta_model.model.state_dict()[name].copy_(
                         param + delta_model.model.state_dict()[name]
                     )
-        
+
         delta_model = delta_model.to(torch.device("cuda"))
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
