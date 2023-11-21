@@ -43,7 +43,6 @@ class FMZipPipeline:
                 f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
             )
         self.base_model_name = base_model
-        self.compressed_modules = set()
         self.device_count = get_gpu_count()
         self.offload_base_model = offload_base_model
         self.max_num_deltas = max_num_deltas
@@ -149,12 +148,6 @@ class FMZipPipeline:
                     compress_config=dummy_compression_config,
                     low_cpu_mem_usage=True,
                 )
-                if len(self.compressed_modules) == 0:
-                    for inside_modules in self.base_models[gpu_id].inside_layer_modules:
-                        [
-                            self.compressed_modules.add(inside_module)
-                            for inside_module in inside_modules
-                        ]
             self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
         logger.info("based model loaded")
 
@@ -284,24 +277,12 @@ class FMZipPipeline:
             logger.info(f"adding delta {deltas[0]} to base model")
             with torch.no_grad():
                 for name, param in self.model_pool[deltas[0]].model.named_parameters():
-                    if (
-                        any(
-                            [
-                                module_name in name
-                                for module_name in self.compressed_modules
-                            ]
-                        )
-                        and not "bias" in name
-                    ):
-                        self.base_models[gpu_id].state_dict()[name] += param
-                    else:
-                        self.base_models[gpu_id].state_dict()[name] = param
+                    self.base_models[gpu_id].state_dict()[name] += param
 
     def _prepare_colocate(self, deltas, gpu_id):
         if all([delta == self.base_model_name for delta in deltas]):
             for key, dmodule in self.base_models[gpu_id].named_modules():
                 setattr(dmodule, "delta", [None for delta in deltas])
-
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_models[gpu_id], key)
             dmodules = []

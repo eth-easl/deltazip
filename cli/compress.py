@@ -65,12 +65,15 @@ def main(args):
         compressed_modules.extend(x)
     # for weights that are not compressed, we calculate delta afterward compression
     if args.base_model != "" and args.delta != "":
-        for name, param in target_model:
-            if "bias" in name or all([modules not in name for modules in compressed_modules]):
-                target_model.model.state_dict()[name].copy_(
-                    param - base_model.model.state_dict()[name]
+        for name, param in target_model.named_parameters():
+            if "bias" in name or all(
+                [modules not in name for modules in compressed_modules]
+            ):
+                target_model.state_dict()[name].copy_(
+                    param - base_model.state_dict()[name]
                 )
     target_model.save_compressed(args.outdir)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
