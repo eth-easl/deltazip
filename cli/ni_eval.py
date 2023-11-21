@@ -30,6 +30,9 @@ compress_config = BaseCompressionConfig(
 
 def generate(args):
     print(args)
+    if os.path.exists(args.output_file):
+        logger.info(f"Output file {args.output_file} already exists, skipping...")
+        return
     tokenizer = AutoTokenizer.from_pretrained(
         args.base_model, use_fast=args.fast_tokenizer
     )

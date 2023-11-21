@@ -30,7 +30,6 @@ OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_mode
 bits = [2, 4]
 sparsity = [0, 0.75]
 
-
 def render_job(
     is_delta: False,
     base_model: str,
@@ -38,7 +37,7 @@ def render_job(
     step: str,
     bits: int,
     sparsity: float,
-    n_samples: int = 1024,
+    n_samples: int = 256,
     block_size: int = 128,
 ):
     model_dir = os.path.join(
@@ -61,7 +60,7 @@ def render_job(
             f"global_step{step}",
         )
     if not os.path.exists(output_dir) or force:
-        job = f"python cli/compress.py --base-model {base_model} --target-model {target_model_dir} --dataset {dataset_file} --bits {bits} --sparsity {sparsity} --outdir {output_dir} {'--delta subtract' if is_delta else ''} --lossless gdeflate --n-samples {n_samples} --block-size {block_size} --fast-tokenizer"
+        job = f"python cli/compress.py --base-model {base_model} --target-model {target_model_dir} --dataset {dataset_file} --bits {bits} --sparsity {sparsity} --outdir {output_dir} {'--delta subtract' if is_delta else ''} --lossless gdeflate --n-samples {n_samples} --block-size {block_size} --fast-tokenizer --shuffle-dataset --perc-damp 0.01"
         return job
     else:
         return None
@@ -84,8 +83,10 @@ if __name__ == "__main__":
                         )
 
     jobs = [job for job in jobs if job is not None]
+    
     if PRINT_JOB:
         for job in jobs:
             print(job)
+    os.system("ts -S 1")
     for job in jobs:
         os.system(f"ts --gpus 1 {job}")
