@@ -1,1 +1,3 @@
 python cli/auto_compress.py --target-model /home/xzyao/Documents/cache/experiments/fmzip/finetuned_raw/task112_asset_simple_sentence_identification/global_step18 --base-model EleutherAI/pythia-2.8b-deduped --dataset /home/xzyao/Documents/cache/datasets/qi/ar/task112_asset_simple_sentence_identification.train.jsonl --lossless gdeflate --delta subtract --outdir .cache/compressed_models/p2.8b_gsd_133 --group-size -1 --n-samples 1024 --perc-damp 0.01 --tolerance 1e-9
+
+python cli/lossless_compress.py --target-model xzyao/openllama-3b-chat --outdir .cache/compressed_models/3b-parameters/openllama-chat-delta-lossless-0 --delta subtract --base-model openlm-research/open_llama_3b_v2 --lossless gdeflate
