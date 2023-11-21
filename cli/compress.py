@@ -42,6 +42,7 @@ def main(args):
     else:
         if args.shuffle_dataset:
             import random
+
             random.seed(42)
             random.shuffle(examples)
         examples = examples[: args.n_samples]
@@ -59,6 +60,16 @@ def main(args):
         )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
+    compressed_modules = []
+    for x in base_model.inside_layer_modules:
+        compressed_modules.extend(x)
+    # for weights that are not compressed, we calculate delta afterward compression
+    if args.base_model != "" and args.delta != "":
+        for name, param in target_model:
+            if "bias" in name or all([modules not in name for modules in compressed_modules]):
+                target_model.model.state_dict()[name].copy_(
+                    param - base_model.model.state_dict()[name]
+                )
     target_model.save_compressed(args.outdir)
 
 if __name__ == "__main__":

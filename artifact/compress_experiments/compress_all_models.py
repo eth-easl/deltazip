@@ -30,6 +30,7 @@ OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_mode
 bits = [2, 4]
 sparsity = [0, 0.75]
 
+
 def render_job(
     is_delta: False,
     base_model: str,
@@ -83,7 +84,7 @@ if __name__ == "__main__":
                         )
 
     jobs = [job for job in jobs if job is not None]
-    
+
     if PRINT_JOB:
         for job in jobs:
             print(job)

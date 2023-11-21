@@ -43,6 +43,8 @@ class FMZipPipeline:
                 f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
             )
         self.base_model_name = base_model
+        self.compressed_modules = set()
+        self.device_count = get_gpu_count()
         self.offload_base_model = offload_base_model
         self.max_num_deltas = max_num_deltas
         self.batch_size = batch_size
@@ -50,12 +52,12 @@ class FMZipPipeline:
         self.placement_args = placement_args
         self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         self.tokenizer.padding_side = "left"
+
         # avoid using eos_token as padding token
         # https://github.com/facebookresearch/llama/issues/380
-        # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-        self.device_count = get_gpu_count()
+        # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
         self._load_base_model()
         self.lossless_only = lossless_only
         if self.lossless_only and self.placement_strategy != "addback":
@@ -147,6 +149,12 @@ class FMZipPipeline:
                     compress_config=dummy_compression_config,
                     low_cpu_mem_usage=True,
                 )
+                if len(self.compressed_modules) == 0:
+                    for inside_modules in self.base_models[gpu_id].inside_layer_modules:
+                        [
+                            self.compressed_modules.add(inside_module)
+                            for inside_module in inside_modules
+                        ]
             self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
         logger.info("based model loaded")
 
@@ -276,7 +284,18 @@ class FMZipPipeline:
             logger.info(f"adding delta {deltas[0]} to base model")
             with torch.no_grad():
                 for name, param in self.model_pool[deltas[0]].model.named_parameters():
-                    self.base_models[gpu_id].state_dict()[name] += param
+                    if (
+                        any(
+                            [
+                                module_name in name
+                                for module_name in self.compressed_modules
+                            ]
+                        )
+                        and not "bias" in name
+                    ):
+                        self.base_models[gpu_id].state_dict()[name] += param
+                    else:
+                        self.base_models[gpu_id].state_dict()[name] = param
 
     def _prepare_colocate(self, deltas, gpu_id):
         if all([delta == self.base_model_name for delta in deltas]):
