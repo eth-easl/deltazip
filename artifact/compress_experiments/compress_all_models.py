@@ -84,7 +84,7 @@ if __name__ == "__main__":
                         )
 
     jobs = [job for job in jobs if job is not None]
-    
+
     if PRINT_JOB:
         for job in jobs:
             print(job)
