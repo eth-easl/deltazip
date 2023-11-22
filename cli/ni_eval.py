@@ -6,7 +6,6 @@ from loguru import logger
 from transformers import AutoTokenizer, TextGenerationPipeline
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
-
 def postprocess(text):
     text = text.strip()
     # if starts with \n, take the remaining
@@ -15,7 +14,6 @@ def postprocess(text):
     # if there's \n left, take the first part
     text = text.split("\n")[0]
     return text
-
 
 compress_config = BaseCompressionConfig(
     bits=4,
@@ -54,13 +52,9 @@ def generate(args):
             compressed_modules.extend(x)
         if args.delta == "subtract":
             for name, param in base_model.model.named_parameters():
-                if (
-                    any([modules in name for modules in compressed_modules])
-                    and "bias" not in name
-                ):
-                    delta_model.model.state_dict()[name].copy_(
-                        param + delta_model.model.state_dict()[name]
-                    )
+                delta_model.model.state_dict()[name].copy_(
+                    param + delta_model.model.state_dict()[name]
+                )
         delta_model = delta_model.to(torch.device("cuda"))
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]

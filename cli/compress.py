@@ -63,6 +63,7 @@ def main(args):
     compressed_modules = []
     for x in base_model.inside_layer_modules:
         compressed_modules.extend(x)
+    
     # for weights that are not compressed, we calculate delta afterward compression
     if args.base_model != "" and args.delta != "":
         for name, param in target_model.named_parameters():

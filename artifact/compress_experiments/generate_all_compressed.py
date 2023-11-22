@@ -16,9 +16,9 @@ hf_id = {
 OUTPUT_DIR = os.path.join(
     cache_folder, "experiments", "fmzip", "generation_results_new"
 )
-FORCE = True
+FORCE = False
 PRINT_JOB = True
-
+keywords = ['2b0.95s']
 
 def render_job(
     base_model, target_model_dir, task, step, is_delta, config, fast_tokenizer
@@ -30,7 +30,7 @@ def render_job(
         OUTPUT_DIR, f"{base_model}", f"{task}-{step}", f"{config}.jsonl"
     )
     job = None
-    if not os.path.exists(output_dir):
+    if not os.path.exists(output_dir) or FORCE or any([keyword in output_dir for keyword in keywords]):
         job = f"python cli/ni_eval.py --base-model {hf_id[base_model]} --target-model {target_model_dir} {'--delta subtract' if is_delta else ''} --input-file {input_file} --input-field input --max-length 64 --output-file {output_dir} {'--fast-tokenizer' if fast_tokenizer else ''}"
     return job
 
