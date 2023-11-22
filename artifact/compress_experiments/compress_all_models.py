@@ -8,7 +8,7 @@ cache_folder = os.environ.get("YAO_CACHE")
 ar_dataset = os.path.join(cache_folder, "datasets", "qi", "ar")
 
 include_fmzip = True
-include_sparsegpt = True
+include_sparsegpt = False
 force = True
 poi_tasks = [
     "task151_tomqa_find_location_easy_clean",
@@ -27,9 +27,10 @@ poi_steps = {
 
 PRINT_JOB = True
 OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models")
-bits = [2, 4]
-sparsity = [0, 0.75]
-
+# bits = [2, 4]
+# sparsity = [0, 0.75]
+bits = [2]
+sparsity = [0.95]
 def render_job(
     is_delta: False,
     base_model: str,
