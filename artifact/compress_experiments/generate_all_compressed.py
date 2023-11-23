@@ -18,7 +18,7 @@ OUTPUT_DIR = os.path.join(
 )
 FORCE = False
 PRINT_JOB = True
-keywords = ['2b0.95s']
+keywords = ['2b0.85s']
 
 def render_job(
     base_model, target_model_dir, task, step, is_delta, config, fast_tokenizer

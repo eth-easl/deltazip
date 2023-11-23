@@ -30,7 +30,8 @@ OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_mode
 # bits = [2, 4]
 # sparsity = [0, 0.75]
 bits = [2]
-sparsity = [0.95]
+sparsity = [0.9]
+
 def render_job(
     is_delta: False,
     base_model: str,
