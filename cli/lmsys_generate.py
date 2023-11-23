@@ -43,9 +43,14 @@ def generate(args):
         )
         base_model = base_model.half()
         logger.info("Loading target model")
-        delta_model = AutoFMZipModelForCausalLM.from_compressed(
-            args.target_model, strict=True, device="cpu", unpack=True
-        )
+        if args.delta == "subtract":
+            delta_model = AutoFMZipModelForCausalLM.from_compressed(
+                args.target_model, strict=True, device="cpu", unpack=True
+            )
+        else:
+            delta_model = AutoFMZipModelForCausalLM.from_pretrained(
+                args.target_model, compress_config=compress_config
+            )
         delta_model = delta_model.half()
         compressed_modules = []
         for x in base_model.inside_layer_modules:
@@ -57,12 +62,12 @@ def generate(args):
                 )
         delta_model = delta_model.to(torch.device("cuda"))
         with open(args.input_file, "r") as f:
-            data = [json.loads(line) for line in f]
+            data = [json.loads(line) for line in f][:args.n_samples]
         pipe = TextGenerationPipeline(
             model=delta_model, tokenizer=tokenizer, device="cuda"
         )
         logger.info("Pipeline Ready")
-        prompts = [datum[args.input_field] + "\n" for datum in data]
+        prompts = [datum[args.input_field] for datum in data]
         outputs = pipe(
             prompts,
             max_new_tokens=args.max_length,

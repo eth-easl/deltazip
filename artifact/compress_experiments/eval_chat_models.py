@@ -14,7 +14,7 @@ def render_job(
     input_file: str,
     input_field: str,
 ):
-    job = f"python cli/lmsys_generate.py --base-model {base_model if is_delta else ''} --target-model {model_name} --input-file {input_file} --input-field {input_field} --output-file .cache/lmsys_{model_name.replace('/', '-')}_{is_delta}.jsonl --max-length 512 --temperature 0.6 --top-k 50 --top-p 0.9 --fast-tokenizer --delta {'subtract' if is_delta else ''} --n-samples 512"
+    job = f"python cli/lmsys_generate.py --base-model {base_model} --target-model {model_name} --input-file {input_file} --input-field {input_field} --output-file .cache/lmsys_{model_name.replace('/', '-')}_{is_delta}.jsonl --max-length 512 --temperature 0.6 --top-k 50 --top-p 0.9 --fast-tokenizer {'--delta subtract' if is_delta else ''} --n-samples 2048"
     return job
 
 if __name__=="__main__":
