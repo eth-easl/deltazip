@@ -60,6 +60,7 @@ class HuggingFacePipeline:
             to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
                 : len(deltas)
             ]
+            to_evict_models = [x for x in to_evict_models if x not in deltas]
             logger.info(f"evicting {to_evict_models}")
             for delta in to_evict_models:
                 try:

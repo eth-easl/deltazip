@@ -14,19 +14,23 @@ base_model = "openlm-research/open_llama_3b_v2"
 requests = [
     (
         "<human>: Who is Alan Turing?<|endoftext|><assistant>:",
-        ".cache/compressed_models/3b-parameters/2bits/openllama-chat",
+        ".cache/compressed_models/3b-parameters/2bits-openllama-0",
+    ),
+    (
+        "<human>: Who is Alan Turing?<|endoftext|><assistant>:",
+        ".cache/compressed_models/3b-parameters/2bits-openllama-1",
+    ),
+    (
+        "<human>: Who is Alan Turing?<|endoftext|><assistant>:",
+        ".cache/compressed_models/3b-parameters/2bits-openllama-2",
+    ),
+    (
+        "<human>: Who is Alan Turing?<|endoftext|><assistant>:",
+        ".cache/compressed_models/3b-parameters/2bits-openllama-3",
     ),
 ]
 
-# requests = [
-#     (
-#         'In this task you will be given a list of integers. You should only return an integer if the first digit is the same as the last digit in the number. If an integer has a single digit, then it should be returned. If there are no integers that start and end with the same digit then an empty list ("[]") should be returned.\n[77, 999, 855, 10, 56, 121, 801]\n[77, 999, 121]\n[-982, 884, 90, 762, 211, -18]\n[]\n[-734, -748, -314, -243, 888, -753, -289, 857, -699, -190, -790, 566, 602, 37, -365, 499, -619, -729, 416, 262, 347, 610, 610, -674, 391]\n',
-#         "/mnt/scratch/xiayao/cache/experiments/fmzip/compressed_models/4b0s/open_llama_3b_v2/task372_synthetic_palindrome_numbers/global_step105",
-#     )
-# ]
-
 warmup_models = [req[1] for req in requests]
-
 
 def addback():
     pipeline = FMZipPipeline(
@@ -44,7 +48,6 @@ def addback():
     torch.cuda.nvtx.range_pop()
     compute_end = timer()
     return output, compute_end - compute_start
-
 
 def colocate():
     pipeline = FMZipPipeline(
