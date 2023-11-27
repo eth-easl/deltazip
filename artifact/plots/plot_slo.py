@@ -19,6 +19,7 @@ def plot(args):
     plot_data = []
     for item in results:
         provider = item["system"]
+        num_tokens = item["gen_configs"]["min_length"]
         provider = get_provider_name(provider)
         for res in item["results"]:
             plot_data.append(
@@ -53,7 +54,7 @@ def plot(args):
         width=800,
         height=600,
         title_x=0.5,
-        title_text="SLO Attainment of Different Backends",
+        title_text=f"SLO Attainment of Different Backends ({num_tokens} Tokens)",
     )
     fig.update_layout(
         font_family="Arial",

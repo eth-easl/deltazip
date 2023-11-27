@@ -11,6 +11,7 @@ def plot(args):
     plot_data = []
     for item in results:
         provider = item["system"]
+        num_tokens = item["gen_configs"]["min_length"]
         name = "HuggingFace" if provider["name"] == "hf" else "FMZip"
         if name == "FMZip":
             provider = f"{name} bsz={provider['args'].get('batch_size', 1)}<br>{provider['args'].get('placement_strategy', 'none')}<br>Lossy={not provider['args'].get('lossless_only', False)}"
@@ -36,7 +37,7 @@ def plot(args):
         width=800,
         height=600,
         title_x=0.5,
-        title_text="Throughput of Different Backends (64 Tokens)",
+        title_text=f"Throughput of Different Backends ({num_tokens} Tokens)",
     )
     fig.update_layout(
         title=dict(font=dict(size=20)),
