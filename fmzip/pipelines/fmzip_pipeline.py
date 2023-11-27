@@ -1,3 +1,4 @@
+import os
 import torch
 import cupy as cp
 from loguru import logger
@@ -49,7 +50,11 @@ class FMZipPipeline:
         self.batch_size = batch_size
         self.placement_strategy = placement_strategy
         self.placement_args = placement_args
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        self.hf_token = os.environ.get("HF_TOKEN", "")
+        if self.hf_token == "":
+            self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True, token=self.hf_token)
         self.tokenizer.padding_side = "left"
 
         # avoid using eos_token as padding token
@@ -143,11 +148,19 @@ class FMZipPipeline:
         logger.info("loading base model")
         for gpu_id in range(self.device_count):
             with torch.device("cuda", gpu_id):
-                self.base_models[gpu_id] = AutoFMZipModelForCausalLM.from_pretrained(
-                    self.base_model_name,
-                    compress_config=dummy_compression_config,
-                    low_cpu_mem_usage=True,
-                )
+                if self.hf_token == "":
+                    self.base_models[gpu_id] = AutoFMZipModelForCausalLM.from_pretrained(
+                        self.base_model_name,
+                        compress_config=dummy_compression_config,
+                        low_cpu_mem_usage=True,
+                    )
+                else:
+                    self.base_models[gpu_id] = AutoFMZipModelForCausalLM.from_pretrained(
+                        self.base_model_name,
+                        compress_config=dummy_compression_config,
+                        low_cpu_mem_usage=True,
+                        token = self.hf_token
+                    )
             self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
         logger.info("based model loaded")
 

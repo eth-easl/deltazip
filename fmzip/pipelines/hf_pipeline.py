@@ -1,3 +1,4 @@
+import os
 import torch
 import cupy as cp
 import transformers
@@ -20,12 +21,18 @@ class HuggingFacePipeline:
         base_model_placement_strategy: str = "replication",
         batch_size: int = 1,
     ) -> None:
+        self.hf_token = os.environ.get("HF_TOKEN", "")
         self.current_model = None
         self.loaded_models = {}
         self.base_model = base_model
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-            base_model, use_fast=True
-        )
+        if self.hf_token=="":
+            self.tokenizer = transformers.AutoTokenizer.from_pretrained(
+                base_model, use_fast=True
+            )
+        else:
+            self.tokenizer = transformers.AutoTokenizer.from_pretrained(
+                base_model, use_fast=True, token = self.hf_token
+            )
         # avoid using eos_token as padding token
         # https://github.com/facebookresearch/llama/issues/380
         self.tokenizer.pad_token = self.tokenizer.bos_token
