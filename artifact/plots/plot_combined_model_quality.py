@@ -126,15 +126,17 @@ def plot(args):
     fig.update_layout(
         width=1200, height=800, title_x=0.5, title_text=title, title_y=0.96
     )
-    fig.update_layout(legend=dict(
-        orientation="h",
-        entrywidth=200,
-        yanchor="bottom",
-        y=-0.2,
-        xanchor="left",
-        x=0,
-        font=dict(size=24),
-    ))
+    fig.update_layout(
+        legend=dict(
+            orientation="h",
+            entrywidth=200,
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="left",
+            x=0,
+            font=dict(size=24),
+        )
+    )
     fig.write_image("artifact/results/images/chat_quality.png", scale=2)
     os.system(
         "convert artifact/results/images/chat_quality.png -trim artifact/results/images/chat_quality.pdf"
