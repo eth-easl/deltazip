@@ -27,6 +27,8 @@ PRINT_JOB = True
 OUTPUT_DIR = os.path.join(
     cache_folder, "experiments", "fmzip", "generation_results_new"
 )
+
+
 def render_job(
     is_delta: False,
     base_model: str,
@@ -52,17 +54,16 @@ def render_job(
     else:
         return None
 
+
 if __name__ == "__main__":
     jobs = []
     for base_model in supported_base_models:
         for i, task in enumerate(poi_tasks):
             step = poi_steps[base_model][i]
-            jobs.append(
-                render_job(False, base_model, task, str(step))
-            )
+            jobs.append(render_job(False, base_model, task, str(step)))
 
     jobs = [job for job in jobs if job is not None]
-    
+
     if PRINT_JOB:
         for job in jobs:
             print(job)

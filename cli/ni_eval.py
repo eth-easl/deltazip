@@ -6,6 +6,7 @@ from loguru import logger
 from transformers import AutoTokenizer, TextGenerationPipeline
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
+
 def postprocess(text):
     text = text.strip()
     # if starts with \n, take the remaining
@@ -14,6 +15,7 @@ def postprocess(text):
     # if there's \n left, take the first part
     text = text.split("\n")[0]
     return text
+
 
 compress_config = BaseCompressionConfig(
     bits=4,
@@ -24,6 +26,7 @@ compress_config = BaseCompressionConfig(
     lossless="gdeflate",
     damp_percent=0.02,
 )
+
 
 def generate(args):
     print(args)

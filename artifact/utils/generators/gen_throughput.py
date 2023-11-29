@@ -25,6 +25,7 @@ def get_dialogs():
         all_dialogs.append(format_openllama(item["conversation_a"][0]["content"]))
     return all_dialogs
 
+
 def prepare_poisson(args):
     print(args)
     dialogs = get_dialogs()

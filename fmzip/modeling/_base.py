@@ -106,7 +106,7 @@ class BaseCompressionConfig(PushToHubMixin):
     prunen: int = field(default=0)
     prunem: int = field(default=0)
     group_size: int = field(default=-1)
-    group_rows: int = field(default=-1) # deprecated, for backward compatibility
+    group_rows: int = field(default=-1)  # deprecated, for backward compatibility
     block_size: int = field(default=128)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)

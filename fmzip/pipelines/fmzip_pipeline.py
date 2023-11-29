@@ -54,7 +54,9 @@ class FMZipPipeline:
         if self.hf_token == "":
             self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True, token=self.hf_token)
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                base_model, use_fast=True, token=self.hf_token
+            )
         self.tokenizer.padding_side = "left"
 
         # avoid using eos_token as padding token
@@ -149,17 +151,21 @@ class FMZipPipeline:
         for gpu_id in range(self.device_count):
             with torch.device("cuda", gpu_id):
                 if self.hf_token == "":
-                    self.base_models[gpu_id] = AutoFMZipModelForCausalLM.from_pretrained(
+                    self.base_models[
+                        gpu_id
+                    ] = AutoFMZipModelForCausalLM.from_pretrained(
                         self.base_model_name,
                         compress_config=dummy_compression_config,
                         low_cpu_mem_usage=True,
                     )
                 else:
-                    self.base_models[gpu_id] = AutoFMZipModelForCausalLM.from_pretrained(
+                    self.base_models[
+                        gpu_id
+                    ] = AutoFMZipModelForCausalLM.from_pretrained(
                         self.base_model_name,
                         compress_config=dummy_compression_config,
                         low_cpu_mem_usage=True,
-                        token = self.hf_token
+                        token=self.hf_token,
                     )
             self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
         logger.info("based model loaded")

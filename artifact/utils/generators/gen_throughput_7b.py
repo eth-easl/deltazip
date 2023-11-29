@@ -8,6 +8,7 @@ from artifact.utils.generators.arrival import PoissonProcess
 
 to_eval_models = [f".cache/raw_models/vicuna-7b-{i}" for i in range(0, 20)]
 
+
 def format_lmsys(prompt):
     return f"USER: {prompt}\nASSISTANT:"
 
@@ -18,6 +19,7 @@ def get_dialogs():
     for idx, item in enumerate(trace):
         all_dialogs.append(format_lmsys(item["conversation_a"][0]["content"]))
     return all_dialogs
+
 
 def prepare_poisson(args):
     print(args)

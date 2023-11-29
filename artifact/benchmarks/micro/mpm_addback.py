@@ -32,6 +32,7 @@ requests = [
 
 warmup_models = [req[1] for req in requests]
 
+
 def addback():
     pipeline = FMZipPipeline(
         base_model=base_model,
@@ -48,6 +49,7 @@ def addback():
     torch.cuda.nvtx.range_pop()
     compute_end = timer()
     return output, compute_end - compute_start
+
 
 def colocate():
     pipeline = FMZipPipeline(

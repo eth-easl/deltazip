@@ -4,21 +4,30 @@ import argparse
 import pandas as pd
 import plotly.express as px
 
+
 def get_provider_name(provider):
     if provider["name"] == "hf":
         return "HuggingFace"
     elif provider["name"] == "fmzip":
         return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>strategy={provider['args'].get('placement_strategy','none')}<br>lossy={not provider['args'].get('lossless_only', False)}"
 
+
 def plot(args):
     print(args)
     with open(args.input, "r") as fp:
         results = json.load(fp)
     plot_data = []
-    results = [item for item in results if not (item['system']['args'].get('placement_strategy','') == 'colocate' and item['system']['args'].get('batch_size') ==1)]
+    results = [
+        item
+        for item in results
+        if not (
+            item["system"]["args"].get("placement_strategy", "") == "colocate"
+            and item["system"]["args"].get("batch_size") == 1
+        )
+    ]
     for item in results:
-        provider = get_provider_name(item['system'])
-        res = item['results'][0]
+        provider = get_provider_name(item["system"])
+        res = item["results"][0]
         tokenize_time = res["response"]["response"]["measure"]["tokenize_time"]
         loading_time = res["response"]["response"]["measure"]["loading_time"]
         prepare_time = res["response"]["response"]["measure"]["prepare_time"]
@@ -59,7 +68,10 @@ def plot(args):
     df = pd.DataFrame(plot_data)
     fig = px.bar(df, x="provider", y="time_elapsed", color="Breakdown")
     fig.update_layout(
-        width=800, height=600, title_x=0.5, title_text=f"Latency Breakdown, {args.token_count} tokens<br>{args.gpu_spec}, {args.disk_bw}"
+        width=800,
+        height=600,
+        title_x=0.5,
+        title_text=f"Latency Breakdown, {args.token_count} tokens<br>{args.gpu_spec}, {args.disk_bw}",
     )
     fig.update_layout(
         font_family="Arial",
@@ -80,20 +92,19 @@ def plot(args):
         )
     )
     fig.update_layout(
-        xaxis=dict(
-            title_text="Backend", title_font=dict(size=22), tickfont_size=14
-        )
+        xaxis=dict(title_text="Backend", title_font=dict(size=22), tickfont_size=14)
     )
     if not os.path.exists(os.path.dirname(args.output)):
         os.makedirs(os.path.dirname(args.output))
     fig.write_image(args.output, scale=2)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, default="artifact/results/latency.json")
     parser.add_argument("--output", type=str, default="artifact/results/latency.png")
     parser.add_argument("--token-count", type=int, default=64)
-    parser.add_argument("--gpu-spec", type=str, default='RTX 3090')
-    parser.add_argument("--disk-bw", type=str, default='2.1 GB/s')
+    parser.add_argument("--gpu-spec", type=str, default="RTX 3090")
+    parser.add_argument("--disk-bw", type=str, default="2.1 GB/s")
     args = parser.parse_args()
     plot(args)

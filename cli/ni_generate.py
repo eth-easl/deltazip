@@ -6,6 +6,7 @@ from loguru import logger
 from transformers import AutoTokenizer, TextGenerationPipeline
 from transformers import AutoModelForCausalLM
 
+
 def postprocess(text):
     text = text.strip()
     # if starts with \n, take the remaining

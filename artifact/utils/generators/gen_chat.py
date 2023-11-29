@@ -5,6 +5,7 @@ import datasets
 import pandas as pd
 import numpy as np
 
+
 def format_lmsys(prompt):
     return f"USER: {prompt}\nASSISTANT:"
 
@@ -16,7 +17,8 @@ def get_dialogs():
         all_dialogs.append(format_lmsys(item["conversation_a"][0]["content"]))
     return all_dialogs
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     dialogs = get_dialogs()
     with open("artifact/data/lmsys_dialogs.jsonl", "w") as fp:
         for d in dialogs:

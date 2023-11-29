@@ -25,13 +25,13 @@ class HuggingFacePipeline:
         self.current_model = None
         self.loaded_models = {}
         self.base_model = base_model
-        if self.hf_token=="":
+        if self.hf_token == "":
             self.tokenizer = transformers.AutoTokenizer.from_pretrained(
                 base_model, use_fast=True
             )
         else:
             self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-                base_model, use_fast=True, token = self.hf_token
+                base_model, use_fast=True, token=self.hf_token
             )
         # avoid using eos_token as padding token
         # https://github.com/facebookresearch/llama/issues/380

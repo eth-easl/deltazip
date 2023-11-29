@@ -7,6 +7,7 @@ from transformers import AutoTokenizer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 from fmzip.utils.delta_utils import subtract, xor
 
+
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(args.target_model, use_fast=True)
@@ -58,7 +59,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lossless", type=str, default="gdeflate", choices=["gdeflate"]
     )
-    parser.add_argument("--delta", type=str, default="subtract", choices=["subtract", "xor"])
+    parser.add_argument(
+        "--delta", type=str, default="subtract", choices=["subtract", "xor"]
+    )
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     args = parser.parse_args()
     main(args)
