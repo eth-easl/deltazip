@@ -4,29 +4,26 @@ import argparse
 import pandas as pd
 import plotly.express as px
 
+strategy_mapping = {
+    "none": "None",
+    "addback": "Add-Back",
+    "colocate": "Mixed-Prec"
+}
 
 def get_provider_name(provider):
     if provider["name"] == "hf":
         return "HuggingFace"
     elif provider["name"] == "fmzip":
-        return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>strategy={provider['args'].get('placement_strategy','none')}<br>lossy={not provider['args'].get('lossless_only', False)}"
-
+        return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>strategy={strategy_mapping[provider['args'].get('placement_strategy','none')]}<br>lossy={not provider['args'].get('lossless_only', False)}"
 
 def plot(args):
     print(args)
     with open(args.input, "r") as fp:
         results = json.load(fp)
     plot_data = []
-    results = [
-        item
-        for item in results
-        if not (
-            item["system"]["args"].get("placement_strategy", "") == "colocate"
-            and item["system"]["args"].get("batch_size") == 1
-        )
-    ]
     for item in results:
         provider = get_provider_name(item["system"])
+        num_tokens = item["gen_configs"]["min_length"]
         res = item["results"][0]
         tokenize_time = res["response"]["response"]["measure"]["tokenize_time"]
         loading_time = res["response"]["response"]["measure"]["loading_time"]
@@ -71,7 +68,7 @@ def plot(args):
         width=800,
         height=600,
         title_x=0.5,
-        title_text=f"Latency Breakdown, {args.token_count} tokens<br>{args.gpu_spec}, {args.disk_bw}",
+        title_text=f"Latency Breakdown, {num_tokens} tokens<br>{args.gpu_spec}, {args.disk_bw}",
     )
     fig.update_layout(
         font_family="Arial",
@@ -92,7 +89,7 @@ def plot(args):
         )
     )
     fig.update_layout(
-        xaxis=dict(title_text="Backend", title_font=dict(size=22), tickfont_size=14)
+        xaxis=dict(title_text="Backend", title_font=dict(size=22), tickfont_size=12)
     )
     if not os.path.exists(os.path.dirname(args.output)):
         os.makedirs(os.path.dirname(args.output))
