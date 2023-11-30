@@ -7,21 +7,19 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-strategy_mapping = {
-    "none": "None",
-    "addback": "Add-Back",
-    "colocate": "Mixed-Prec"
-}
+strategy_mapping = {"none": "None", "addback": "Add-Back", "colocate": "Mixed-Prec"}
 
 tokens = [64, 128, 256, 512]
 bits = 4
-model_size = '3b'
+model_size = "3b"
+
 
 def get_provider_name(provider):
     if provider["name"] == "hf":
         return "HuggingFace"
     elif provider["name"] == "fmzip":
         return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>{strategy_mapping[provider['args'].get('placement_strategy','none')]}<br>lossy={not provider['args'].get('lossless_only', False)}"
+
 
 def plot(args):
     print(args)
@@ -38,7 +36,9 @@ def plot(args):
         x_title="SLO Requirement (s)",
     )
     for idx, num_token in enumerate(tokens):
-        filename = os.path.join(args.input, f"ar_{ar}_{bits}bits_{num_token}tokens.json")
+        filename = os.path.join(
+            args.input, f"ar_{ar}_{bits}bits_{num_token}tokens.json"
+        )
         with open(filename, "r") as fp:
             results = json.load(fp)
         plot_data = []
@@ -133,7 +133,7 @@ def plot(args):
         width=1200,
         height=600,
         title_x=0.5,
-        title_text=fr"SLO Attainment of Different Backends",
+        title_text=rf"SLO Attainment of Different Backends",
     )
     fig.update_layout(
         font_family="Arial",
