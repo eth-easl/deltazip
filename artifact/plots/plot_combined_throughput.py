@@ -12,8 +12,8 @@ strategy_mapping = {
     "addback": "Add-Back",
     "colocate": "Mixed-Prec"
 }
+
 tokens = [64, 128, 256, 512]
-ar = 6
 bits = 4
 model_size = '3b'
 
@@ -25,6 +25,10 @@ def get_provider_name(provider):
 
 def plot(args):
     print(args)
+    ar = args.ar
+    # if ar does not have a decimal point, convert to int
+    if ar % 1 == 0:
+        ar = int(ar)
     fig = make_subplots(
         rows=1,
         cols=4,
@@ -40,7 +44,6 @@ def plot(args):
         plot_data = []
         for item in results:
             provider = item["system"]
-            num_tokens = item["gen_configs"]["min_length"]
             provider = get_provider_name(provider)
             for res in item["results"]:
                 plot_data.append(
@@ -128,9 +131,9 @@ def plot(args):
         )
     fig.update_layout(
         width=1200,
-        height=800,
+        height=600,
         title_x=0.5,
-        title_text=f"SLO Attainment of Different Backends",
+        title_text=fr"SLO Attainment of Different Backends",
     )
     fig.update_layout(
         font_family="Arial",
@@ -140,7 +143,7 @@ def plot(args):
         legend_title_font_color="black",
     )
     fig.update_layout(
-        title=dict(font=dict(size=20)),
+        title=dict(font=dict(size=28)),
         legend=dict(font=dict(size=14)),
         legend_title=dict(font=dict(size=14)),
     )
@@ -161,7 +164,7 @@ def plot(args):
             orientation="h",
             entrywidth=160,
             yanchor="bottom",
-            y=-0.4,
+            y=-0.5,
             xanchor="left",
             x=0,
             font=dict(size=24),
@@ -169,10 +172,10 @@ def plot(args):
     )
     fig.write_image(args.output, scale=2)
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, default="artifact/results/latency.json")
+    parser.add_argument("--ar", type=float, default=6)
     parser.add_argument("--output", type=str, default="artifact/results/latency.png")
     args = parser.parse_args()
     plot(args)

@@ -137,12 +137,8 @@ def plot(args):
         font_color="black",
         title_font_family="Arial",
         title_font_color="black",
+        title_font_size=28,
         legend_title_font_color="black",
-    )
-    fig.update_layout(
-        title=dict(font=dict(size=20)),
-        legend=dict(font=dict(size=14)),
-        legend_title=dict(font=dict(size=14)),
     )
     fig.update_traces(line=dict(width=4))
     fig.update_layout(
@@ -150,7 +146,6 @@ def plot(args):
             title_text="Success Rate (%)", title_font=dict(size=22), tickfont_size=18
         )
     )
-    fig.update_xaxes(title_font=dict(size=28), tickfont_size=20)
     fig.update_annotations(
         font_size=24,
         font_color="black",
