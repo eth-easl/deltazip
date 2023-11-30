@@ -13,7 +13,7 @@ strategy_mapping = {
     "colocate": "Mixed-Prec"
 }
 tokens = [64, 128, 256, 512]
-ar = 0.75
+ar = 6
 bits = 4
 model_size = '3b'
 
