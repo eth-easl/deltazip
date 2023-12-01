@@ -6,20 +6,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
-strategy_mapping = {"none": "None", "addback": "Add-Back", "colocate": "Mixed-Prec"}
+from artifact.plots.utils import get_provider_name
 
 tokens = [64, 128, 256, 512]
 bits = 4
 model_size = "3b"
-
-
-def get_provider_name(provider):
-    if provider["name"] == "hf":
-        return "HuggingFace"
-    elif provider["name"] == "fmzip":
-        return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>{strategy_mapping[provider['args'].get('placement_strategy','none')]}<br>lossy={not provider['args'].get('lossless_only', False)}"
-
+ars = [0.75, 3, 6]
 
 def plot(args):
     print(args)
