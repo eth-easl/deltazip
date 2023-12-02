@@ -6,88 +6,138 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
-strategy_mapping = {"none": "None", "addback": "Add-Back", "colocate": "Mixed-Prec"}
+from artifact.plots.utils import get_provider_name, get_provider_order
 
 tokens = [64, 128, 256, 512]
 bits = 4
 model_size = "3b"
-
-
-def get_provider_name(provider):
-    if provider["name"] == "hf":
-        return "HuggingFace"
-    elif provider["name"] == "fmzip":
-        return f"FMZip, bsz={provider['args'].get('batch_size', 1)}<br>{strategy_mapping[provider['args'].get('placement_strategy','none')]}<br>lossy={not provider['args'].get('lossless_only', False)}"
-
+ars = [0.75, 3, 6]
 
 def plot(args):
     print(args)
-    ar = args.ar
-    # if ar does not have a decimal point, convert to int
-    if ar % 1 == 0:
-        ar = int(ar)
-    agg_data = []
-    for idx, num_token in enumerate(tokens):
-        filename = os.path.join(
-            args.input, f"ar_{ar}_{bits}bits_{num_token}tokens.json"
-        )
-        with open(filename, "r") as fp:
-            results = json.load(fp)
-        plot_data = []
-        for item in results:
-            provider = item["system"]
-            provider = get_provider_name(provider)
-            for res in item["results"]:
-                plot_data.append(
-                    {
-                        "id": res["response"]["id"],
-                        "provider": provider,
-                        "time_elapsed": res["time_elapsed"],
-                    }
-                )
-            total_jobs = len(item["results"])
-            throughput = (
-                total_jobs
-                / max(item["results"], key=lambda x: x["time_elapsed"])["time_elapsed"]
-            )
-            agg_data.append(
-                {"tokens": num_token, "provider": provider, "throughput": throughput}
-            )
-    agg_data = pd.DataFrame(agg_data)
-    agg_data = agg_data.sort_values(by=["throughput"], ascending=False)
-    fig = px.bar(
-        agg_data, x="provider", y="throughput", color="provider", facet_col="tokens"
+    fig = make_subplots(
+        rows = len(ars),
+        cols = len(tokens),
+        shared_xaxes=True,
+        row_titles=[r"$\huge{\lambda=0.75}$", r"$\huge{\lambda=3}$", r"$\huge{\lambda=6}$"],
+        subplot_titles=("64 Tokens", "128 Tokens", "256 Tokens", "512 Tokens"),
+        horizontal_spacing=0.04,
+        vertical_spacing=0.05,
+        x_title="Inference System",
+        y_title="Throughput (queries/s)",
+        row_heights=[0.333, 0.333, 0.333]
     )
-    fig.for_each_annotation(lambda a: a.update(text=f"{a.text.split('=')[-1]} Tokens"))
-    fig['layout']['xaxis']['title']['text'] = ""
-    fig['layout']['xaxis2']['title']['text'] = ""
-    fig['layout']['xaxis3']['title']['text'] = ""
-    fig['layout']['xaxis4']['title']['text'] = ""
-    fig['layout']['legend']['title']['text'] = ""
+    for ar_id, ar in enumerate(ars):
+        for idx, num_token in enumerate(tokens):
+            show_legend = True if ar_id == 0 and idx == 0 else False
+            agg_data = []
+            filename = os.path.join(
+                args.input, f"ar_{ar}_{bits}bits_{num_token}tokens.json"
+            )
+            with open(filename, "r") as fp:
+                results = json.load(fp)
+            plot_data = []
+            for item in results:
+                provider = item["system"]
+                provider = get_provider_name(provider)
+                order = get_provider_order(item["system"])
+                for res in item["results"]:
+                    plot_data.append(
+                        {
+                            "id": res["response"]["id"],
+                            "provider": provider,
+                            "time_elapsed": res["time_elapsed"],
+                            "order": order,
+                        }
+                    )
+                total_jobs = len(item["results"])
+                throughput = (
+                    total_jobs
+                    / max(item["results"], key=lambda x: x["time_elapsed"])["time_elapsed"]
+                )
+                agg_data.append(
+                    {"tokens": num_token, "provider": provider, "throughput": throughput, "order": order}
+                )
+            agg_data = pd.DataFrame(agg_data)
+
+            agg_data = agg_data.sort_values(by=["order"], ascending=True)
+            print(agg_data)
+            fig2 = px.bar(
+                agg_data, x="order", y="throughput", color="provider",
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=fig2['data'][0]['x'],
+                    y=fig2['data'][0]['y'],
+                    name=fig2['data'][0]['name'],
+                    marker = fig2['data'][0]['marker'],
+                    showlegend=show_legend,
+                ),
+                row=ar_id+1,
+                col=idx + 1,
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=fig2['data'][1]['x'],
+                    y=fig2['data'][1]['y'],
+                    name=fig2['data'][1]['name'],
+                    marker = fig2['data'][1]['marker'],
+                    showlegend=show_legend,
+                ),
+                row=ar_id+1,
+                col=idx + 1,
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=fig2['data'][2]['x'],
+                    y=fig2['data'][2]['y'],
+                    name=fig2['data'][2]['name'],
+                    marker = fig2['data'][2]['marker'],
+                    showlegend=show_legend,
+                ),
+                row=ar_id+1,
+                col=idx + 1,
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=fig2['data'][3]['x'],
+                    y=fig2['data'][3]['y'],
+                    name=fig2['data'][3]['name'],
+                    marker = fig2['data'][3]['marker'],
+                    showlegend=show_legend,
+                ),
+                row=ar_id+1,
+                col=idx + 1,
+            )
+            fig.add_trace(
+                go.Bar(
+                    x=fig2['data'][4]['x'],
+                    y=fig2['data'][4]['y'],
+                    name=fig2['data'][4]['name'],
+                    marker = fig2['data'][4]['marker'],
+                    showlegend=show_legend,
+                ),
+                row=ar_id+1,
+                col=idx + 1,
+            )
     fig.update_layout(
         width=1200,
-        height=600,
+        height=1200,
         title_x=0.5,
         title_y=1,
         title_text=f"Throughput of Different Backends",
-        yaxis=dict(
-            title_text="Throughput (queries/s)",
-            title_font=dict(size=22),
-            tickfont_size=18,
-        ),
-        title=dict(font=dict(size=28)),
-        legend=dict(font=dict(size=14)),
-        legend_title=dict(font=dict(size=14)),
+        title=dict(font=dict(size=36)),
+        legend_title=dict(font=dict(size=16)),
         font_family="Arial",
         font_color="black",
         title_font_family="Arial",
         title_font_color="black",
         legend_title_font_color="black",
     )
-    fig.update_xaxes(showticklabels=False, title_font=dict(size=28), tickfont_size=20)
+    fig.update_xaxes(showticklabels=False, title_font=dict(size=28), tickfont_size=24)
+    fig.update_yaxes(showticklabels=True, title_font=dict(size=20), tickfont_size=20)
     fig.update_annotations(
-        font_size=24,
+        font=dict(size=28),
         font_color="black",
         font_family="Arial",
     )
@@ -96,7 +146,7 @@ def plot(args):
             orientation="h",
             entrywidth=160,
             yanchor="bottom",
-            y=-0.4,
+            y=-0.2,
             xanchor="left",
             x=0,
             font=dict(size=24),
@@ -107,7 +157,6 @@ def plot(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", type=str, default="artifact/results/latency.json")
-    parser.add_argument("--ar", type=float, default=6)
     parser.add_argument("--output", type=str, default="artifact/results/latency.png")
     args = parser.parse_args()
     plot(args)
