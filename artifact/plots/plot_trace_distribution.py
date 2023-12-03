@@ -9,7 +9,6 @@ reqs = []
 timestamps = []
 models = []
 timewindow = 5
-# create a grid of times, where the format is %H:%M, %H is from 0 to 23, and %M is from 0 to 59 with a step of 5
 time_grid = []
 for h in range(0, 24):
     for m in range(0, 60, timewindow):
@@ -20,7 +19,6 @@ for d in ds["train"]:
     # only keep the minute
     date = time.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%d")
     time = time.replace(year=1970, month=1, day=1).strftime("%H:%M")
-    # convert time to the closest 10 minutes interval
     time = min(
         time_grid,
         key=lambda x: abs(
@@ -56,32 +54,29 @@ print(df.head())
 # select only time in May 7 to May 14
 sub_df = df[(df["date"] >= "2023-06-11") & (df["date"] <= "2023-06-18")]
 new_df = sub_df.pivot(index="model", columns="time")["count"].fillna(0)
-
 fig = px.imshow(
-    new_df, x=new_df.columns, y=new_df.index, color_continuous_scale="Greys"
+    new_df, x=new_df.columns, y=new_df.index, color_continuous_scale="greys", aspect='auto'
 )
-
 fig.update_layout(
     title={
         "text": f"# of Requests for Different Models per {timewindow} Minutes",
         "xanchor": "center",
         "x": 0.5,
-        "font_size": 24,
+        "font_size": 28,
     }
 )
-
 fig.update_xaxes(
     title_text="Time",
     tickangle=30,
     title_standoff=25,
     title_font=dict(size=28),
-    tickfont=dict(size=21),
+    tickfont=dict(size=26),
 )
 fig.update_yaxes(
     title_text="Model",
     title_standoff=25,
     title_font=dict(size=28),
-    tickfont=dict(size=21),
+    tickfont=dict(size=24),
 )
 fig.update_layout(
     font_family="Arial",
@@ -96,7 +91,6 @@ fig.update_layout(
     legend_title=dict(font=dict(size=20)),
 )
 fig.update_layout(
-    width=1200, height=800, title_x=0.5, margin=dict(l=40, r=40, t=80, b=80)
+    width=1200, height=1000, title_x=0.5, margin=dict(l=40, r=40, t=80, b=80)
 )
-
 fig.write_image("artifact/results/images/trace.png", scale=2)
