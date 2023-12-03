@@ -152,7 +152,6 @@ def plot(args):
             font=dict(size=24),
         )
     )
-    print(fig['layout']['annotations'])
     fig.write_image(args.output, scale=6)
 
 
