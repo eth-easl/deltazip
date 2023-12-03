@@ -42,7 +42,6 @@ def main(args):
     else:
         if args.shuffle_dataset:
             import random
-
             random.seed(42)
             random.shuffle(examples)
         examples = examples[: args.n_samples]
