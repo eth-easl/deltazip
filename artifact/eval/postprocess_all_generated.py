@@ -3,10 +3,28 @@ import json
 import pandas as pd
 from typing import Callable
 
+def get_size(start_path = '.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            # skip if it is symbolic link
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+    return total_size / 1024 / 1024
+
 cache_folder = os.environ.get("YAO_CACHE")
 OUTPUT_DIR = os.path.join(
     cache_folder, "experiments", "fmzip", "generation_results_reproduce"
 )
+MODELS_DIR = os.path.join(
+    cache_folder, "experiments", "fmzip", "compressed_models_reproduce"
+)
+# in megabytes
+base_model_size = {
+    "open_llama_3b_v2": 6540.97,
+    "pythia-2.8b-deduped": 5297.78
+}
 
 def postprocess_pred(text):
     text = text.strip()
@@ -60,12 +78,16 @@ if __name__=="__main__":
                         "raw_prediction",
                         pred_preprocess = _preprocess
                     )
+                    task_name = task.split("-")[0]
+                    task_step = task.split("-")[1]
                     eval_results.append({
                         "base_model": base_model,
-                        "task": task,
+                        "task": task_name,
+                        "step": task_step,
                         "method": method,
                         "compression_config": compression_config,
                         "eval_res": eval_res['exact_match'],
+                        "compression ratio": base_model_size[base_model] / get_size(os.path.join(MODELS_DIR, f"{base_model}-{compression_config}_{method}",task_name, task_step)),
                     })
     df = pd.DataFrame(eval_results)
     df.to_csv("repro_eval_results.csv", index=False)

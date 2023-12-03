@@ -10,6 +10,7 @@ ar_dataset = os.path.join(cache_folder, "datasets", "qi", "ar")
 include_fmzip = True
 include_sparsegpt = True
 force = True
+
 poi_tasks = [
     "task151_tomqa_find_location_easy_clean",
     "task152_tomqa_find_location_easy_noise",
@@ -28,7 +29,7 @@ PRINT_JOB = True
 OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models_reproduce")
 
 bits = [2, 4]
-sparsity = [0, 0.75]
+sparsity = [0.5, 0.8, 0.9]
 
 
 def render_job(
