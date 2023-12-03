@@ -3,10 +3,10 @@ import json
 # format:
 # {"question": "", "answers": [{"from": "fmzip", "text": ""},{"from": "orginal", "text": ""}]}
 
-with open(".cache/lmsys_output_xwin_16bit.jsonl", "r") as fp:
+with open(".cache/lmsys_output_vicuna_16bit.jsonl", "r") as fp:
     full_data = [json.loads(line) for line in fp][:1000]
 
-with open(".cache/lmsys_output_xwin_2bit.jsonl", "r") as fp:
+with open(".cache/lmsys_output_vicuna_2bit.jsonl", "r") as fp:
     fmzip_data = [json.loads(line) for line in fp][:1000]
 data = []
 
@@ -18,6 +18,6 @@ for full, fmzip in zip(full_data, fmzip_data):
     datum = {"question": question, "answers": answers}
     data.append(datum)
 
-with open("artifact/results/xwin_agg.jsonl", "w") as fp:
+with open("artifact/results/vicuna_agg.jsonl", "w") as fp:
     for d in data:
         fp.write(json.dumps(d) + "\n")

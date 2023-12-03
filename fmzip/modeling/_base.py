@@ -603,6 +603,33 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self.compress_config.save_pretrained(save_dir)
 
     @classmethod
+    def from_lora(
+        cls,
+        pretrained_model_name_or_path: str,
+        compress_config: BaseCompressionConfig,
+        max_memory: Optional[dict] = None,
+        **model_init_kwargs,
+    ):
+        """load lora fine-tuned model"""
+        if not torch.cuda.is_available():
+            raise EnvironmentError("Load LoRA model requires CUDA available.")
+        def skip(*args, **kwargs):
+            pass
+            
+        torch.nn.init.kaiming_uniform_ = skip
+        torch.nn.init.uniform_ = skip
+        torch.nn.init.normal_ = skip
+        config = AutoConfig.from_pretrained(
+            pretrained_model_name_or_path, trust_remote_code=True
+        )
+        if config.model_type not in SUPPORTED_MODELS:
+            raise TypeError(f"{config.model_type} isn't supported yet.")
+        model_init_kwargs["torch_dtype"] = torch.float16
+        model_init_kwargs["trust_remote_code"] = True
+        torch.cuda.empty_cache()
+        
+
+    @classmethod
     def from_pretrained(
         cls,
         pretrained_model_name_or_path: str,
@@ -654,7 +681,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 dtype=model_init_kwargs["torch_dtype"],
             )
             model_init_kwargs["low_cpu_mem_usage"] = True
-
             del model
         else:
             model_init_kwargs["device_map"] = None

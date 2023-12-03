@@ -47,6 +47,23 @@ class AutoFMZipModelForCausalLM:
         )
 
     @classmethod
+    def from_lora(
+        cls,
+        pretrained_model_name_or_path: str,
+        compress_config: BaseCompressionConfig,
+        max_memory: Optional[dict] = None,
+        **model_init_kwargs
+    ) -> BaseFMZipModelForCausalLM:
+        model_type = check_and_get_model_type(pretrained_model_name_or_path)
+        return FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_lora(
+            pretrained_model_name_or_path=pretrained_model_name_or_path,
+            compress_config=compress_config,
+            max_memory=max_memory,
+            **model_init_kwargs
+        )
+
+
+    @classmethod
     def from_compressed(
         cls,
         save_dir: str,
