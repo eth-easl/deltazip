@@ -26,7 +26,9 @@ poi_steps = {
 }
 
 PRINT_JOB = True
-OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models_reproduce")
+OUTPUT_DIR = os.path.join(
+    cache_folder, "experiments", "fmzip", "compressed_models_reproduce"
+)
 
 bits = [2, 4]
 sparsity = [0.5, 0.8, 0.9]

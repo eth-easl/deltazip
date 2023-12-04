@@ -6,13 +6,14 @@ import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from plotly import express as px
+
+
 def plot(args):
     print(args)
     plot_df = []
     for i, filename in enumerate(
         [x for x in os.listdir(args.input_file) if x.endswith(".jsonl")]
     ):
-        
         with open(os.path.join(args.input_file, filename), "r") as f:
             data = [json.loads(line) for line in f.readlines()]
         title = f"Score Distribution 2bits/50% Sparsity<br>Compression Ratio: {data[0]['compression_ratio']}"
@@ -37,14 +38,23 @@ def plot(args):
                         "filename": filename,
                         "source": source,
                         "x": prob,
-                        "y": len(df[(df["filename"] == filename) & (df["source"] == source) & (df["score"] <= prob)]) / len(df[(df["filename"] == filename) & (df["source"] == source)]),
+                        "y": len(
+                            df[
+                                (df["filename"] == filename)
+                                & (df["source"] == source)
+                                & (df["score"] <= prob)
+                            ]
+                        )
+                        / len(
+                            df[(df["filename"] == filename) & (df["source"] == source)]
+                        ),
                     }
                 )
     cdf_df = pd.DataFrame(cdf_data)
     print(cdf_df)
     # dashed line for fmzip, solid line for original
     fig = px.line(cdf_df, x="x", y="y", color="filename", line_dash="source")
-    
+
     fig.update_layout(
         font_family="Arial",
         font_color="black",

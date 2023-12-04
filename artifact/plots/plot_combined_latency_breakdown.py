@@ -6,126 +6,91 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from artifact.plots.utils import get_provider_name, get_provider_order
 
-strategy_mapping = {"none": "None", "addback": "Add-Back", "colocate": "Mixed-Prec"}
-tokens = [64, 128, 256, 512]
-ar = 6
-bits = 4
+bits = [2, 4]
+tokens = [64, 128]
+ar = 0.75
 model_size = "3b"
-
-
-def get_provider_name(provider):
-    if provider["name"] == "hf":
-        return "HuggingFace"
-    elif provider["name"] == "fmzip":
-        return f"FMZip, bsz={provider['args'].get('batch_size', 1)} <br>{strategy_mapping[provider['args'].get('placement_strategy','none')]}<br>lossy={not provider['args'].get('lossless_only', False)}"
 
 
 def plot(args):
     print(args)
     fig = make_subplots(
-        rows=1,
-        cols=4,
+        rows=len(bits),
+        cols=len(tokens),
         shared_yaxes=True,
-        subplot_titles=("64 Tokens", "128 Tokens", "256 Tokens", "512 Tokens"),
+        subplot_titles=("2bits", "4bits"),
+        row_titles=("64tokens", "128tokens"),
         horizontal_spacing=0.015,
-        x_title="SLO Requirement (s)",
+        x_title="Inference System",
+        y_title="Time Elapsed (s)",
     )
-    for idx, num_token in enumerate(tokens):
-        filename = os.path.join(
-            args.input, f"ar_{ar}_{bits}bits_{num_token}tokens.json"
-        )
-        with open(filename, "r") as fp:
-            results = json.load(fp)
-        plot_data = []
-        for item in results:
-            provider = item["system"]
-            num_tokens = item["gen_configs"]["min_length"]
-            provider = get_provider_name(provider)
-            for res in item["results"]:
+    for mid, bit in enumerate(bits):
+        for idx, num_token in enumerate(tokens):
+            show_legend = True if mid == 0 and idx == 0 else False
+            filename = os.path.join(
+                args.input, f"ar_{ar}_{bit}bits_{num_token}tokens.json"
+            )
+            with open(filename, "r") as fp:
+                results = json.load(fp)
+            plot_data = []
+            for item in results:
+                provider = item["system"]
+                num_tokens = item["gen_configs"]["min_length"]
+                provider = get_provider_name(provider)
+                res = item["results"][0]
+                tokenize_time = res["response"]["response"]["measure"]["tokenize_time"]
+                loading_time = res["response"]["response"]["measure"]["loading_time"]
+                prepare_time = res["response"]["response"]["measure"]["prepare_time"]
+                inference_time = res["response"]["response"]["measure"][
+                    "inference_time"
+                ]
                 plot_data.append(
                     {
                         "id": res["response"]["id"],
                         "provider": provider,
-                        "time_elapsed": res["time_elapsed"],
+                        "time_elapsed": tokenize_time,
+                        "Breakdown": "Tokenize",
                     }
                 )
-        df = pd.DataFrame(plot_data)
-        max_time = df["time_elapsed"].max()
-        slo_requirements = np.arange(1, max_time, 0.5)
-        # for each slo_requirement, find how many requests are satisfied
-        slo_data = []
-        for slo in slo_requirements:
-            for provider in df["provider"].unique():
-                provider_df = df[df["provider"] == provider]
-                success_rate = (
-                    provider_df[provider_df["time_elapsed"] <= slo].shape[0]
-                    / provider_df.shape[0]
-                )
-                slo_data.append(
+                plot_data.append(
                     {
-                        "slo": slo,
+                        "id": res["response"]["id"],
                         "provider": provider,
-                        "success_rate": success_rate,
+                        "time_elapsed": loading_time,
+                        "Breakdown": "Loading",
                     }
                 )
-        df = pd.DataFrame(slo_data)
-        fig2 = px.line(df, x="slo", y="success_rate", color="provider")
-        fig.add_trace(
-            go.Scatter(
-                x=fig2["data"][0]["x"],
-                y=fig2["data"][0]["y"],
-                name=fig2["data"][0]["name"],
-                line=dict(color="green", width=4),
-                showlegend=True if idx == 0 else False,
-            ),
-            row=1,
-            col=idx + 1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=fig2["data"][1]["x"],
-                y=fig2["data"][1]["y"],
-                name=fig2["data"][1]["name"],
-                line=dict(color="red", width=4),
-                showlegend=True if idx == 0 else False,
-            ),
-            row=1,
-            col=idx + 1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=fig2["data"][2]["x"],
-                y=fig2["data"][2]["y"],
-                name=fig2["data"][2]["name"],
-                line=dict(color="blue", width=4),
-                showlegend=True if idx == 0 else False,
-            ),
-            row=1,
-            col=idx + 1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=fig2["data"][3]["x"],
-                y=fig2["data"][3]["y"],
-                name=fig2["data"][3]["name"],
-                line=dict(color="purple", width=4),
-                showlegend=True if idx == 0 else False,
-            ),
-            row=1,
-            col=idx + 1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=fig2["data"][4]["x"],
-                y=fig2["data"][4]["y"],
-                name=fig2["data"][4]["name"],
-                line=dict(color="orange", width=4),
-                showlegend=True if idx == 0 else False,
-            ),
-            row=1,
-            col=idx + 1,
-        )
+                plot_data.append(
+                    {
+                        "id": res["response"]["id"],
+                        "provider": provider,
+                        "time_elapsed": prepare_time,
+                        "Breakdown": "Prepare",
+                    }
+                )
+                plot_data.append(
+                    {
+                        "id": res["response"]["id"],
+                        "provider": provider,
+                        "time_elapsed": inference_time,
+                        "Breakdown": "Inference",
+                    }
+                )
+            df = pd.DataFrame(plot_data)
+            fig2 = px.bar(df, x="provider", y="time_elapsed", color="Breakdown")
+            fig.add_trace(
+                go.Bar(
+                    x=fig2["data"][0]["x"],
+                    y=fig2["data"][0]["y"],
+                    name=fig2["data"][0]["name"],
+                    marker=fig2["data"][0]["marker"],
+                    showlegend=show_legend,
+                ),
+                row=mid + 1,
+                col=idx + 1,
+            )
     fig.update_layout(
         width=1200,
         height=800,
@@ -140,12 +105,7 @@ def plot(args):
         title_font_size=28,
         legend_title_font_color="black",
     )
-    fig.update_traces(line=dict(width=4))
-    fig.update_layout(
-        yaxis=dict(
-            title_text="Success Rate (%)", title_font=dict(size=22), tickfont_size=18
-        )
-    )
+    fig.update_layout(yaxis=dict(title_font=dict(size=22), tickfont_size=18))
     fig.update_annotations(
         font_size=24,
         font_color="black",

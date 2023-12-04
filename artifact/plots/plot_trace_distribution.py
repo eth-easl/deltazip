@@ -55,7 +55,11 @@ print(df.head())
 sub_df = df[(df["date"] >= "2023-06-11") & (df["date"] <= "2023-06-18")]
 new_df = sub_df.pivot(index="model", columns="time")["count"].fillna(0)
 fig = px.imshow(
-    new_df, x=new_df.columns, y=new_df.index, color_continuous_scale="greys", aspect='auto'
+    new_df,
+    x=new_df.columns,
+    y=new_df.index,
+    color_continuous_scale="greys",
+    aspect="auto",
 )
 fig.update_layout(
     title={

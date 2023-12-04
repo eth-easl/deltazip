@@ -13,6 +13,7 @@ bits = 4
 model_size = "3b"
 ars = [0.75, 3, 6]
 
+
 def plot(args):
     print(args)
     fig = make_subplots(
@@ -22,10 +23,14 @@ def plot(args):
         subplot_titles=("64 Tokens", "128 Tokens", "256 Tokens", "512 Tokens"),
         horizontal_spacing=0.015,
         vertical_spacing=0.05,
-        row_titles=[r"$\huge{\lambda=0.75}$", r"$\huge{\lambda=3}$", r"$\huge{\lambda=6}$"],
+        row_titles=[
+            r"$\huge{\lambda=0.75}$",
+            r"$\huge{\lambda=3}$",
+            r"$\huge{\lambda=6}$",
+        ],
         x_title="SLO Requirement (s)",
         y_title="Success Rate (%)",
-        row_heights=[0.333, 0.333, 0.333]
+        row_heights=[0.333, 0.333, 0.333],
     )
     for ar_id, ar in enumerate(ars):
         for idx, num_token in enumerate(tokens):
@@ -73,7 +78,7 @@ def plot(args):
                     y=fig2["data"][0]["y"],
                     name=fig2["data"][0]["name"],
                     line=dict(color="green", width=4),
-                    showlegend=True if idx == 0 and ar_id==0 else False,
+                    showlegend=True if idx == 0 and ar_id == 0 else False,
                 ),
                 row=ar_id + 1,
                 col=idx + 1,
@@ -84,7 +89,7 @@ def plot(args):
                     y=fig2["data"][1]["y"],
                     name=fig2["data"][1]["name"],
                     line=dict(color="red", width=4),
-                    showlegend=True if idx == 0 and ar_id==0 else False,
+                    showlegend=True if idx == 0 and ar_id == 0 else False,
                 ),
                 row=ar_id + 1,
                 col=idx + 1,
@@ -95,7 +100,7 @@ def plot(args):
                     y=fig2["data"][2]["y"],
                     name=fig2["data"][2]["name"],
                     line=dict(color="blue", width=4),
-                    showlegend=True if idx == 0 and ar_id==0 else False,
+                    showlegend=True if idx == 0 and ar_id == 0 else False,
                 ),
                 row=ar_id + 1,
                 col=idx + 1,
@@ -106,7 +111,7 @@ def plot(args):
                     y=fig2["data"][3]["y"],
                     name=fig2["data"][3]["name"],
                     line=dict(color="purple", width=4),
-                    showlegend=True if idx == 0 and ar_id==0 else False,
+                    showlegend=True if idx == 0 and ar_id == 0 else False,
                 ),
                 row=ar_id + 1,
                 col=idx + 1,
@@ -117,7 +122,7 @@ def plot(args):
                     y=fig2["data"][4]["y"],
                     name=fig2["data"][4]["name"],
                     line=dict(color="orange", width=4),
-                    showlegend=True if idx == 0 and ar_id==0 else False,
+                    showlegend=True if idx == 0 and ar_id == 0 else False,
                 ),
                 row=ar_id + 1,
                 col=idx + 1,
@@ -150,7 +155,7 @@ def plot(args):
             xanchor="left",
             x=0,
             font=dict(size=24),
-        )
+        ),
     )
     fig.write_image(args.output, scale=6)
 

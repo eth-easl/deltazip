@@ -27,6 +27,7 @@ compress_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+
 def generate(args):
     print(args)
     # if os.path.exists(args.output_file):

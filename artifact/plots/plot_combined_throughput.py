@@ -13,19 +13,24 @@ bits = 4
 model_size = "3b"
 ars = [0.75, 3, 6]
 
+
 def plot(args):
     print(args)
     fig = make_subplots(
-        rows = len(ars),
-        cols = len(tokens),
+        rows=len(ars),
+        cols=len(tokens),
         shared_xaxes=True,
-        row_titles=[r"$\huge{\lambda=0.75}$", r"$\huge{\lambda=3}$", r"$\huge{\lambda=6}$"],
+        row_titles=[
+            r"$\huge{\lambda=0.75}$",
+            r"$\huge{\lambda=3}$",
+            r"$\huge{\lambda=6}$",
+        ],
         subplot_titles=("64 Tokens", "128 Tokens", "256 Tokens", "512 Tokens"),
         horizontal_spacing=0.04,
         vertical_spacing=0.05,
         x_title="Inference System",
         y_title="Throughput (queries/s)",
-        row_heights=[0.333, 0.333, 0.333]
+        row_heights=[0.333, 0.333, 0.333],
     )
     for ar_id, ar in enumerate(ars):
         for idx, num_token in enumerate(tokens):
@@ -51,73 +56,83 @@ def plot(args):
                         }
                     )
                 total_jobs = len(item["results"])
-                last_job = max(item["results"], key=lambda x: x["time_elapsed"]+x['relative_start_at'])
-                throughput = (
-                    total_jobs
-                    / (last_job["time_elapsed"] + last_job['relative_start_at'])
+                last_job = max(
+                    item["results"],
+                    key=lambda x: x["time_elapsed"] + x["relative_start_at"],
+                )
+                throughput = total_jobs / (
+                    last_job["time_elapsed"] + last_job["relative_start_at"]
                 )
                 agg_data.append(
-                    {"tokens": num_token, "provider": provider, "throughput": throughput, "order": order}
+                    {
+                        "tokens": num_token,
+                        "provider": provider,
+                        "throughput": throughput,
+                        "order": order,
+                    }
                 )
             agg_data = pd.DataFrame(agg_data)
             agg_data = agg_data.sort_values(by=["order"], ascending=True)
             print(agg_data)
             fig2 = px.bar(
-                agg_data, x="order", y="throughput", color="provider",
+                agg_data,
+                x="order",
+                y="throughput",
+                color="provider",
             )
             fig.add_trace(
                 go.Bar(
-                    x=fig2['data'][0]['x'],
-                    y=fig2['data'][0]['y'],
-                    name=fig2['data'][0]['name'],
-                    marker = fig2['data'][0]['marker'],
+                    x=fig2["data"][0]["x"],
+                    y=fig2["data"][0]["y"],
+                    name=fig2["data"][0]["name"],
+                    marker=fig2["data"][0]["marker"],
                     showlegend=show_legend,
                 ),
-                row=ar_id+1,
+                row=ar_id + 1,
                 col=idx + 1,
             )
             fig.add_trace(
                 go.Bar(
-                    x=fig2['data'][1]['x'],
-                    y=fig2['data'][1]['y'],
-                    name=fig2['data'][1]['name'],
-                    marker = fig2['data'][1]['marker'],
+                    x=fig2["data"][1]["x"],
+                    y=fig2["data"][1]["y"],
+                    name=fig2["data"][1]["name"],
+                    marker=fig2["data"][1]["marker"],
                     showlegend=show_legend,
                 ),
-                row=ar_id+1,
+                row=ar_id + 1,
                 col=idx + 1,
             )
             fig.add_trace(
                 go.Bar(
-                    x=fig2['data'][2]['x'],
-                    y=fig2['data'][2]['y'],
-                    name=fig2['data'][2]['name'],
-                    marker = fig2['data'][2]['marker'],
+                    x=fig2["data"][2]["x"],
+                    y=fig2["data"][2]["y"],
+                    name=fig2["data"][2]["name"],
+                    marker=fig2["data"][2]["marker"],
                     showlegend=show_legend,
                 ),
-                row=ar_id+1,
+                row=ar_id + 1,
                 col=idx + 1,
             )
             fig.add_trace(
                 go.Bar(
-                    x=fig2['data'][3]['x'],
-                    y=fig2['data'][3]['y'],
-                    name=fig2['data'][3]['name'],
-                    marker = fig2['data'][3]['marker'],
+                    x=fig2["data"][3]["x"],
+                    y=fig2["data"][3]["y"],
+                    name=fig2["data"][3]["name"],
+                    marker=fig2["data"][3]["marker"],
                     showlegend=show_legend,
                 ),
-                row=ar_id+1,
+                row=ar_id + 1,
                 col=idx + 1,
             )
             fig.add_trace(
                 go.Bar(
-                    x=fig2['data'][4]['x'],
-                    y=fig2['data'][4]['y'],
-                    name=fig2['data'][4]['name'],
-                    marker = fig2['data'][4]['marker'],
+                    x=fig2["data"][4]["x"],
+                    y=fig2["data"][4]["y"],
+                    name=fig2["data"][4]["name"],
+                    marker=fig2["data"][4]["marker"],
                     showlegend=show_legend,
                 ),
-                row=ar_id+1,
+                row=ar_id + 1,
                 col=idx + 1,
             )
     fig.update_layout(
@@ -153,6 +168,7 @@ def plot(args):
         )
     )
     fig.write_image(args.output, scale=2)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

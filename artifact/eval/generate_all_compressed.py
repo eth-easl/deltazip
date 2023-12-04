@@ -21,7 +21,8 @@ FORCE = False
 PRINT_JOB = True
 include_sparse_gpt = True
 include_fmzip = False
-keywords = ['2b0s', '2b0.75s', '4b0s', '4b0.75s']
+keywords = ["2b0s", "2b0.75s", "4b0s", "4b0.75s"]
+
 
 def render_job(
     base_model, target_model_dir, task, step, is_delta, config, fast_tokenizer
@@ -34,9 +35,14 @@ def render_job(
     )
     job = None
     if (is_delta and include_fmzip) or (not is_delta and include_sparse_gpt):
-        if not os.path.exists(output_dir) or FORCE or any([keyword in output_dir for keyword in keywords]):
+        if (
+            not os.path.exists(output_dir)
+            or FORCE
+            or any([keyword in output_dir for keyword in keywords])
+        ):
             job = f"python cli/ni_eval.py --base-model {hf_id[base_model]} --target-model {target_model_dir} {'--delta subtract' if is_delta else ''} --input-file {input_file} --input-field input --max-length 64 --output-file {output_dir} {'--fast-tokenizer' if fast_tokenizer else ''}"
     return job
+
 
 if __name__ == "__main__":
     models = os.listdir(compressed_model_dir)

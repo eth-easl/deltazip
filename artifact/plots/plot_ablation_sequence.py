@@ -9,32 +9,41 @@ bsz = 2
 tokens = [64, 128, 256, 512, 1024, 2048]
 plot_data = []
 provider_mapping = {
-    'FiniCompress<br>bsz=1<br>AS, Lossy': 'AS, Lossy, bsz=1',
-    'FiniCompress<br>bsz=2<br>MMA, Lossy': 'MMA, Lossy, bsz=2',
+    "FiniCompress<br>bsz=1<br>AS, Lossy": "AS, Lossy, bsz=1",
+    "FiniCompress<br>bsz=2<br>MMA, Lossy": "MMA, Lossy, bsz=2",
 }
 for token in tokens:
-    with open(f"artifact/results/ablation/sequence/bsz=2/{token}tokens.json", "r") as fp:
+    with open(
+        f"artifact/results/ablation/sequence/bsz=2/{token}tokens.json", "r"
+    ) as fp:
         results = json.load(fp)
-    # calculate 
+    # calculate
     for item in results:
-        provider = get_provider_name(item['system'])
+        provider = get_provider_name(item["system"])
         provider = provider_mapping[provider]
         total_jobs = len(item["results"])
-        last_job = max(item["results"], key=lambda x: x["time_elapsed"]+x['relative_start_at'])
-        throughput = (
-            total_jobs
-            / (last_job["time_elapsed"] + last_job['relative_start_at'])
+        last_job = max(
+            item["results"], key=lambda x: x["time_elapsed"] + x["relative_start_at"]
+        )
+        throughput = total_jobs / (
+            last_job["time_elapsed"] + last_job["relative_start_at"]
         )
         plot_data.append(
             {"tokens": token, "provider": provider, "throughput": throughput}
         )
 
 df = pd.DataFrame(plot_data)
-fig = px.line(df, x="tokens", y="throughput", color='provider')
+fig = px.line(df, x="tokens", y="throughput", color="provider")
 fig.update_traces(line=dict(width=4))
 
-fig.update_xaxes(title_text="Output Sequence Length (tokens)", title_font=dict(size=24), tickfont_size=22)
-fig.update_yaxes(title_text="Throughput (requests/s)", title_font=dict(size=24), tickfont_size=22)
+fig.update_xaxes(
+    title_text="Output Sequence Length (tokens)",
+    title_font=dict(size=24),
+    tickfont_size=22,
+)
+fig.update_yaxes(
+    title_text="Throughput (requests/s)", title_font=dict(size=24), tickfont_size=22
+)
 
 fig.update_layout(
     width=1200,
@@ -54,5 +63,5 @@ fig.update_layout(
     title_font_color="black",
     legend_title_font_color="black",
 )
-fig.update_xaxes(type='log')
+fig.update_xaxes(type="log")
 fig.write_image("artifact/results/images/3b_ablation/sequence.png", scale=2)

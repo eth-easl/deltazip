@@ -59,7 +59,6 @@ def plot(args):
                 "Breakdown": "Inference",
             }
         )
-
     df = pd.DataFrame(plot_data)
     fig = px.bar(df, x="provider", y="time_elapsed", color="Breakdown")
     fig.update_layout(

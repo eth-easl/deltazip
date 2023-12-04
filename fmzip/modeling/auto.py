@@ -62,7 +62,6 @@ class AutoFMZipModelForCausalLM:
             **model_init_kwargs
         )
 
-
     @classmethod
     def from_compressed(
         cls,

@@ -613,9 +613,10 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         """load lora fine-tuned model"""
         if not torch.cuda.is_available():
             raise EnvironmentError("Load LoRA model requires CUDA available.")
+
         def skip(*args, **kwargs):
             pass
-            
+
         torch.nn.init.kaiming_uniform_ = skip
         torch.nn.init.uniform_ = skip
         torch.nn.init.normal_ = skip
@@ -627,7 +628,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         model_init_kwargs["torch_dtype"] = torch.float16
         model_init_kwargs["trust_remote_code"] = True
         torch.cuda.empty_cache()
-        
 
     @classmethod
     def from_pretrained(
