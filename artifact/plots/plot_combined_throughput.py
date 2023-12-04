@@ -60,7 +60,6 @@ def plot(args):
                     {"tokens": num_token, "provider": provider, "throughput": throughput, "order": order}
                 )
             agg_data = pd.DataFrame(agg_data)
-
             agg_data = agg_data.sort_values(by=["order"], ascending=True)
             print(agg_data)
             fig2 = px.bar(
