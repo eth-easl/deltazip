@@ -6,7 +6,7 @@ import plotly.express as px
 from artifact.plots.utils import get_provider_name, get_provider_order
 
 bsz = 2
-tokens = [64, 128, 256, 512, 1024, 2048]
+tokens = [64, 128, 256, 512, 1024, 2048, 3072]
 plot_data = []
 provider_mapping = {
     "FiniCompress<br>bsz=1<br>AS, Lossy": "AS, Lossy, bsz=1",
@@ -38,23 +38,23 @@ fig.update_traces(line=dict(width=4))
 
 fig.update_xaxes(
     title_text="Output Sequence Length (tokens)",
-    title_font=dict(size=24),
-    tickfont_size=22,
+    title_font=dict(size=36),
+    tickfont_size=24,
 )
 fig.update_yaxes(
-    title_text="Throughput (requests/s)", title_font=dict(size=24), tickfont_size=22
+    title_text="Throughput (requests/s)", title_font=dict(size=36), tickfont_size=24
 )
 
 fig.update_layout(
     width=1200,
     height=600,
     title_x=0.5,
-    title_text=f"Throughput of Different Backends (bsz={bsz})",
+    title_text=f"Throughput of Different Backends",
 )
 fig.update_layout(
     title=dict(font=dict(size=36)),
     legend=dict(font=dict(size=24)),
-    legend_title=dict(font=dict(size=24)),
+    legend_title=dict(font=dict(size=28), text="Backend"),
 )
 fig.update_layout(
     font_family="Arial",
@@ -63,5 +63,14 @@ fig.update_layout(
     title_font_color="black",
     legend_title_font_color="black",
 )
+fig.update_layout(legend=dict(
+    font=dict(size=28),
+    yanchor="top",
+    y=0.99,
+    xanchor="right",
+    x=0.99,
+    bgcolor="white",
+    
+))
 fig.update_xaxes(type="log")
 fig.write_image("artifact/results/images/3b_ablation/sequence.png", scale=2)

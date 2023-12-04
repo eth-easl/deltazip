@@ -12,7 +12,17 @@ bits = [2, 4]
 tokens = [64, 128]
 ar = 0.75
 model_size = "3b"
-
+# for latency we only consider a single query, removing batched settings
+remove_settings = [
+    "FiniCompress<br>bsz=4<br>MMA, Lossy",
+    "FiniCompress<br>bsz=8<br>MMA, Lossy",
+]
+naming_map = {
+    "FiniCompress<br>bsz=1<br>MMA, Lossy": "Ours<br>MMA<br>Lossy",
+    "FiniCompress<br>bsz=1<br>AS, Lossy": "Ours<br>AS<br>Lossy",
+    "FiniCompress<br>bsz=1<br>AS, Lossless": "Ours<br>AS<br>Lossless",
+    "HuggingFace": "HF",
+}
 
 def plot(args):
     print(args)
@@ -20,10 +30,12 @@ def plot(args):
         rows=len(bits),
         cols=len(tokens),
         shared_yaxes=True,
-        subplot_titles=("2bits", "4bits"),
-        row_titles=("64tokens", "128tokens"),
+        shared_xaxes=True,
+        subplot_titles=("64 Tokens", "128 Tokens"),
+        row_titles=("2 bits", "4 bits"),
         horizontal_spacing=0.015,
-        x_title="Inference System",
+        vertical_spacing=0.05,
+        x_title="",
         y_title="Time Elapsed (s)",
     )
     for mid, bit in enumerate(bits):
@@ -39,7 +51,9 @@ def plot(args):
                 provider = item["system"]
                 num_tokens = item["gen_configs"]["min_length"]
                 provider = get_provider_name(provider)
-                res = item["results"][0]
+                # use the second query, the first may need warmup
+                # ensured the second query is not the same model as the first
+                res = item["results"][1]
                 tokenize_time = res["response"]["response"]["measure"]["tokenize_time"]
                 loading_time = res["response"]["response"]["measure"]["loading_time"]
                 prepare_time = res["response"]["response"]["measure"]["prepare_time"]
@@ -79,23 +93,32 @@ def plot(args):
                     }
                 )
             df = pd.DataFrame(plot_data)
+            df = df[~df["provider"].isin(remove_settings)]
+            df["provider"] = df["provider"].apply(lambda x: naming_map[x])
             fig2 = px.bar(df, x="provider", y="time_elapsed", color="Breakdown")
-            fig.add_trace(
-                go.Bar(
-                    x=fig2["data"][0]["x"],
-                    y=fig2["data"][0]["y"],
-                    name=fig2["data"][0]["name"],
-                    marker=fig2["data"][0]["marker"],
-                    showlegend=show_legend,
-                ),
-                row=mid + 1,
-                col=idx + 1,
-            )
+            for fig2_data in fig2["data"]:
+                fig.add_trace(
+                    go.Bar(
+                        x=fig2_data["x"],
+                        y=fig2_data["y"],
+                        name=fig2_data["name"],
+                        marker=fig2_data["marker"],
+                        showlegend=show_legend,
+                    ),
+                    row=mid + 1,
+                    col=idx + 1,
+                )
+    fig.update_layout(barmode="stack")
     fig.update_layout(
         width=1200,
         height=800,
         title_x=0.5,
-        title_text=f"SLO Attainment of Different Backends",
+        title_text=f"Latency Breakdown of Different Backends",
+    )
+    fig.update_annotations(
+        font=dict(size=28),
+        font_color="black",
+        font_family="Arial",
     )
     fig.update_layout(
         font_family="Arial",
@@ -107,19 +130,20 @@ def plot(args):
     )
     fig.update_layout(yaxis=dict(title_font=dict(size=22), tickfont_size=18))
     fig.update_annotations(
-        font_size=24,
+        font_size=28,
         font_color="black",
         font_family="Arial",
     )
+    fig.update_xaxes(title_font=dict(size=24), tickfont_size=24)
     fig.update_layout(
         legend=dict(
             orientation="h",
             entrywidth=160,
             yanchor="bottom",
-            y=-0.4,
+            y=-0.3,
             xanchor="left",
-            x=0,
-            font=dict(size=24),
+            x=0.1,
+            font=dict(size=28),
         )
     )
     fig.write_image(args.output, scale=2)
