@@ -51,9 +51,10 @@ def plot(args):
                         }
                     )
                 total_jobs = len(item["results"])
+                last_job = max(item["results"], key=lambda x: x["time_elapsed"]+x['relative_start_at'])
                 throughput = (
                     total_jobs
-                    / max(item["results"], key=lambda x: x["time_elapsed"])["time_elapsed"]
+                    / (last_job["time_elapsed"] + last_job['relative_start_at'])
                 )
                 agg_data.append(
                     {"tokens": num_token, "provider": provider, "throughput": throughput, "order": order}
