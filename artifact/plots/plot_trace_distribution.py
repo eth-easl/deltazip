@@ -65,6 +65,7 @@ fig.update_layout(
         "font_size": 28,
     }
 )
+
 fig.update_xaxes(
     title_text="Time",
     tickangle=30,
@@ -86,9 +87,10 @@ fig.update_layout(
     legend_title_font_color="black",
 )
 fig.update_layout(
+    font=dict(size=24),
     title=dict(font=dict(size=28)),
-    legend=dict(font=dict(size=20)),
-    legend_title=dict(font=dict(size=20)),
+    legend=dict(font=dict(size=28)),
+    legend_title=dict(font=dict(size=28)),
 )
 fig.update_layout(
     width=1200, height=1000, title_x=0.5, margin=dict(l=40, r=40, t=80, b=80)
