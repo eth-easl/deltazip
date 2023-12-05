@@ -5,11 +5,10 @@ import pandas as pd
 import plotly.figure_factory as ff
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
+import plotly.express as px
 
 def plot(args):
     print(args)
-
     fig = make_subplots(
         rows=1,
         cols=2,
@@ -19,10 +18,10 @@ def plot(args):
         x_title="Score",
         y_title="Percentage of Responses",
     )
+    plot_df = []
     for i, filename in enumerate(
         [x for x in os.listdir(args.input_file) if x.endswith(".jsonl")]
     ):
-        plot_df = []
         with open(os.path.join(args.input_file, filename), "r") as f:
             data = [json.loads(line) for line in f.readlines()]
         title = f"Score Distribution 2bits/50% Sparsity<br>Compression Ratio: {data[0]['compression_ratio']}"
@@ -30,80 +29,15 @@ def plot(args):
             for answer in datum["answers"]:
                 plot_df.append(
                     {
+                        "model": filename.replace(".jsonl", ""),
                         "source": answer["from"],
                         "score": answer["score"],
                     }
                 )
-        df = pd.DataFrame(plot_df)
-        fmzip_score = df[df["source"] == "fmzip"]["score"].to_numpy()
-        original_score = df[df["source"] == "original"]["score"].to_numpy()
-        avg_fmzip_score = fmzip_score.mean()
-        avg_original_score = original_score.mean()
-        group_labels = ["FMZip", "Original"]
-        score_dist_data = [fmzip_score, original_score]
-        fig2 = ff.create_distplot(
-            score_dist_data, group_labels, bin_size=1, show_rug=False
-        )
-        fig.add_trace(
-            go.Histogram(
-                fig2["data"][0],
-                marker_color="green",
-                showlegend=False if i == 0 else True,
-            ),
-            row=1,
-            col=i + 1,
-        )
-
-        fig.add_trace(
-            go.Histogram(
-                fig2["data"][1],
-                marker_color="red",
-                showlegend=False if i == 0 else True,
-            ),
-            row=1,
-            col=i + 1,
-        )
-
-        fig.add_trace(
-            go.Scatter(
-                fig2["data"][2], line=dict(color="green", width=3), showlegend=False
-            ),
-            row=1,
-            col=i + 1,
-        )
-
-        fig.add_trace(
-            go.Scatter(
-                fig2["data"][3], line=dict(color="red", width=3), showlegend=False
-            ),
-            row=1,
-            col=i + 1,
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=[avg_fmzip_score, avg_fmzip_score],
-                y=[0, 0.5],
-                mode="lines",
-                name="FMZip Average",
-                line=dict(color="green", width=3, dash="dash"),
-                showlegend=False if i == 0 else True,
-            ),
-            row=1,
-            col=i + 1,
-        )
-
-        fig.add_trace(
-            go.Scatter(
-                x=[avg_original_score, avg_original_score],
-                y=[0, 0.5],
-                mode="lines",
-                name="Original Average",
-                line=dict(color="red", width=3, dash="dash"),
-                showlegend=False if i == 0 else True,
-            ),
-            row=1,
-            col=i + 1,
-        )
+    df = pd.DataFrame(plot_df)
+    print(df)
+    fig = px.violin(df, y="score", x="model", color="source", box=True, points="all",
+          hover_data=df.columns)
 
     fig.update_layout(
         font_family="Arial",
