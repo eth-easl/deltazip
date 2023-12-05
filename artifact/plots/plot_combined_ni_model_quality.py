@@ -90,6 +90,22 @@ def plot(args):
     fig.update_xaxes(title=dict(font=dict(size=28)), tickfont_size=24, type="log")
     fig.update_yaxes(title=dict(font=dict(size=28)), tickfont_size=24)
     fig.update_layout(width=1200, height=800, title_x=0.5, title_text=f"Base Model")
+    # set background color to white, with grid lines
+    fig.update_layout(plot_bgcolor="white")
+    fig.update_xaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey'
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey'
+    )
     fig.update_layout(
         legend=dict(
             orientation="h",

@@ -58,6 +58,21 @@ def plot(args):
     fig.update_layout(
         width=1200, height=800, title_x=0.5, title_text=title
     )
+    fig.update_layout(plot_bgcolor="white")
+    fig.update_xaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey'
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey'
+    )
     # put title a bit up
     fig.update_layout(
         legend=dict(

@@ -35,3 +35,21 @@ def get_provider_order(provider):
             and provider["args"].get("lossless_only", True) == True
         ):
             return str(3)
+
+def set_plotly_theme(fig):
+    fig.update_layout(plot_bgcolor="white")
+    fig.update_xaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey'
+    )
+    fig.update_yaxes(
+        mirror=True,
+        ticks='outside',
+        showline=True,
+        linecolor='black',
+        gridcolor='lightgrey'
+    )
+    return fig

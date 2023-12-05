@@ -3,7 +3,7 @@ import json
 import pandas as pd
 import plotly.express as px
 
-from artifact.plots.utils import get_provider_name, get_provider_order
+from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme
 
 bsz = 2
 tokens = [64, 128, 256, 512, 1024, 2048, 3072]
@@ -74,4 +74,5 @@ fig.update_layout(legend=dict(
     
 ))
 fig.update_xaxes(type="log")
+fig = set_plotly_theme(fig)
 fig.write_image("artifact/results/images/sequence.png", scale=2)

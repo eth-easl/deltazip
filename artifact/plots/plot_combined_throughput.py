@@ -6,16 +6,14 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, get_provider_order
+from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme
 
 tokens = [64, 128, 256, 512]
 bits = 4
 model_size = "3b"
 ars = [0.75, 3, 6]
 
-
 def plot(args):
-    print(args)
     fig = make_subplots(
         rows=len(ars),
         cols=len(tokens),
@@ -26,8 +24,8 @@ def plot(args):
             r"$\huge{\lambda=6}$",
         ],
         subplot_titles=("64 Tokens", "128 Tokens", "256 Tokens", "512 Tokens"),
-        horizontal_spacing=0.04,
-        vertical_spacing=0.05,
+        horizontal_spacing=0.06,
+        vertical_spacing=0.04,
         x_title="Inference System",
         y_title="Throughput (queries/s)",
         row_heights=[0.333, 0.333, 0.333],
@@ -73,7 +71,6 @@ def plot(args):
                 )
             agg_data = pd.DataFrame(agg_data)
             agg_data = agg_data.sort_values(by=["order"], ascending=True)
-            print(agg_data)
             fig2 = px.bar(
                 agg_data,
                 x="order",
@@ -167,6 +164,7 @@ def plot(args):
             font=dict(size=24),
         )
     )
+    fig = set_plotly_theme(fig)
     fig.write_image(args.output, scale=2)
 
 
