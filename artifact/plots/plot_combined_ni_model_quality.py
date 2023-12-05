@@ -5,13 +5,16 @@ import pandas as pd
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+from plotly.validators.scatter.marker import SymbolValidator
 
 model_mapping = {
     "pythia-2.8b-deduped": "Pythia 2.8b Deduped",
     "open_llama_3b_v2": "OpenLlama 3B V2",
 }
 project_name_mapping = {"sparsegpt": "SparseGPT", "fmzip": "FiniCompress"}
-remove_tasks = ["NI-227"]
+poi_tasks = ["NI-151", "NI-372", "NI-380", "NI-1308"]
+
+raw_symbols = SymbolValidator().values
 
 
 def plot(args):
@@ -33,13 +36,16 @@ def plot(args):
         sub_df["task_name"] = sub_df["task"].apply(
             lambda x: x.split("_")[0].replace("task", "NI-")
         )
-        sub_df = sub_df[~sub_df["task_name"].isin(remove_tasks)]
+        sub_df = sub_df[sub_df["task_name"].isin(poi_tasks)]
         sub_df["method"] = sub_df["method"].apply(lambda x: project_name_mapping[x])
+        symbols = ['square', 'circle', 'diamond', 'cross']
         fig2 = px.line(
             sub_df,
             y="eval_res",
             x="compression ratio",
+            symbol='task_name',
             color="task_name",
+            symbol_sequence=symbols,
             line_dash="method",
             markers=True,
         )
@@ -48,13 +54,14 @@ def plot(args):
                 go.Scatter(
                     x=fig2_data["x"],
                     y=fig2_data["y"],
-                    name=fig2_data["name"],
+                    name=fig2_data["name"].split(",")[0],
                     line=dict(
                         dash="solid" if "FiniCompress" in fig2_data["name"] else "dash",
                         color=fig2_data["line"]["color"],
                     ),
+                    marker=fig2_data["marker"],
                     mode="lines+markers",
-                    showlegend=True if mid == 0 else False,
+                    showlegend=True if mid == 0 and "FiniCompress" in fig2_data["name"] else False,
                 ),
                 row=1,
                 col=mid + 1,
@@ -65,7 +72,7 @@ def plot(args):
         font_family="Arial",
     )
     # set xaxes to be log scale
-    fig.update_traces(line=dict(width=6))
+    fig.update_traces(line=dict(width=5))
 
     fig.update_traces(marker={"size": 15})
     fig.update_layout(
@@ -83,6 +90,17 @@ def plot(args):
     fig.update_xaxes(title=dict(font=dict(size=28)), tickfont_size=24, type="log")
     fig.update_yaxes(title=dict(font=dict(size=28)), tickfont_size=24)
     fig.update_layout(width=1200, height=800, title_x=0.5, title_text=f"Base Model")
+    fig.update_layout(
+        legend=dict(
+            orientation="h",
+            entrywidth=120,
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="left",
+            x=0.2,
+            font=dict(size=24),
+        ),
+    )
     fig.write_image(args.output, scale=2)
 
 
