@@ -13,7 +13,6 @@ time_grid = []
 for h in range(0, 24):
     for m in range(0, 60, timewindow):
         time_grid.append(f"{h:02d}:{m:02d}")
-print(time_grid)
 for d in ds["train"]:
     time = datetime.fromtimestamp(d["tstamp"])
     # only keep the minute
@@ -58,7 +57,7 @@ fig = px.imshow(
     new_df,
     x=new_df.columns,
     y=new_df.index,
-    color_continuous_scale="greys",
+    color_continuous_scale="inferno_r",
     aspect="auto",
 )
 fig.update_layout(

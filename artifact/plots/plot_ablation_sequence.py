@@ -11,6 +11,7 @@ plot_data = []
 provider_mapping = {
     "FiniCompress<br>bsz=1<br>AS, Lossy": "AS, Lossy, bsz=1",
     "FiniCompress<br>bsz=2<br>MMA, Lossy": "MMA, Lossy, bsz=2",
+    "FiniCompress<br>bsz=2<br>MMA, Lossy, Triton": "MMA, Lossy, bsz=2, Triton",
 }
 for token in tokens:
     with open(
@@ -73,4 +74,4 @@ fig.update_layout(legend=dict(
     
 ))
 fig.update_xaxes(type="log")
-fig.write_image("artifact/results/images/3b_ablation/sequence.png", scale=2)
+fig.write_image("artifact/results/images/sequence.png", scale=2)
