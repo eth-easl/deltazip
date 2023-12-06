@@ -12,7 +12,7 @@ model_mapping = {
     "open_llama_3b_v2": "OpenLlama 3B V2",
 }
 project_name_mapping = {"sparsegpt": "SparseGPT", "fmzip": "FiniCompress"}
-poi_tasks = ["NI-151", "NI-372", "NI-380", "NI-1308"]
+poi_tasks = ["NI-151", "NI-380", "NI-1308"]
 
 raw_symbols = SymbolValidator().values
 

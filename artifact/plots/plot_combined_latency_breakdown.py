@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, get_provider_order
+from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme
 
 bits = [2, 4]
 tokens = [64, 128]
@@ -135,6 +135,7 @@ def plot(args):
         font_family="Arial",
     )
     fig.update_xaxes(title_font=dict(size=24), tickfont_size=24)
+    fig = set_plotly_theme(fig)
     fig.update_layout(
         legend=dict(
             orientation="h",

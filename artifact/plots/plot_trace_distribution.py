@@ -62,22 +62,20 @@ fig = px.imshow(
 )
 fig.update_layout(
     title={
-        "text": f"# of Requests for Different Models per {timewindow} Minutes",
         "xanchor": "center",
         "x": 0.5,
         "font_size": 28,
     }
 )
-
 fig.update_xaxes(
-    title_text="Time",
+    title_text="",
     tickangle=30,
     title_standoff=25,
     title_font=dict(size=28),
     tickfont=dict(size=26),
 )
 fig.update_yaxes(
-    title_text="Model",
+    title_text="",
     title_standoff=25,
     title_font=dict(size=28),
     tickfont=dict(size=24),
@@ -98,4 +96,4 @@ fig.update_layout(
 fig.update_layout(
     width=1200, height=1000, title_x=0.5, margin=dict(l=40, r=40, t=80, b=80)
 )
-fig.write_image("artifact/results/images/trace.png", scale=2)
+fig.write_image("artifact/results/images/trace.png", scale=4)

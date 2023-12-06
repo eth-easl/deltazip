@@ -33,10 +33,12 @@ for token in tokens:
             {"tokens": token, "provider": provider, "throughput": throughput}
         )
 
+symbols = ['square', 'circle', 'diamond', 'cross']
 df = pd.DataFrame(plot_data)
-fig = px.line(df, x="tokens", y="throughput", color="provider")
-fig.update_traces(line=dict(width=4))
+fig = px.line(df, x="tokens", y="throughput", color="provider", markers=True, symbol="provider", symbol_sequence=symbols)
 
+fig.update_traces(line=dict(width=5))
+fig.update_traces(marker={"size": 20})
 fig.update_xaxes(
     title_text="Output Sequence Length (tokens)",
     title_font=dict(size=36),
