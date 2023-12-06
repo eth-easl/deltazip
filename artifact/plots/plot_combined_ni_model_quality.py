@@ -6,7 +6,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 from plotly.validators.scatter.marker import SymbolValidator
-
+from artifact.plots.utils import set_plotly_theme, set_font
 model_mapping = {
     "pythia-2.8b-deduped": "Pythia 2.8b Deduped",
     "open_llama_3b_v2": "OpenLlama 3B V2",
@@ -24,7 +24,7 @@ def plot(args):
         rows=1,
         cols=2,
         shared_yaxes=True,
-        subplot_titles=("OpenLlama 3B V2", "Pythia 2.8b Deduped"),
+        subplot_titles=("OpenLlama-3B-V2", "Pythia-2.8b-deduped"),
         horizontal_spacing=0.015,
         x_title="Compression Ratio (log-scale)",
         y_title="Downstream Accuracy",
@@ -67,13 +67,15 @@ def plot(args):
                 col=mid + 1,
             )
     fig.update_annotations(
-        font=dict(size=26),
+        font=dict(size=32),
         font_color="black",
         font_family="Arial",
     )
+    fig["layout"]["annotations"][2]['yshift'] = -50
+    fig["layout"]["annotations"][3]['xshift'] = -50
+    
     # set xaxes to be log scale
     fig.update_traces(line=dict(width=5))
-
     fig.update_traces(marker={"size": 15})
     fig.update_layout(
         font_family="Arial",
@@ -87,36 +89,22 @@ def plot(args):
         legend=dict(font=dict(size=24)),
         legend_title=dict(font=dict(size=24)),
     )
-    fig.update_xaxes(title=dict(font=dict(size=28)), tickfont_size=24, type="log")
-    fig.update_yaxes(title=dict(font=dict(size=28)), tickfont_size=24)
-    fig.update_layout(width=1200, height=800, title_x=0.5, title_text=f"Base Model")
+    fig.update_xaxes(type="log")
+    fig.update_layout(width=1250, height=800, title_x=0.5, title_text=f"Base Model")
     # set background color to white, with grid lines
-    fig.update_layout(plot_bgcolor="white")
-    fig.update_xaxes(
-        mirror=True,
-        ticks='outside',
-        showline=True,
-        linecolor='black',
-        gridcolor='lightgrey'
-    )
-    fig.update_yaxes(
-        mirror=True,
-        ticks='outside',
-        showline=True,
-        linecolor='black',
-        gridcolor='lightgrey'
-    )
     fig.update_layout(
         legend=dict(
             orientation="h",
             entrywidth=120,
             yanchor="bottom",
-            y=-0.2,
+            y=-0.25,
             xanchor="left",
             x=0.2,
             font=dict(size=24),
         ),
     )
+    fig = set_font(fig)
+    fig = set_plotly_theme(fig)
     fig.write_image(args.output, scale=2)
 
 

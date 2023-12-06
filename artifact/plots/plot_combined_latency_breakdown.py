@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme
+from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme, set_font
 
 bits = [2, 4]
 tokens = [64, 128]
@@ -112,8 +112,6 @@ def plot(args):
     fig.update_layout(
         width=1200,
         height=800,
-        title_x=0.5,
-        title_text=f"Latency Breakdown of Different Backends",
     )
     fig.update_annotations(
         font=dict(size=28),
@@ -135,18 +133,19 @@ def plot(args):
         font_family="Arial",
     )
     fig.update_xaxes(title_font=dict(size=24), tickfont_size=24)
-    fig = set_plotly_theme(fig)
     fig.update_layout(
         legend=dict(
             orientation="h",
             entrywidth=160,
             yanchor="bottom",
-            y=-0.3,
+            y=-0.4,
             xanchor="left",
             x=0.1,
             font=dict(size=28),
         )
     )
+    fig = set_plotly_theme(fig)
+    fig = set_font(fig)
     fig.write_image(args.output, scale=2)
 
 

@@ -6,9 +6,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme
+from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme, set_font
 
-tokens = [64, 128, 256, 512]
+tokens = [64, 256, 512]
 bits = 4
 model_size = "3b"
 ars = [0.75, 3, 6]
@@ -23,10 +23,10 @@ def plot(args):
             r"$\huge{\lambda=3}$",
             r"$\huge{\lambda=6}$",
         ],
-        subplot_titles=("64 Tokens", "128 Tokens", "256 Tokens", "512 Tokens"),
-        horizontal_spacing=0.06,
+        subplot_titles=("64 Tokens", "256 Tokens", "512 Tokens"),
+        horizontal_spacing=0.08,
         vertical_spacing=0.04,
-        x_title="Inference System",
+        x_title="",
         y_title="Throughput (queries/s)",
         row_heights=[0.333, 0.333, 0.333],
     )
@@ -43,6 +43,8 @@ def plot(args):
             for item in results:
                 provider = item["system"]
                 provider = get_provider_name(provider)
+                provider = provider.replace("FiniCompress", "Ours")
+                provider = provider.replace("HuggingFace", "HF")
                 order = get_provider_order(item["system"])
                 for res in item["results"]:
                     plot_data.append(
@@ -132,12 +134,13 @@ def plot(args):
                 row=ar_id + 1,
                 col=idx + 1,
             )
+    fig["layout"]["annotations"][-1]['xshift'] = -50
     fig.update_layout(
         width=1200,
         height=1200,
         title_x=0.5,
         title_y=1,
-        title_text=f"Throughput of Different Backends",
+        title_text=f"",
         title=dict(font=dict(size=36)),
         legend_title=dict(font=dict(size=16)),
         font_family="Arial",
@@ -149,23 +152,26 @@ def plot(args):
     fig.update_xaxes(showticklabels=False, title_font=dict(size=28), tickfont_size=24)
     fig.update_yaxes(showticklabels=True, title_font=dict(size=20), tickfont_size=20)
     fig.update_annotations(
-        font=dict(size=28),
+        font=dict(size=30),
         font_color="black",
         font_family="Arial",
     )
+    print(fig)
+    # enlarge the legend marker
     fig.update_layout(
         legend=dict(
             orientation="h",
-            entrywidth=160,
+            entrywidth=150,
             yanchor="bottom",
-            y=-0.2,
+            y=-0.18,
             xanchor="left",
             x=0,
-            font=dict(size=24),
+            font=dict(size=28),
         )
     )
     fig = set_plotly_theme(fig)
-    fig.write_image(args.output, scale=2)
+    fig = set_font(fig)
+    fig.write_image(args.output, scale=4)
 
 
 if __name__ == "__main__":

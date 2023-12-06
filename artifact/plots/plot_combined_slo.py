@@ -6,9 +6,9 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, set_plotly_theme
+from artifact.plots.utils import get_provider_name, set_plotly_theme, set_font
 
-tokens = [64, 128, 256, 512]
+tokens = [64, 256, 512]
 bits = 4
 model_size = "3b"
 ars = [0.75, 3, 6]
@@ -20,7 +20,7 @@ def plot(args):
         rows=len(ars),
         cols=len(tokens),
         shared_yaxes=True,
-        subplot_titles=("64 Tokens", "128 Tokens", "256 Tokens", "512 Tokens"),
+        subplot_titles=("64 Tokens", "256 Tokens", "512 Tokens"),
         horizontal_spacing=0.015,
         vertical_spacing=0.05,
         row_titles=[
@@ -135,7 +135,6 @@ def plot(args):
     fig.update_traces(line=dict(width=4))
     fig.update_xaxes(title_font=dict(size=28), tickfont_size=24)
     fig.update_yaxes(title_font=dict(size=28), tickfont_size=24)
-    fig = set_plotly_theme(fig)
     fig.update_layout(
         width=1200,
         height=1200,
@@ -158,6 +157,8 @@ def plot(args):
             font=dict(size=24),
         ),
     )
+    fig = set_plotly_theme(fig)
+    fig = set_font(fig)
     fig.write_image(args.output, scale=6)
 
 

@@ -88,9 +88,6 @@ def plot(args):
         )
     )
     fig.write_image("artifact/results/images/chat_quality.png", scale=2)
-    # os.system(
-    #     "convert artifact/results/images/chat_quality.png -trim artifact/results/images/chat_quality.pdf"
-    # )
 
 
 if __name__ == "__main__":
