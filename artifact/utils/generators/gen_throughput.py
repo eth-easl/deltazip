@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from artifact.utils.generators.arrival import PoissonProcess
 
-to_eval_models = [f".cache/raw_models/openllama-3b-chat-{i}" for i in range(0, 10)]
+to_eval_models = [f".cache/raw_models/openllama-3b-chat-{i}" for i in range(0, 20)]
 # to_eval_models = ["openlm-research/open_llama_3b_v2"] + to_eval_models
 
 
@@ -24,10 +24,6 @@ def get_dialogs():
     for idx, item in enumerate(trace):
         all_dialogs.append(format_openllama(item["conversation_a"][0]["content"]))
     return all_dialogs
-
-
-def pick_model(idx):
-    trace = datasets.load_dataset("lmsys/chatbot_arena_conversations")["train"]
 
 
 def prepare_poisson(args):

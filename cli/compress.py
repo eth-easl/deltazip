@@ -2,16 +2,15 @@ import os
 import json
 import torch
 import argparse
-from typing import Union
 from transformers import AutoTokenizer
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
-from fmzip.utils.delta_utils import subtract, xor
 
 
 def main(args):
     print(args)
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model, use_fast=args.fast_tokenizer)
-
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.base_model, use_fast=args.fast_tokenizer
+    )
     compress_config = BaseCompressionConfig(
         bits=args.bits,
         sparsity=args.sparsity,
@@ -33,7 +32,6 @@ def main(args):
             args.base_model, compress_config=compress_config, torch_dtype=torch.float16
         )
         base_model.requires_grad_(False)
-        base_model = base_model.to(torch.device("cuda"))
     torch.cuda.empty_cache()
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
@@ -41,6 +39,11 @@ def main(args):
     if args.n_samples <= 0:
         examples = examples
     else:
+        if args.shuffle_dataset:
+            import random
+
+            random.seed(42)
+            random.shuffle(examples)
         examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
     if args.base_model != "" and args.delta != "":
@@ -56,6 +59,18 @@ def main(args):
         )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
+    # for weights that are not compressed, we calculate delta afterward compression
+    if args.base_model != "" and args.delta != "":
+        compressed_modules = []
+        for x in base_model.inside_layer_modules:
+            compressed_modules.extend(x)
+        for name, param in target_model.named_parameters():
+            if "bias" in name or all(
+                [modules not in name for modules in compressed_modules]
+            ):
+                target_model.state_dict()[name].copy_(
+                    param - base_model.state_dict()[name]
+                )
     target_model.save_compressed(args.outdir)
 
 
@@ -87,5 +102,6 @@ if __name__ == "__main__":
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     parser.add_argument("--fast-tokenizer", action="store_true")
+    parser.add_argument("--shuffle-dataset", action="store_true")
     args = parser.parse_args()
     main(args)

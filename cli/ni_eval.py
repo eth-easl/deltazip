@@ -6,6 +6,7 @@ from loguru import logger
 from transformers import AutoTokenizer, TextGenerationPipeline
 from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
+
 def postprocess(text):
     text = text.strip()
     # if starts with \n, take the remaining
@@ -14,6 +15,7 @@ def postprocess(text):
     # if there's \n left, take the first part
     text = text.split("\n")[0]
     return text
+
 
 compress_config = BaseCompressionConfig(
     bits=4,
@@ -25,8 +27,12 @@ compress_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+
 def generate(args):
     print(args)
+    # if os.path.exists(args.output_file):
+    #     logger.info(f"Output file {args.output_file} already exists, skipping...")
+    #     return
     tokenizer = AutoTokenizer.from_pretrained(
         args.base_model, use_fast=args.fast_tokenizer
     )
@@ -49,10 +55,9 @@ def generate(args):
             compressed_modules.extend(x)
         if args.delta == "subtract":
             for name, param in base_model.model.named_parameters():
-                if any([modules in name for modules in compressed_modules]):
-                    delta_model.model.state_dict()[name].copy_(
-                        param + delta_model.model.state_dict()[name]
-                    )
+                delta_model.model.state_dict()[name].copy_(
+                    param + delta_model.model.state_dict()[name]
+                )
         delta_model = delta_model.to(torch.device("cuda"))
         with open(args.input_file, "r") as f:
             data = [json.loads(line) for line in f]
@@ -71,7 +76,7 @@ def generate(args):
             return_full_text=False,
         )
         results = []
-        
+
         for datum, output in zip(data, outputs):
             result = datum.copy()
             result["prediction"] = [postprocess(o["generated_text"]) for o in output]

@@ -2,6 +2,7 @@ import os
 import copy
 import json
 import torch
+import traceback
 import cupy as cp
 import accelerate
 import transformers
@@ -37,6 +38,7 @@ from ..nn_modules.qlinear_cuda import QuantLinear
 from fmzip.modeling._utils import fmzip_post_init
 
 triton_has_warmup = False
+NUM_DEBUG_LAYER = 5
 
 
 @dataclass
@@ -104,6 +106,7 @@ class BaseCompressionConfig(PushToHubMixin):
     prunen: int = field(default=0)
     prunem: int = field(default=0)
     group_size: int = field(default=-1)
+    group_rows: int = field(default=-1)  # deprecated, for backward compatibility
     block_size: int = field(default=128)
     damp_percent: float = field(default=0.01)
     desc_act: bool = field(default=True)
@@ -257,8 +260,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         cache_examples_on_gpu: bool = True,
         base_model=None,
     ):
-        if self.compressed:
-            raise EnvironmentError("Model is already compressed.")
+        assert self.compressed == False, "Model is already compressed."
         device_map = self.hf_device_map
         if device_map:
             for name, device in device_map.items():
@@ -343,8 +345,8 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 self.model(**example)
             except ValueError as e:
                 pass
-        layers[0] = layers[0].module
 
+        layers[0] = layers[0].module
         move_to_device(layers[0], CPU if force_layer_back_to_cpu else cur_layer_device)
         for module_name in self.outside_layer_modules:
             module = get_module_by_name(self.model, module_name)
@@ -361,6 +363,7 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         if not self.compress_config.true_sequential:
             inside_layer_modules = [sum(inside_layer_modules, [])]
         self.compressors = {}
+        compressed_ws = {}
         for i in range(len(layers)):
             layer = layers[i]
             force_layer_back_to_cpu = False
@@ -424,10 +427,13 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
                     if base_model is not None:
-                        base_weight = base_model.state_dict()[
+                        base_weight = base_model.model.state_dict()[
                             f"{self.layers_block_name}.{i}.{name}.weight"
                         ]
-                    scale, zero, g_idx, avg_loss = sparsegpt[name].fasterprune(
+                        base_weight = move_to_device(base_weight, cur_layer_device)
+                    scale, zero, g_idx, avg_loss, compressed_w = sparsegpt[
+                        name
+                    ].fasterprune(
                         sparsity=self.compress_config.sparsity,
                         prunen=self.compress_config.prunen,
                         prunem=self.compress_config.prunem,
@@ -453,7 +459,18 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                                 CPU if force_layer_back_to_cpu else cur_layer_device,
                             ),
                         )
+                        # move it back to cpu to save memory
+                        assert (
+                            f"{self.layers_block_name}.{i}.{name}" not in compressed_ws
+                        )
+
+                        compressed_ws[
+                            f"{self.layers_block_name}.{i}.{name}"
+                        ] = compressed_w.to(CPU).clone()
+
                         sparsegpt[name].free()
+                        if base_model is not None:
+                            del base_weight
 
             for j in range(num_batches):
                 layer_input = move_to_device(layer_inputs[j], cur_layer_device)
@@ -497,10 +514,31 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
             self.model = accelerate.dispatch_model(
                 self.model, device_map, offload_buffers=True
             )
+        logger.info("Compress finished... moving compressed delta back")
+        if base_model is not None:
+            for i in range(len(layers)):
+                # move compressed weights back
+                full = find_layers(layers[i])
+                for names in inside_layer_modules:
+                    subset = {n: full[n] for n in names}
+                    for name in subset:
+                        if self.compress_config.bits < 16:
+                            finetuned_weight = subset[name].weight.data
+                            delta_only = compressed_ws[
+                                f"{self.layers_block_name}.{i}.{name}"
+                            ]
+                            base_weight = base_model.model.state_dict()[
+                                f"{self.layers_block_name}.{i}.{name}.weight"
+                            ]
+                            assert torch.equal(
+                                finetuned_weight, base_weight + delta_only
+                            )
+                            subset[name].weight.data = compressed_ws[
+                                f"{self.layers_block_name}.{i}.{name}"
+                            ]
 
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
-
         torch.cuda.empty_cache()
 
     @property
@@ -565,6 +603,33 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         self.compress_config.save_pretrained(save_dir)
 
     @classmethod
+    def from_lora(
+        cls,
+        pretrained_model_name_or_path: str,
+        compress_config: BaseCompressionConfig,
+        max_memory: Optional[dict] = None,
+        **model_init_kwargs,
+    ):
+        """load lora fine-tuned model"""
+        if not torch.cuda.is_available():
+            raise EnvironmentError("Load LoRA model requires CUDA available.")
+
+        def skip(*args, **kwargs):
+            pass
+
+        torch.nn.init.kaiming_uniform_ = skip
+        torch.nn.init.uniform_ = skip
+        torch.nn.init.normal_ = skip
+        config = AutoConfig.from_pretrained(
+            pretrained_model_name_or_path, trust_remote_code=True
+        )
+        if config.model_type not in SUPPORTED_MODELS:
+            raise TypeError(f"{config.model_type} isn't supported yet.")
+        model_init_kwargs["torch_dtype"] = torch.float16
+        model_init_kwargs["trust_remote_code"] = True
+        torch.cuda.empty_cache()
+
+    @classmethod
     def from_pretrained(
         cls,
         pretrained_model_name_or_path: str,
@@ -585,7 +650,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         torch.nn.init.kaiming_uniform_ = skip
         torch.nn.init.uniform_ = skip
         torch.nn.init.normal_ = skip
-
         config = AutoConfig.from_pretrained(
             pretrained_model_name_or_path, trust_remote_code=True
         )
@@ -617,7 +681,6 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
                 dtype=model_init_kwargs["torch_dtype"],
             )
             model_init_kwargs["low_cpu_mem_usage"] = True
-
             del model
         else:
             model_init_kwargs["device_map"] = None

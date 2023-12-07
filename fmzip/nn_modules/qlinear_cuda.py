@@ -320,7 +320,6 @@ class QuantLinear(nn.Module):
                 self.infeatures, self.outfeatures, bias=self.bias is not None
             )
             linear.weight = nn.Parameter(weights.t().float())
-            # print sparsity of the weight
             if self.bias is not None:
                 linear.bias = nn.Parameter(self.bias)
 

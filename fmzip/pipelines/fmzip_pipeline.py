@@ -1,3 +1,4 @@
+import os
 import torch
 import cupy as cp
 from loguru import logger
@@ -43,19 +44,26 @@ class FMZipPipeline:
                 f"Unsupported placement strategy: {placement_strategy}, supported strategies are {placement_strategies}"
             )
         self.base_model_name = base_model
+        self.device_count = get_gpu_count()
         self.offload_base_model = offload_base_model
         self.max_num_deltas = max_num_deltas
         self.batch_size = batch_size
         self.placement_strategy = placement_strategy
         self.placement_args = placement_args
-        self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        self.hf_token = os.environ.get("HF_TOKEN", "")
+        if self.hf_token == "":
+            self.tokenizer = AutoTokenizer.from_pretrained(base_model, use_fast=True)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                base_model, use_fast=True, token=self.hf_token
+            )
         self.tokenizer.padding_side = "left"
+
         # avoid using eos_token as padding token
         # https://github.com/facebookresearch/llama/issues/380
-        # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-        self.device_count = get_gpu_count()
+        # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
         self._load_base_model()
         self.lossless_only = lossless_only
         if self.lossless_only and self.placement_strategy != "addback":
@@ -142,11 +150,23 @@ class FMZipPipeline:
         logger.info("loading base model")
         for gpu_id in range(self.device_count):
             with torch.device("cuda", gpu_id):
-                self.base_models[gpu_id] = AutoFMZipModelForCausalLM.from_pretrained(
-                    self.base_model_name,
-                    compress_config=dummy_compression_config,
-                    low_cpu_mem_usage=True,
-                )
+                if self.hf_token == "":
+                    self.base_models[
+                        gpu_id
+                    ] = AutoFMZipModelForCausalLM.from_pretrained(
+                        self.base_model_name,
+                        compress_config=dummy_compression_config,
+                        low_cpu_mem_usage=True,
+                    )
+                else:
+                    self.base_models[
+                        gpu_id
+                    ] = AutoFMZipModelForCausalLM.from_pretrained(
+                        self.base_model_name,
+                        compress_config=dummy_compression_config,
+                        low_cpu_mem_usage=True,
+                        token=self.hf_token,
+                    )
             self.base_models[gpu_id] = self.base_models[gpu_id].to(gpu_id)
         logger.info("based model loaded")
 
@@ -239,7 +259,7 @@ class FMZipPipeline:
         )
         logger.warning(f"PyTorch free memory: {free / 1e9} GB")
         logger.warning(f"PyTorch total memory: {total / 1e9} GB")
-    
+
     def _evict_deltas(self, deltas: List[str]):
         print(f"len model pool: {len(self.model_pool)}")
         if len(self.model_pool) + len(deltas) > self.max_num_deltas:
@@ -251,6 +271,7 @@ class FMZipPipeline:
             to_evict_models = sorted(req_count_loaded, key=req_count_loaded.get)[
                 : len(deltas)
             ]
+            to_evict_models = [x for x in to_evict_models if x not in deltas]
             logger.info(f"evicting {to_evict_models}")
             for delta in to_evict_models:
                 try:
@@ -282,7 +303,6 @@ class FMZipPipeline:
         if all([delta == self.base_model_name for delta in deltas]):
             for key, dmodule in self.base_models[gpu_id].named_modules():
                 setattr(dmodule, "delta", [None for delta in deltas])
-
         for key in self.key_list:
             _, target, _ = get_submodules(self.base_models[gpu_id], key)
             dmodules = []

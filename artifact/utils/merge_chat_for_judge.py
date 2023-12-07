@@ -3,10 +3,10 @@ import json
 # format:
 # {"question": "", "answers": [{"from": "fmzip", "text": ""},{"from": "orginal", "text": ""}]}
 
-with open("artifact/results/lmsys_output_vicuna_16bit.jsonl", "r") as fp:
+with open(".cache/lmsys_output_vicuna_16bit.jsonl", "r") as fp:
     full_data = [json.loads(line) for line in fp][:1000]
 
-with open("artifact/results/lmsys_output_vicuna_2bit.jsonl", "r") as fp:
+with open(".cache/lmsys_output_vicuna_2bit.jsonl", "r") as fp:
     fmzip_data = [json.loads(line) for line in fp][:1000]
 data = []
 

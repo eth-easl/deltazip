@@ -1,4 +1,4 @@
-transformers
+transformers==4.34.0
 rouge-score
 safetensors
 py7zr
@@ -17,3 +17,6 @@ parameterized
 pydantic
 accelerate
 ninja
+loguru
+datasets
+sentencepiece
