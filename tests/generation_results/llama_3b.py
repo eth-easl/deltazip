@@ -1,7 +1,7 @@
 import torch
 from loguru import logger
 from timeit import default_timer as timer
-from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
+from deltazip.pipelines.fmzip_pipeline import DeltaZipPipeline
 from deltazip.pipelines.hf_pipeline import HuggingFacePipeline
 from deltazip.utils.randomness import init_seeds
 
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     logger.info(f"time elapsed: {end - start}")
     del hf_pipeline
 
-    mpm = FMZipPipeline(
+    mpm = DeltaZipPipeline(
         "openlm-research/open_llama_3b_v2",
         batch_size=1,
         max_num_deltas=1,

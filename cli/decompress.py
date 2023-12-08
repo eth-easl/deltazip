@@ -3,7 +3,7 @@ import argparse
 from loguru import logger
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import xor_inverse, subtract_inverse
 
 
@@ -20,13 +20,13 @@ def main(args):
         damp_percent=0.02,
     )
     with torch.inference_mode():
-        base_model = AutoFMZipModelForCausalLM.from_pretrained(
+        base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config, torch_dtype=torch.float16
         )
         base_model = base_model.to(torch.device("cuda"))
         logger.info("Loading target model")
         start = timer()
-        delta_model = AutoFMZipModelForCausalLM.from_compressed(
+        delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
             args.target_model, strict=False, device="cpu", unpack=True
         )
         delta_model = delta_model.half()

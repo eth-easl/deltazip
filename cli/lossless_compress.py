@@ -4,7 +4,7 @@ import torch
 import argparse
 from typing import Union
 from transformers import AutoTokenizer
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import subtract, xor
 
 
@@ -21,7 +21,7 @@ def main(args):
         damp_percent=0.01,
     )
     print("[info] compress config:", compress_config)
-    target_model = AutoFMZipModelForCausalLM.from_pretrained(
+    target_model = AutoDeltaZipModelForCausalLM.from_pretrained(
         args.target_model, compress_config=compress_config, torch_dtype=torch.float16
     )
     target_model.requires_grad_(False)
@@ -29,7 +29,7 @@ def main(args):
         # import copy
         # target_model_copy = copy.deepcopy(target_model)
         print("[info] base model is defined, delta mode enabled")
-        base_model = AutoFMZipModelForCausalLM.from_pretrained(
+        base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config
         )
         base_model.requires_grad_(False)

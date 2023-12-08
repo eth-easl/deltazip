@@ -1,7 +1,7 @@
 from ._base import *
 
 
-class MOSSFMZipForCausalLM(BaseFMZipModelForCausalLM):
+class MOSSFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "MossBlock"
     layers_block_name = "transformer.h"
     outside_layer_modules = ["transformer.wte", "transformer.ln_f"]

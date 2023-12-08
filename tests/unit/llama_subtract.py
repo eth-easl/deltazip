@@ -1,6 +1,6 @@
 import torch
 import transformers
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import subtract_inverse, subtract
 
 base_model = "openlm-research/open_llama_3b_v2"

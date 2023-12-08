@@ -4,7 +4,7 @@ import torch
 import argparse
 from loguru import logger
 from transformers import AutoTokenizer, TextGenerationPipeline
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 
 
 def postprocess(text):
@@ -38,12 +38,12 @@ def generate(args):
     tokenizer.padding_side = "left"
     tokenizer.skip_special_tokens = False
     with torch.inference_mode():
-        base_model = AutoFMZipModelForCausalLM.from_pretrained(
+        base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config
         )
         base_model = base_model.half()
         logger.info("Loading target model")
-        delta_model = AutoFMZipModelForCausalLM.from_compressed(
+        delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
             args.target_model, strict=True, device="cpu", unpack=True
         )
         delta_model = delta_model.half()

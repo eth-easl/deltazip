@@ -1,7 +1,7 @@
 from ._base import *
 
 
-class GPT2FMZipForCausalLM(BaseFMZipModelForCausalLM):
+class GPT2FMZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "GPT2Block"
     layers_block_name = "transformer.h"
     outside_layer_modules = ["transformer.wte", "transformer.wpe", "transformer.ln_f"]

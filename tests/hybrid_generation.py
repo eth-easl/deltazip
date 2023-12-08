@@ -1,6 +1,6 @@
 # Mixed Precision Generation
-from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip.pipelines.fmzip_pipeline import DeltaZipPipeline
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import xor_inverse, subtract_inverse
 from transformers import AutoTokenizer
 import torch
@@ -23,10 +23,10 @@ def load_delta_model():
     tokenizer.pad_token_id = tokenizer.bos_token_id
     tokenizer.pad_token = tokenizer.bos_token
     tokenizer.padding_side = "left"
-    base_model = AutoFMZipModelForCausalLM.from_pretrained(
+    base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
         base_model_name, compress_config=compress_config
     )
-    delta_model = AutoFMZipModelForCausalLM.from_compressed(
+    delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
         delta, strict=False, device="cpu", unpack=True
     )
     delta_model = subtract_inverse(base_model, delta_model)
@@ -52,7 +52,7 @@ def main():
     #     )
     # del delta_model
     torch.cuda.empty_cache()
-    mpm = FMZipPipeline(base_model=base_model_name, placement_strategy="colocate")
+    mpm = DeltaZipPipeline(base_model=base_model_name, placement_strategy="colocate")
     # print("delta model results")
     # print(delta_model_results)
     print("Mixed Precision Model results")

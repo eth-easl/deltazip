@@ -8,7 +8,7 @@ from timeit import default_timer as timer
 from deltazip.modeling.llama import parallelize_llama
 from deltazip.modeling.gpt_neox import parallelize_neox
 from deltazip.pipelines.utils import get_gpu_count, get_submodules
-from deltazip import BaseCompressionConfig, AutoFMZipModelForCausalLM
+from deltazip import BaseCompressionConfig, AutoDeltaZipModelForCausalLM
 from deltazip.nn_modules.batched_qlinear import WarmupBQLForward
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
@@ -27,7 +27,7 @@ dummy_compression_config = BaseCompressionConfig(
 )
 
 
-class FMZipPipeline:
+class DeltaZipPipeline:
     def __init__(
         self,
         base_model: str,
@@ -153,7 +153,7 @@ class FMZipPipeline:
                 if self.hf_token == "":
                     self.base_models[
                         gpu_id
-                    ] = AutoFMZipModelForCausalLM.from_pretrained(
+                    ] = AutoDeltaZipModelForCausalLM.from_pretrained(
                         self.base_model_name,
                         compress_config=dummy_compression_config,
                         low_cpu_mem_usage=True,
@@ -161,7 +161,7 @@ class FMZipPipeline:
                 else:
                     self.base_models[
                         gpu_id
-                    ] = AutoFMZipModelForCausalLM.from_pretrained(
+                    ] = AutoDeltaZipModelForCausalLM.from_pretrained(
                         self.base_model_name,
                         compress_config=dummy_compression_config,
                         low_cpu_mem_usage=True,
@@ -175,7 +175,7 @@ class FMZipPipeline:
             logger.info(f"delta model {delta_model} already loaded")
             return
         logger.info(f"Loading target model {delta_model} to cuda:{device}")
-        self.model_pool[delta_model] = AutoFMZipModelForCausalLM.from_compressed(
+        self.model_pool[delta_model] = AutoDeltaZipModelForCausalLM.from_compressed(
             delta_model,
             device=device,
             unpack=True

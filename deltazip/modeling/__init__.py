@@ -1,7 +1,7 @@
 from ._base import (
     AutoCompressionConfig,
     BaseCompressionConfig,
-    BaseFMZipModelForCausalLM,
+    AutoDeltaZipModelForCausalLM,
 )
 from .auto import *
 from .bloom import *

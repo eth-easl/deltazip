@@ -1,6 +1,6 @@
 from typing import Optional, Union
 
-from ._base import BaseCompressionConfig, BaseFMZipModelForCausalLM
+from ._base import BaseCompressionConfig, BaseDeltaZipModelForCausalLM
 from ._utils import check_and_get_model_type
 from .bloom import BloomFMZipForCausalLM
 from .gpt_neox import GPTNeoXFMZipForCausalLM
@@ -22,12 +22,12 @@ FMZIP_CAUSAL_LM_MODEL_MAP = {
 }
 
 
-class AutoFMZipModelForCausalLM:
+class AutoDeltaZipModelForCausalLM:
     def __init__(self):
         raise EnvironmentError(
-            "AutoFMZipModelForCausalLM is designed to be instantiated\n"
-            "using `AutoFMZipModelForCausalLM.from_pretrained` if want to compress a pretrained model.\n"
-            "using `AutoFMZipModelForCausalLM.from_compressed` if want to inference with compressed model."
+            "AutoDeltaZipModelForCausalLM is designed to be instantiated\n"
+            "using `AutoDeltaZipModelForCausalLM.from_pretrained` if want to compress a pretrained model.\n"
+            "using `AutoDeltaZipModelForCausalLM.from_compressed` if want to inference with compressed model."
         )
 
     @classmethod
@@ -37,7 +37,7 @@ class AutoFMZipModelForCausalLM:
         compress_config: BaseCompressionConfig,
         max_memory: Optional[dict] = None,
         **model_init_kwargs
-    ) -> BaseFMZipModelForCausalLM:
+    ) -> BaseDeltaZipModelForCausalLM:
         model_type = check_and_get_model_type(pretrained_model_name_or_path)
         return FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
@@ -53,7 +53,7 @@ class AutoFMZipModelForCausalLM:
         compress_config: BaseCompressionConfig,
         max_memory: Optional[dict] = None,
         **model_init_kwargs
-    ) -> BaseFMZipModelForCausalLM:
+    ) -> BaseDeltaZipModelForCausalLM:
         model_type = check_and_get_model_type(pretrained_model_name_or_path)
         return FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_lora(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
@@ -83,7 +83,7 @@ class AutoFMZipModelForCausalLM:
         unpack: bool = False,
         use_exllama: bool = False,
         **kwargs
-    ) -> BaseFMZipModelForCausalLM:
+    ) -> BaseDeltaZipModelForCausalLM:
         model_type = check_and_get_model_type(save_dir)
         decompress_func = FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
         keywords = {
@@ -112,4 +112,4 @@ class AutoFMZipModelForCausalLM:
         )
 
 
-__all__ = ["AutoFMZipModelForCausalLM"]
+__all__ = ["AutoDeltaZipModelForCausalLM"]

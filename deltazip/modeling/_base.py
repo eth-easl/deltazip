@@ -34,7 +34,7 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 from ..nn_modules.qlinear_cuda import QuantLinear
-from deltazip.modeling._utils import fmzip_post_init
+from deltazip.modeling._utils import deltazip_post_init
 
 triton_has_warmup = False
 NUM_DEBUG_LAYER = 5
@@ -844,7 +844,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         if unexpected_keys:
             logger.debug(f"unexpected keys: {unexpected_keys}")
         model = model.to(device)
-        model = fmzip_post_init(model, use_act_order=compress_config.desc_act)
+        model = deltazip_post_init(model, use_act_order=compress_config.desc_act)
         model.eval()
         if isinstance(
             compress_config, AutoCompressionConfig

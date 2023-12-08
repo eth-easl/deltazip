@@ -1,7 +1,7 @@
 import torch
 import transformers
 from typing import List, Tuple
-from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
+from deltazip.pipelines.fmzip_pipeline import DeltaZipPipeline
 from deltazip.pipelines.hf_pipeline import HuggingFacePipeline
 
 AVAILABLE_PROVIDERS = ["hf", "fmzip"]
@@ -20,4 +20,4 @@ class TextGenerationPipeline:
                 f"Unsupported provider: {provider}, supported providers are {AVAILABLE_PROVIDERS}"
             )
         if self.provider == "fmzip":
-            self.fmzip_pipeline = FMZipPipeline(**provider_args)
+            self.fmzip_pipeline = DeltaZipPipeline(**provider_args)

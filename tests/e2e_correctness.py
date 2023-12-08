@@ -2,7 +2,7 @@ import os
 import torch
 from copy import deepcopy
 from transformers import AutoTokenizer, TextGenerationPipeline
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 
 pretraind_model = "facebook/opt-125m"
 
@@ -22,7 +22,7 @@ compress_config = BaseCompressionConfig(
     prunem=0,
 )
 
-model = AutoFMZipModelForCausalLM.from_pretrained(pretraind_model, compress_config)
+model = AutoDeltaZipModelForCausalLM.from_pretrained(pretraind_model, compress_config)
 
 model.lossy_compress(examples)
 post_compressed_model = deepcopy(model)
@@ -33,6 +33,6 @@ os.makedirs(temp_dir, exist_ok=True)
 
 model.save_compressed(temp_dir)
 
-decompressed_model = AutoFMZipModelForCausalLM.from_compressed(
+decompressed_model = AutoDeltaZipModelForCausalLM.from_compressed(
     temp_dir, unpack=True, device="cuda:0"
 )

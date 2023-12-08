@@ -3,7 +3,7 @@ import json
 import torch
 import argparse
 from transformers import AutoTokenizer
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 
 
 def main(args):
@@ -22,13 +22,13 @@ def main(args):
         sym=False,
     )
     print("[info] compress config:", compress_config)
-    target_model = AutoFMZipModelForCausalLM.from_pretrained(
+    target_model = AutoDeltaZipModelForCausalLM.from_pretrained(
         args.target_model, compress_config=compress_config, torch_dtype=torch.float16
     )
     target_model.requires_grad_(False)
     if args.base_model != "" and args.delta != "":
         print("[info] base model is defined, delta mode enabled")
-        base_model = AutoFMZipModelForCausalLM.from_pretrained(
+        base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
             args.base_model, compress_config=compress_config, torch_dtype=torch.float16
         )
         base_model.requires_grad_(False)

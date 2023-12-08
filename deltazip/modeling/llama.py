@@ -14,7 +14,7 @@ from deltazip.modeling.llama_monkey_patch import (
 )
 
 
-class LlamaFMZipForCausalLM(BaseFMZipModelForCausalLM):
+class LlamaFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "LlamaDecoderLayer"
     layers_block_name = "model.layers"
     outside_layer_modules = ["model.embed_tokens", "model.norm"]

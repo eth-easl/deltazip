@@ -1,6 +1,6 @@
 import torch
 import transformers
-from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import xor_inverse, subtract_inverse, subtract
 
 base_model = "openlm-research/open_llama_3b_v2"
@@ -18,14 +18,14 @@ with torch.inference_mode():
         damp_percent=0.02,
     )
 
-    target_model = AutoFMZipModelForCausalLM.from_pretrained(
+    target_model = AutoDeltaZipModelForCausalLM.from_pretrained(
         target_model, compress_config=compress_config
     )
     target_model = target_model.half()
     target_model = target_model.to(torch.device("cuda"))
 
     print(f"Loading delta model...")
-    delta_model = AutoFMZipModelForCausalLM.from_compressed(
+    delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
         delta_model, strict=True, device="cpu", unpack=True
     )
     delta_model = delta_model.half()

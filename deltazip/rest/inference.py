@@ -3,7 +3,7 @@ import threading
 import transformers
 from typing import List, Tuple
 from deltazip.pipelines.hf_pipeline import HuggingFacePipeline
-from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
+from deltazip.pipelines.fmzip_pipeline import DeltaZipPipeline
 
 base_model_placement_strategies = ["replication"]
 
@@ -24,7 +24,7 @@ class InferenceService:
         if backend == "hf":
             self.pipeline = HuggingFacePipeline(base_model, **backend_args)
         elif backend == "fmzip":
-            self.pipeline = FMZipPipeline(base_model=base_model, **backend_args)
+            self.pipeline = DeltaZipPipeline(base_model=base_model, **backend_args)
         self.gen_configs = gen_configs
 
     def generate(self, queries: List[Tuple], gpu_id):
