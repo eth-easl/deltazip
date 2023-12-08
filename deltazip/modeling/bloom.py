@@ -1,7 +1,7 @@
 from ._base import *
 
 
-class BloomFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
+class BloomDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "BloomBlock"
     layers_block_name = "transformer.h"
     outside_layer_modules = [
@@ -17,4 +17,4 @@ class BloomFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
     ]
 
 
-__all__ = ["BloomFMZipForCausalLM"]
+__all__ = ["BloomDeltaZipForCausalLM"]

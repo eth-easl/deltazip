@@ -51,7 +51,7 @@ def main(args):
         )
         print(tokenizer.decode(output[0], skip_special_tokens=True))
         end = timer()
-        logger.info(f"[FMZip] Total time: {end - start} seconds")
+        logger.info(f"[DeltaZip] Total time: {end - start} seconds")
 
 
 if __name__ == "__main__":

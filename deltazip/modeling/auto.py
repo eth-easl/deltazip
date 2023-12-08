@@ -2,23 +2,23 @@ from typing import Optional, Union
 
 from ._base import BaseCompressionConfig, BaseDeltaZipModelForCausalLM
 from ._utils import check_and_get_model_type
-from .bloom import BloomFMZipForCausalLM
-from .gpt_neox import GPTNeoXFMZipForCausalLM
-from .gptj import GPTJFMZipForCausalLM
-from .gpt2 import GPT2FMZipForCausalLM
-from .llama import LlamaFMZipForCausalLM
-from .moss import MOSSFMZipForCausalLM
-from .opt import OPTFMZipForCausalLM
+from .bloom import BloomDeltaZipForCausalLM
+from .gpt_neox import GPTNeoXDeltaZipForCausalLM
+from .gptj import GPTJDeltaZipForCausalLM
+from .gpt2 import GPT2DeltaZipForCausalLM
+from .llama import LlamaDeltaZipForCausalLM
+from .moss import MOSSDeltaZipForCausalLM
+from .opt import OPTDeltaZipForCausalLM
 from inspect import signature
 
-FMZIP_CAUSAL_LM_MODEL_MAP = {
-    "bloom": BloomFMZipForCausalLM,
-    "gpt_neox": GPTNeoXFMZipForCausalLM,
-    "gptj": GPTJFMZipForCausalLM,
-    "gpt2": GPT2FMZipForCausalLM,
-    "llama": LlamaFMZipForCausalLM,
-    "opt": OPTFMZipForCausalLM,
-    "moss": MOSSFMZipForCausalLM,
+DeltaZip_CAUSAL_LM_MODEL_MAP = {
+    "bloom": BloomDeltaZipForCausalLM,
+    "gpt_neox": GPTNeoXDeltaZipForCausalLM,
+    "gptj": GPTJDeltaZipForCausalLM,
+    "gpt2": GPT2DeltaZipForCausalLM,
+    "llama": LlamaDeltaZipForCausalLM,
+    "opt": OPTDeltaZipForCausalLM,
+    "moss": MOSSDeltaZipForCausalLM,
 }
 
 
@@ -39,7 +39,7 @@ class AutoDeltaZipModelForCausalLM:
         **model_init_kwargs
     ) -> BaseDeltaZipModelForCausalLM:
         model_type = check_and_get_model_type(pretrained_model_name_or_path)
-        return FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_pretrained(
+        return DeltaZip_CAUSAL_LM_MODEL_MAP[model_type].from_pretrained(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             compress_config=compress_config,
             max_memory=max_memory,
@@ -55,7 +55,7 @@ class AutoDeltaZipModelForCausalLM:
         **model_init_kwargs
     ) -> BaseDeltaZipModelForCausalLM:
         model_type = check_and_get_model_type(pretrained_model_name_or_path)
-        return FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_lora(
+        return DeltaZip_CAUSAL_LM_MODEL_MAP[model_type].from_lora(
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             compress_config=compress_config,
             max_memory=max_memory,
@@ -85,7 +85,7 @@ class AutoDeltaZipModelForCausalLM:
         **kwargs
     ) -> BaseDeltaZipModelForCausalLM:
         model_type = check_and_get_model_type(save_dir)
-        decompress_func = FMZIP_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
+        decompress_func = DeltaZip_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
         keywords = {
             key: kwargs[key]
             for key in signature(decompress_func).parameters

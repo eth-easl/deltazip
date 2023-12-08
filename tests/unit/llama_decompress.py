@@ -3,8 +3,8 @@ from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import subtract_inverse
 
 base_model = "openlm-research/open_llama_3b_v2"
-target_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
-delta_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/compressed_models/4b0s/open_llama_3b_v2/task372_synthetic_palindrome_numbers/global_step105"
+target_model = "/mnt/scratch/xiayao/cache/experiments/deltazip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
+delta_model = "/mnt/scratch/xiayao/cache/experiments/deltazip/compressed_models/4b0s/open_llama_3b_v2/task372_synthetic_palindrome_numbers/global_step105"
 
 compress_config = BaseCompressionConfig(
     bits=4,

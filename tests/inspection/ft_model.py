@@ -17,8 +17,8 @@ def get_size(start_path="."):
 finetune_task = "task112_asset_simple_sentence_identification"
 base_model = AutoModelForCausalLM.from_pretrained("openlm-research/open_llama_3b_v2")
 
-ft_model_base_path = f"/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/{finetune_task}/"
-compressed_model_path = f"/mnt/scratch/xiayao/cache/experiments/fmzip/compressed_models/3b0.75s/open_llama_3b_v2/{finetune_task}/"
+ft_model_base_path = f"/mnt/scratch/xiayao/cache/experiments/deltazip/finetuned_raw/llama-3b/{finetune_task}/"
+compressed_model_path = f"/mnt/scratch/xiayao/cache/experiments/deltazip/compressed_models/3b0.75s/open_llama_3b_v2/{finetune_task}/"
 
 steps = os.listdir(ft_model_base_path)
 print(f"step,zero_percent,compression_ratio")

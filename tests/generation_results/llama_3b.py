@@ -1,12 +1,12 @@
 import torch
 from loguru import logger
 from timeit import default_timer as timer
-from deltazip.pipelines.fmzip_pipeline import DeltaZipPipeline
+from deltazip.pipelines.deltazip_pipeline import DeltaZipPipeline
 from deltazip.pipelines.hf_pipeline import HuggingFacePipeline
 from deltazip.utils.randomness import init_seeds
 
 init_seeds(42)
-fmzip_test_data = [
+deltazip_test_data = [
     (
         "ETH Zurich is founded in ",
         "openlm-research/open_llama_3b_v2",
@@ -27,7 +27,7 @@ hf_test_data = [
     ),
 ]
 
-fmzip_test_data = fmzip_test_data * 1
+deltazip_test_data = deltazip_test_data * 1
 hf_test_data = hf_test_data * 1
 
 if __name__ == "__main__":
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     )
     start = timer()
     results = mpm.generate(
-        fmzip_test_data,
+        deltazip_test_data,
         min_length=64,
         max_new_tokens=64,
         do_sample=True,

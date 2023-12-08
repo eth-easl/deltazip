@@ -96,7 +96,9 @@ def make_quant(
         )
 
 
-def fmzip_post_init(model, use_act_order: bool, max_input_length: Optional[int] = None):
+def deltazip_post_init(
+    model, use_act_order: bool, max_input_length: Optional[int] = None
+):
     """
     The max_input_length argument is specific to the exllama backend, that requires to initialize a buffer temp_state.
     """

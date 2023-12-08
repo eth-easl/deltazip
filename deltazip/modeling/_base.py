@@ -580,7 +580,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             )
         os.makedirs(save_dir, exist_ok=True)
         self.model.to(CPU)
-        model_save_name = f"fmzip-compressed.safetensors"
+        model_save_name = f"deltazip-compressed.safetensors"
         state_dict = self.model.state_dict()
         state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
         if self.compress_config.lossless != "none":
@@ -740,7 +740,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         logger.info(f"compress config: {compress_config}")
 
         if model_basename is None:
-            model_basename = "fmzip-compressed"
+            model_basename = "deltazip-compressed"
 
         model_save_name = os.path.join(save_dir, model_basename)
         extensions = [".safetensors"]

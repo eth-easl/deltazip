@@ -799,7 +799,7 @@ def gen_model(n, m, t, bits, p, gs):
     code += pack_out(n, t, nb, tb)
     code += print_parameters(bits, n, m, t, nb, mb, tb, mu, nu, tu, unroll, p)
 
-    with open("fmzip/core/csrc/qigen/forward.h", "w") as f:
+    with open("deltazip/core/csrc/qigen/forward.h", "w") as f:
         f.write(macros())
         f.write(code)
 
@@ -876,7 +876,7 @@ def gen_and_compile(
         )
 
     # write the code to a file called forward.h
-    with open("fmzip/core/csrc/qigen/forward.h", "w") as f:
+    with open("deltazip/core/csrc/qigen/forward.h", "w") as f:
         f.write(macros())
         f.write(code)
 
@@ -917,7 +917,7 @@ def gen_and_compile(
                 "-O3",
                 "-o",
                 ".build/qigen/mmm",
-                "fmzip/core/csrc/qigen/mmm.cpp",
+                "deltazip/core/csrc/qigen/mmm.cpp",
                 "-mavx",
                 "-mfma",
                 "-mavx2",

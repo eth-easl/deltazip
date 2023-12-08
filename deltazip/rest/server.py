@@ -17,9 +17,9 @@ from deltazip.rest.profile import profile_disk_io, get_gpu_name
 app = FastAPI()
 task_queue = Queue()
 
-batch_size = int(os.environ.get("FMZIP_BATCH_SIZE", 1))
-backend = os.environ.get("FMZIP_BACKEND", "hf")
-base_model = os.environ.get("FMZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
+batch_size = int(os.environ.get("DELTAZIP_BATCH_SIZE", 1))
+backend = os.environ.get("DELTAZIP_BACKEND", "hf")
+base_model = os.environ.get("DELTAZIP_BASE_MODEL", "meta-llama/Llama-2-7b-hf")
 cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES", "0")
 num_gpus = len(cuda_visible_devices.split(","))
 

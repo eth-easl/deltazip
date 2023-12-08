@@ -6,7 +6,7 @@ initialize()
 
 
 def profile_disk_io(
-    test_file=".cache/compressed_models/bits-3/llama-2-7b-chat/fmzip-compressed.safetensors",
+    test_file=".cache/compressed_models/bits-3/llama-2-7b-chat/deltazip-compressed.safetensors",
 ):
     # run the command and get output
     subprocess.check_output(
@@ -14,7 +14,7 @@ def profile_disk_io(
     )
 
     output = subprocess.run(
-        "time dd if=.cache/compressed_models/bits-2/llama-2-7b-chat/fmzip-compressed.safetensors of=/dev/null bs=8k",
+        "time dd if=.cache/compressed_models/bits-2/llama-2-7b-chat/deltazip-compressed.safetensors of=/dev/null bs=8k",
         shell=True,
         stderr=subprocess.PIPE,
     )

@@ -8,7 +8,7 @@ losslesscompressor = LosslessCompressor(algorithm="gdeflate", device_id=0)
 tensors = {}
 
 with safe_open(
-    ".cache/compressed_models/3b-parameters/openllama-chat-1/fmzip-compressed.safetensors",
+    ".cache/compressed_models/3b-parameters/openllama-chat-1/deltazip-compressed.safetensors",
     framework="numpy",
 ) as f:
     metadata = f.metadata()

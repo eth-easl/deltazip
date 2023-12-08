@@ -1,7 +1,7 @@
 from ._base import *
 
 
-class OPTFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
+class OPTDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "OPTDecoderLayer"
     layers_block_name = "model.decoder.layers"
     outside_layer_modules = [
@@ -19,4 +19,4 @@ class OPTFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
     ]
 
 
-__all__ = ["OPTFMZipForCausalLM"]
+__all__ = ["OPTDeltaZipForCausalLM"]

@@ -100,7 +100,7 @@ def gpt_neox_attention_forward(
     return outputs
 
 
-class GPTNeoXFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
+class GPTNeoXDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "GPTNeoXLayer"
     layers_block_name = "gpt_neox.layers"
     outside_layer_modules = ["gpt_neox.embed_in", "gpt_neox.final_layer_norm"]
@@ -122,4 +122,4 @@ def parallelize_neox():
     )
 
 
-__all__ = ["GPTNeoXFMZipForCausalLM"]
+__all__ = ["GPTNeoXDeltaZipForCausalLM"]

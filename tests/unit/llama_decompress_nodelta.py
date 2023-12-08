@@ -4,8 +4,8 @@ from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import xor_inverse, subtract_inverse, subtract
 
 base_model = "openlm-research/open_llama_3b_v2"
-target_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
-delta_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/compressed_models/4b0s_nodelta/open_llama_3b_v2/task372_synthetic_palindrome_numbers/global_step105"
+target_model = "/mnt/scratch/xiayao/cache/experiments/deltazip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"
+delta_model = "/mnt/scratch/xiayao/cache/experiments/deltazip/compressed_models/4b0s_nodelta/open_llama_3b_v2/task372_synthetic_palindrome_numbers/global_step105"
 
 with torch.inference_mode():
     compress_config = BaseCompressionConfig(

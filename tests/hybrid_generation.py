@@ -1,5 +1,5 @@
 # Mixed Precision Generation
-from deltazip.pipelines.fmzip_pipeline import DeltaZipPipeline
+from deltazip.pipelines.deltazip_pipeline import DeltaZipPipeline
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 from deltazip.utils.delta_utils import xor_inverse, subtract_inverse
 from transformers import AutoTokenizer

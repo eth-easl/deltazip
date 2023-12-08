@@ -2,8 +2,6 @@ from ._const import *
 from ._utils import *
 from ._base import *
 import transformers
-from ..nn_modules.fused_llama_attn import FusedLlamaAttentionForQuantizedModel
-from ..nn_modules.fused_llama_mlp import FusedLlamaMLPForQuantizedModel
 
 from deltazip.modeling.llama_monkey_patch import (
     llama_attention_forward,
@@ -14,7 +12,7 @@ from deltazip.modeling.llama_monkey_patch import (
 )
 
 
-class LlamaFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
+class LlamaDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "LlamaDecoderLayer"
     layers_block_name = "model.layers"
     outside_layer_modules = ["model.embed_tokens", "model.norm"]
@@ -24,9 +22,6 @@ class LlamaFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
         ["mlp.up_proj", "mlp.gate_proj"],
         ["mlp.down_proj"],
     ]
-
-    fused_attn_module_type = FusedLlamaAttentionForQuantizedModel
-    fused_mlp_module_type = FusedLlamaMLPForQuantizedModel
 
 
 def parallelize_llama():
@@ -43,4 +38,4 @@ def parallelize_llama():
     transformers.models.llama.modeling_llama.LlamaModel.forward = llama_model_forward
 
 
-__all__ = ["LlamaFMZipForCausalLM"]
+__all__ = ["LlamaDeltaZipForCausalLM"]

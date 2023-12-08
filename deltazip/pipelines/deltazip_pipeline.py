@@ -63,7 +63,7 @@ class DeltaZipPipeline:
         # https://github.com/facebookresearch/llama/issues/380
         self.tokenizer.pad_token = self.tokenizer.bos_token
         self.tokenizer.pad_token_id = self.tokenizer.bos_token_id
-        # the core assumption of fmzip is that the base model is always loaded, so let's load it when initialize
+        # the core assumption of deltazip is that the base model is always loaded, so let's load it when initialize
         self._load_base_model()
         self.lossless_only = lossless_only
         if self.lossless_only and self.placement_strategy != "addback":

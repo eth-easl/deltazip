@@ -1,8 +1,7 @@
 from ._base import *
-from ..nn_modules.fused_gptj_attn import FusedGPTJAttentionForQuantizedModel
 
 
-class GPTJFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
+class GPTJDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "GPTJBlock"
     layers_block_name = "transformer.h"
     outside_layer_modules = ["transformer.wte", "transformer.ln_f"]
@@ -13,7 +12,5 @@ class GPTJFMZipForCausalLM(BaseDeltaZipModelForCausalLM):
         ["mlp.fc_out"],
     ]
 
-    fused_attn_module_type = FusedGPTJAttentionForQuantizedModel
 
-
-__all__ = ["GPTJFMZipForCausalLM"]
+__all__ = ["GPTJDeltaZipForCausalLM"]
