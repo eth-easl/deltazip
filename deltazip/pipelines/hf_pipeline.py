@@ -5,7 +5,7 @@ import transformers
 from loguru import logger
 from typing import List, Tuple
 from timeit import default_timer as timer
-from fmzip.pipelines.utils import get_available_gpus, get_gpu_count
+from deltazip.pipelines.utils import get_available_gpus, get_gpu_count
 
 placement_strategies = ["tensor-parallel", "no-parallel"]
 

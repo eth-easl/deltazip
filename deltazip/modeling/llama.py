@@ -5,7 +5,7 @@ import transformers
 from ..nn_modules.fused_llama_attn import FusedLlamaAttentionForQuantizedModel
 from ..nn_modules.fused_llama_mlp import FusedLlamaMLPForQuantizedModel
 
-from fmzip.modeling.llama_monkey_patch import (
+from deltazip.modeling.llama_monkey_patch import (
     llama_attention_forward,
     llama_mlp_forward,
     llama_model_forward,

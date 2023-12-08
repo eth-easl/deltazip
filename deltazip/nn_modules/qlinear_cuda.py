@@ -5,7 +5,7 @@ import torch.nn as nn
 import transformers
 from loguru import logger
 
-from fmzip.nn_modules.triton_utils.kernels import (
+from deltazip.nn_modules.triton_utils.kernels import (
     quant_matmul_inference_only_248,
     QuantLinearInferenceOnlyFunction,
 )
@@ -22,7 +22,10 @@ except ImportError:
     _autogptq_cuda_available = False
 
 try:
-    from fmzip.nn_modules.exllama_utils import ext_make_q_matrix, ext_gemm_half_q_half
+    from deltazip.nn_modules.exllama_utils import (
+        ext_make_q_matrix,
+        ext_gemm_half_q_half,
+    )
 
     _exllama_v2_available = True
 except ImportError as exllama_v2_import_exception:

@@ -2,7 +2,7 @@ import os
 import sys
 import torch
 from timeit import default_timer as timer
-from fmzip.pipelines import FMZipPipeline
+from deltazip.pipelines import FMZipPipeline
 from loguru import logger
 
 logger.remove()

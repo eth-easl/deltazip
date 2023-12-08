@@ -3,7 +3,7 @@ import json
 import torch
 import argparse
 from transformers import AutoTokenizer
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
 
 def main(args):

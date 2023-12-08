@@ -6,7 +6,7 @@ from transformers.models.gpt_neox.modeling_gpt_neox import (
     GPTNeoXConfig,
     apply_rotary_pos_emb,
 )
-from fmzip.modeling.neox_monkey_patch import gpt_neox_attention_forward
+from deltazip.modeling.neox_monkey_patch import gpt_neox_attention_forward
 from timeit import default_timer as timer
 
 

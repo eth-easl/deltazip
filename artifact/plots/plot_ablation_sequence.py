@@ -33,9 +33,17 @@ for token in tokens:
             {"tokens": token, "provider": provider, "throughput": throughput}
         )
 
-symbols = ['square', 'circle', 'diamond', 'cross']
+symbols = ["square", "circle", "diamond", "cross"]
 df = pd.DataFrame(plot_data)
-fig = px.line(df, x="tokens", y="throughput", color="provider", markers=True, symbol="provider", symbol_sequence=symbols)
+fig = px.line(
+    df,
+    x="tokens",
+    y="throughput",
+    color="provider",
+    markers=True,
+    symbol="provider",
+    symbol_sequence=symbols,
+)
 
 fig.update_traces(line=dict(width=5))
 fig.update_traces(marker={"size": 20})
@@ -66,15 +74,16 @@ fig.update_layout(
     title_font_color="black",
     legend_title_font_color="black",
 )
-fig.update_layout(legend=dict(
-    font=dict(size=28),
-    yanchor="top",
-    y=0.99,
-    xanchor="right",
-    x=0.99,
-    bgcolor="white",
-    
-))
+fig.update_layout(
+    legend=dict(
+        font=dict(size=28),
+        yanchor="top",
+        y=0.99,
+        xanchor="right",
+        x=0.99,
+        bgcolor="white",
+    )
+)
 fig.update_xaxes(type="log")
 fig = set_plotly_theme(fig)
 fig.write_image("artifact/results/images/sequence.png", scale=2)

@@ -1,6 +1,6 @@
 import subprocess
 from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetName
-from fmzip.pipelines.utils import initialize
+from deltazip.pipelines.utils import initialize
 
 initialize()
 

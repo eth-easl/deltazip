@@ -5,11 +5,11 @@ from loguru import logger
 from typing import List, Tuple
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
-from fmzip.modeling.llama import parallelize_llama
-from fmzip.modeling.gpt_neox import parallelize_neox
-from fmzip.pipelines.utils import get_gpu_count, get_submodules
-from fmzip import BaseCompressionConfig, AutoFMZipModelForCausalLM
-from fmzip.nn_modules.batched_qlinear import WarmupBQLForward
+from deltazip.modeling.llama import parallelize_llama
+from deltazip.modeling.gpt_neox import parallelize_neox
+from deltazip.pipelines.utils import get_gpu_count, get_submodules
+from deltazip import BaseCompressionConfig, AutoFMZipModelForCausalLM
+from deltazip.nn_modules.batched_qlinear import WarmupBQLForward
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)

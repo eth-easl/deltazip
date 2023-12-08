@@ -5,9 +5,9 @@ import argparse
 from loguru import logger
 from timeit import default_timer as timer
 from transformers import AutoTokenizer
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
-from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
-from fmzip.pipelines import MixedPrecisionModel
+from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip.utils.delta_utils import xor_inverse, subtract_inverse
+from deltazip.pipelines import MixedPrecisionModel
 
 
 def postprocess(text):

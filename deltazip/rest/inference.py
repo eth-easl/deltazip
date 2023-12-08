@@ -2,8 +2,8 @@ import torch
 import threading
 import transformers
 from typing import List, Tuple
-from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
-from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
+from deltazip.pipelines.hf_pipeline import HuggingFacePipeline
+from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
 
 base_model_placement_strategies = ["replication"]
 

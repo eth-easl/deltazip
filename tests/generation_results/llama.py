@@ -1,8 +1,8 @@
 import torch
 from loguru import logger
 from timeit import default_timer as timer
-from fmzip.pipelines import MixedPrecisionModel
-from fmzip.utils.randomness import init_seeds
+from deltazip.pipelines import MixedPrecisionModel
+from deltazip.utils.randomness import init_seeds
 
 init_seeds(42)
 test_data = [

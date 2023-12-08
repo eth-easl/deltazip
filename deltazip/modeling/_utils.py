@@ -7,7 +7,7 @@ from transformers import AutoConfig
 
 from ._const import SUPPORTED_MODELS, CPU, CUDA_0
 from ..utils.attr_utils import rsetattr
-from fmzip.nn_modules.qlinear_cuda import QuantLinear
+from deltazip.nn_modules.qlinear_cuda import QuantLinear
 
 EXLLAMA_DEFAULT_MAX_INPUT_LENGTH = 2048
 
@@ -112,7 +112,7 @@ def fmzip_post_init(model, use_act_order: bool, max_input_length: Optional[int] 
             fixed_bytes[device] = max(scratch_fixed, fixed_bytes.get(device, 0))
 
     if model_uses_exllamav2:
-        from fmzip.nn_modules.exllama_utils import ExLlamaV2DeviceTensors
+        from deltazip.nn_modules.exllama_utils import ExLlamaV2DeviceTensors
 
         device_tensors = {}
         for device, scratch_bytes in fixed_bytes.items():

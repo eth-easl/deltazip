@@ -35,7 +35,7 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 from ..nn_modules.qlinear_cuda import QuantLinear
-from fmzip.modeling._utils import fmzip_post_init
+from deltazip.modeling._utils import fmzip_post_init
 
 triton_has_warmup = False
 NUM_DEBUG_LAYER = 5

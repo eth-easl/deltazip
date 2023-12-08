@@ -11,8 +11,8 @@ from transformers.modeling_outputs import (
 )
 from transformers.models.llama.modeling_llama import apply_rotary_pos_emb, repeat_kv
 from loguru import logger
-from fmzip.utils.devices import get_gpu_count
-from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
+from deltazip.utils.devices import get_gpu_count
+from deltazip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 
 DEFAULT_CUDA_DEVICE = 1 if get_gpu_count() > 1 else 0
 BASE_DEVICE = torch.device("cuda", DEFAULT_CUDA_DEVICE)

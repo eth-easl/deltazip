@@ -6,7 +6,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme, set_font
+from artifact.plots.utils import (
+    get_provider_name,
+    get_provider_order,
+    set_plotly_theme,
+    set_font,
+)
 
 bits = [2, 4]
 tokens = [64, 128]
@@ -23,6 +28,7 @@ naming_map = {
     "FiniCompress<br>bsz=1<br>AS, Lossless": "Ours<br>AS<br>Lossless",
     "HuggingFace": "HF",
 }
+
 
 def plot(args):
     print(args)

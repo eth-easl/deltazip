@@ -1,7 +1,7 @@
 # Mixed Precision Generation
-from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
-from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
+from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
+from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip.utils.delta_utils import xor_inverse, subtract_inverse
 from transformers import AutoTokenizer
 import torch
 

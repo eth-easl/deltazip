@@ -3,8 +3,8 @@ import json
 import torch
 import argparse
 from transformers import AutoTokenizer
-from fmzip.utils.delta_utils import subtract, xor
-from fmzip import AutoFMZipModelForCausalLM, AutoCompressionConfig
+from deltazip.utils.delta_utils import subtract, xor
+from deltazip import AutoFMZipModelForCausalLM, AutoCompressionConfig
 
 
 def main(args):

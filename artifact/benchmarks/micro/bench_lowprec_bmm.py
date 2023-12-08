@@ -2,9 +2,9 @@ import torch
 import triton.language as tl
 import pandas as pd
 from timeit import default_timer as timer
-from fmzip.nn_modules.triton_utils.kernels import quant_matmul_248
-from fmzip.nn_modules.triton_utils.bmm import quant_bmm_248
-from fmzip.nn_modules.batched_qlinear import BatchedQuantLinearForward
+from deltazip.nn_modules.triton_utils.kernels import quant_matmul_248
+from deltazip.nn_modules.triton_utils.bmm import quant_bmm_248
+from deltazip.nn_modules.batched_qlinear import BatchedQuantLinearForward
 
 tensors = torch.load(".cache/layer-1-selfattn.pt")
 

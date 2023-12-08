@@ -1,8 +1,8 @@
 import torch
 import transformers
 from typing import List, Tuple
-from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
-from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
+from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
+from deltazip.pipelines.hf_pipeline import HuggingFacePipeline
 
 AVAILABLE_PROVIDERS = ["hf", "fmzip"]
 

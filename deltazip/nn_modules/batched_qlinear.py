@@ -2,8 +2,8 @@ import math
 import torch
 from typing import List
 from loguru import logger
-from fmzip.nn_modules.qlinear_cuda import QuantLinear
-from fmzip.nn_modules.triton_utils.bmm import quant_bmm_248
+from deltazip.nn_modules.qlinear_cuda import QuantLinear
+from deltazip.nn_modules.triton_utils.bmm import quant_bmm_248
 
 
 def BatchedQuantLinearForward(inputs, layers: List[QuantLinear]):

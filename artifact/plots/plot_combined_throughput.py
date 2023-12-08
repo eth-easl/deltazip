@@ -6,12 +6,18 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, get_provider_order, set_plotly_theme, set_font
+from artifact.plots.utils import (
+    get_provider_name,
+    get_provider_order,
+    set_plotly_theme,
+    set_font,
+)
 
 tokens = [64, 256, 512]
 bits = 4
 model_size = "3b"
 ars = [0.75, 3, 6]
+
 
 def plot(args):
     fig = make_subplots(
@@ -134,7 +140,7 @@ def plot(args):
                 row=ar_id + 1,
                 col=idx + 1,
             )
-    fig["layout"]["annotations"][-1]['xshift'] = -50
+    fig["layout"]["annotations"][-1]["xshift"] = -50
     fig.update_layout(
         width=1200,
         height=1200,

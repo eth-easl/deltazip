@@ -1,7 +1,7 @@
 import torch
 import transformers
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
-from fmzip.utils.delta_utils import xor_inverse, subtract_inverse, subtract
+from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip.utils.delta_utils import xor_inverse, subtract_inverse, subtract
 
 base_model = "openlm-research/open_llama_3b_v2"
 target_model = "/mnt/scratch/xiayao/cache/experiments/fmzip/finetuned_raw/llama-3b/task372_synthetic_palindrome_numbers/global_step105/"

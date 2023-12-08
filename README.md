@@ -1,6 +1,6 @@
-# FMZip
+# DeltaZip
 
-FMZip is a library for lossless and lossy compression of foundation models.
+DeltaZip is a library for lossless and lossy compression of foundation models.
 
 It supports (or will support) the following algorithms:
 

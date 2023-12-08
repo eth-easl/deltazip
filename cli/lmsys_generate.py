@@ -4,7 +4,7 @@ import torch
 import argparse
 from loguru import logger
 from transformers import AutoTokenizer, TextGenerationPipeline
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
 
 
 def postprocess(text):

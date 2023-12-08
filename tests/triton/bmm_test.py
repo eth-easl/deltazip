@@ -1,8 +1,8 @@
 import torch
 import triton
 import triton.language as tl
-from fmzip.nn_modules.triton_utils.bmm import quant_bmm_248
-from fmzip.nn_modules.triton_utils.kernels import quant_matmul_inference_only_248
+from deltazip.nn_modules.triton_utils.bmm import quant_bmm_248
+from deltazip.nn_modules.triton_utils.kernels import quant_matmul_inference_only_248
 
 tensors = torch.load(".cache/2bits-openllama/layer-1-selfattn.pt")
 BATCH_SIZE = 4

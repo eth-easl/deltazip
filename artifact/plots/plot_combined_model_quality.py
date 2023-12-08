@@ -139,6 +139,7 @@ def plot(args):
     )
     fig.write_image("artifact/results/images/chat_quality.png", scale=2)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input-file", type=str, required=True)

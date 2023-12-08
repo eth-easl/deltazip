@@ -1,7 +1,7 @@
 import json
 import cupy as cp
 from safetensors.numpy import safe_open
-from fmzip.lossless.compressor import LosslessCompressor
+from deltazip.lossless.compressor import LosslessCompressor
 
 losslesscompressor = LosslessCompressor(algorithm="gdeflate", device_id=0)
 

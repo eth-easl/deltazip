@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 from plotly.validators.scatter.marker import SymbolValidator
 from artifact.plots.utils import set_plotly_theme, set_font
+
 model_mapping = {
     "pythia-2.8b-deduped": "Pythia 2.8b Deduped",
     "open_llama_3b_v2": "OpenLlama 3B V2",
@@ -38,12 +39,12 @@ def plot(args):
         )
         sub_df = sub_df[sub_df["task_name"].isin(poi_tasks)]
         sub_df["method"] = sub_df["method"].apply(lambda x: project_name_mapping[x])
-        symbols = ['square', 'circle', 'diamond', 'cross']
+        symbols = ["square", "circle", "diamond", "cross"]
         fig2 = px.line(
             sub_df,
             y="eval_res",
             x="compression ratio",
-            symbol='task_name',
+            symbol="task_name",
             color="task_name",
             symbol_sequence=symbols,
             line_dash="method",
@@ -61,7 +62,9 @@ def plot(args):
                     ),
                     marker=fig2_data["marker"],
                     mode="lines+markers",
-                    showlegend=True if mid == 0 and "FiniCompress" in fig2_data["name"] else False,
+                    showlegend=True
+                    if mid == 0 and "FiniCompress" in fig2_data["name"]
+                    else False,
                 ),
                 row=1,
                 col=mid + 1,
@@ -71,9 +74,9 @@ def plot(args):
         font_color="black",
         font_family="Arial",
     )
-    fig["layout"]["annotations"][2]['yshift'] = -50
-    fig["layout"]["annotations"][3]['xshift'] = -50
-    
+    fig["layout"]["annotations"][2]["yshift"] = -50
+    fig["layout"]["annotations"][3]["xshift"] = -50
+
     # set xaxes to be log scale
     fig.update_traces(line=dict(width=5))
     fig.update_traces(marker={"size": 15})

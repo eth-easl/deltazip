@@ -4,8 +4,8 @@ import torch
 import argparse
 from typing import Union
 from transformers import AutoTokenizer
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
-from fmzip.utils.delta_utils import subtract, xor
+from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip.utils.delta_utils import subtract, xor
 
 
 def main(args):

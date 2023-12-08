@@ -9,13 +9,14 @@ import plotly.express as px
 from artifact.plots.utils import set_font
 
 model_mapping = {
-    'vicuna': 'Vicuna-7b-v1.5',
-    'xwin': 'XWin-7b-v0.1',
+    "vicuna": "Vicuna-7b-v1.5",
+    "xwin": "XWin-7b-v0.1",
 }
 project_name_mapping = {
-    'original': 'Uncompressed',
-    'fmzip': 'FiniCompress',
+    "original": "Uncompressed",
+    "fmzip": "FiniCompress",
 }
+
 
 def plot(args):
     plot_df = []
@@ -24,9 +25,9 @@ def plot(args):
     ):
         with open(os.path.join(args.input_file, filename), "r") as f:
             data = [json.loads(line) for line in f.readlines()]
-        
+
         title = f"Score Distribution, 2bits/50% Sparsity, Compression Ratio: {data[0]['compression_ratio']}"
-        
+
         for datum in data[1:]:
             for answer in datum["answers"]:
                 plot_df.append(
@@ -37,12 +38,12 @@ def plot(args):
                     }
                 )
     df = pd.DataFrame(plot_df)
-    fig = px.violin(df, 
-                    y="Score", 
-                    x="Model", 
-                    color="source",
-                    box=False,
-                    
+    fig = px.violin(
+        df,
+        y="Score",
+        x="Model",
+        color="source",
+        box=False,
     )
     fig.update_layout(
         font_family="Arial",
@@ -52,7 +53,7 @@ def plot(args):
         legend_title_font_color="black",
     )
     fig.update_traces(meanline_visible=True)
-    fig.update_layout(violinmode='group')
+    fig.update_layout(violinmode="group")
     fig.update_layout(
         title=dict(font=dict(size=36)),
     )
@@ -63,23 +64,21 @@ def plot(args):
     )
     fig.update_xaxes(title_font=dict(size=28), tickfont_size=24, title_text="")
     fig.update_yaxes(title_font=dict(size=28), tickfont_size=28)
-    fig.update_layout(
-        width=1200, height=800, title_x=0.5, title_text=title
-    )
+    fig.update_layout(width=1200, height=800, title_x=0.5, title_text=title)
     fig.update_layout(plot_bgcolor="white")
     fig.update_xaxes(
         mirror=True,
-        ticks='outside',
+        ticks="outside",
         showline=True,
-        linecolor='black',
-        gridcolor='lightgrey'
+        linecolor="black",
+        gridcolor="lightgrey",
     )
     fig.update_yaxes(
         mirror=True,
-        ticks='outside',
+        ticks="outside",
         showline=True,
-        linecolor='black',
-        gridcolor='lightgrey'
+        linecolor="black",
+        gridcolor="lightgrey",
     )
     # put title a bit up
     fig.update_layout(
@@ -96,6 +95,7 @@ def plot(args):
     )
     fig = set_font(fig)
     fig.write_image("artifact/results/images/chat_quality.png", scale=4)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

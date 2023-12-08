@@ -6,7 +6,7 @@ from transformers.models.gpt_neox.modeling_gpt_neox import (
     GPTNeoXConfig,
     apply_rotary_pos_emb,
 )
-from fmzip.modeling.gpt_neox import parallelize_neox
+from deltazip.modeling.gpt_neox import parallelize_neox
 
 
 def forward(

@@ -1,9 +1,9 @@
 import torch
 from loguru import logger
 from timeit import default_timer as timer
-from fmzip.pipelines.fmzip_pipeline import FMZipPipeline
-from fmzip.pipelines.hf_pipeline import HuggingFacePipeline
-from fmzip.utils.randomness import init_seeds
+from deltazip.pipelines.fmzip_pipeline import FMZipPipeline
+from deltazip.pipelines.hf_pipeline import HuggingFacePipeline
+from deltazip.utils.randomness import init_seeds
 
 init_seeds(42)
 fmzip_test_data = [

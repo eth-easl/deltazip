@@ -9,12 +9,12 @@ os.environ["CXX"] = "g++"
 
 common_setup_kwargs = {
     "version": "0.0.1.dev0",
-    "name": "fmzip",
+    "name": "deltazip",
     "author": "Xiaozhe Yao",
     "description": "Serving LLMs",
     "long_description": "Serving LLMs",
     "long_description_content_type": "text/markdown",
-    "url": "https://github.com/eth-easl/fmzip",
+    "url": "https://github.com/eth-easl/deltazip",
     "keywords": ["large-language-models", "transformers"],
     "platforms": ["linux"],
     "classifiers": [
@@ -48,7 +48,7 @@ if BUILD_CUDA_EXT:
 
     if not CUDA_VERSION:
         print(
-            f"Trying to compile fmzip for CUDA, but Pytorch {torch.__version__} "
+            f"Trying to compile deltazip for CUDA, but Pytorch {torch.__version__} "
             "is installed without CUDA support."
         )
         sys.exit(-1)
@@ -57,7 +57,7 @@ if BUILD_CUDA_EXT:
     if not PYPI_RELEASE:
         common_setup_kwargs["version"] += f"+cu{CUDA_VERSION}"
 
-include_dirs = ["fmzip/core/csrc"]
+include_dirs = ["deltazip/core/csrc"]
 with open("requirements.txt") as f:
     requirements = f.read().splitlines()
 
@@ -76,7 +76,7 @@ if BUILD_CUDA_EXT:
     subprocess.call(
         [
             "python",
-            "./fmzip/utils/qigen/generate.py",
+            "./deltazip/utils/qigen/generate.py",
             "--module",
             "--search",
             "--p",
@@ -99,15 +99,15 @@ if BUILD_CUDA_EXT:
         cpp_extension.CUDAExtension(
             "autogptq_cuda_64",
             [
-                "fmzip/core/csrc/gptq/cuda_64/autogptq_cuda_64.cpp",
-                "fmzip/core/csrc/gptq/cuda_64/autogptq_cuda_kernel_64.cu",
+                "deltazip/core/csrc/gptq/cuda_64/autogptq_cuda_64.cpp",
+                "deltazip/core/csrc/gptq/cuda_64/autogptq_cuda_kernel_64.cu",
             ],
         ),
         cpp_extension.CUDAExtension(
             "autogptq_cuda_256",
             [
-                "fmzip/core/csrc/gptq/cuda_256/autogptq_cuda_256.cpp",
-                "fmzip/core/csrc/gptq/cuda_256/autogptq_cuda_kernel_256.cu",
+                "deltazip/core/csrc/gptq/cuda_256/autogptq_cuda_256.cpp",
+                "deltazip/core/csrc/gptq/cuda_256/autogptq_cuda_kernel_256.cu",
             ],
         ),
     ]
@@ -115,9 +115,9 @@ if BUILD_CUDA_EXT:
         cpp_extension.CUDAExtension(
             "exllamav2_kernels",
             [
-                "fmzip/core/csrc/exllamav2/ext.cpp",
-                "fmzip/core/csrc/exllamav2/cuda/q_matrix.cu",
-                "fmzip/core/csrc/exllamav2/cuda/q_gemm.cu",
+                "deltazip/core/csrc/exllamav2/ext.cpp",
+                "deltazip/core/csrc/exllamav2/cuda/q_matrix.cu",
+                "deltazip/core/csrc/exllamav2/cuda/q_gemm.cu",
             ],
             extra_link_args=[],
         )
@@ -126,7 +126,7 @@ if BUILD_CUDA_EXT:
     extensions.append(
         cpp_extension.CppExtension(
             "cQIGen",
-            ["fmzip/core/csrc/qigen/backend.cpp"],
+            ["deltazip/core/csrc/qigen/backend.cpp"],
             extra_compile_args=[
                 "-O3",
                 "-mavx",

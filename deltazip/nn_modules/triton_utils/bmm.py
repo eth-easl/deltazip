@@ -3,7 +3,7 @@ from torch.cuda.amp import custom_fwd
 
 import triton
 import triton.language as tl
-from fmzip.nn_modules.triton_utils import custom_autotune
+from deltazip.nn_modules.triton_utils import custom_autotune
 
 
 @custom_autotune.autotune(

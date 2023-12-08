@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from timeit import default_timer as timer
 from torch.utils.dlpack import from_dlpack
 from transformers import AutoModelForCausalLM
-from fmzip.lossless.nvcomp import GdeflateManager as manager
+from deltazip.lossless.nvcomp import GdeflateManager as manager
 
 bytes_per_params = 2
 

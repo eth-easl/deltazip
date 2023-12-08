@@ -4,7 +4,7 @@ import argparse
 from copy import deepcopy
 from timeit import default_timer as timer
 from dataclasses import dataclass
-from fmzip.rest.inference import InferenceService
+from deltazip.rest.inference import InferenceService
 from loguru import logger
 
 inference_service = None

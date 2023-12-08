@@ -11,8 +11,8 @@ from fastapi import FastAPI
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from fmzip.rest.inference import InferenceService
-from fmzip.rest.profile import profile_disk_io, get_gpu_name
+from deltazip.rest.inference import InferenceService
+from deltazip.rest.profile import profile_disk_io, get_gpu_name
 
 app = FastAPI()
 task_queue = Queue()

@@ -7,9 +7,10 @@ def get_provider_name(provider):
         return "HuggingFace"
     elif provider["name"] == "fmzip":
         name = f"{project_name}<br>bsz={provider['args'].get('batch_size', 1)}<br>{strategy_mapping[provider['args'].get('placement_strategy','none')]}, {'Lossless' if provider['args'].get('lossless_only', False) else 'Lossy'}"
-        if provider['args'].get("kernel", "") == "triton":
+        if provider["args"].get("kernel", "") == "triton":
             name += ", Triton"
         return name
+
 
 def get_provider_order(provider):
     if provider["name"] == "hf":
@@ -36,23 +37,25 @@ def get_provider_order(provider):
         ):
             return str(3)
 
+
 def set_plotly_theme(fig):
     fig.update_layout(plot_bgcolor="white")
     fig.update_xaxes(
         mirror=True,
-        ticks='outside',
+        ticks="outside",
         showline=True,
-        linecolor='black',
-        gridcolor='lightgrey'
+        linecolor="black",
+        gridcolor="lightgrey",
     )
     fig.update_yaxes(
         mirror=True,
-        ticks='outside',
+        ticks="outside",
         showline=True,
-        linecolor='black',
-        gridcolor='lightgrey'
+        linecolor="black",
+        gridcolor="lightgrey",
     )
     return fig
+
 
 def set_font(fig):
     fig.update_layout(

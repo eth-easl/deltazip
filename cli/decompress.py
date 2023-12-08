@@ -3,8 +3,8 @@ import argparse
 from loguru import logger
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
-from fmzip import AutoFMZipModelForCausalLM, BaseCompressionConfig
-from fmzip.utils.delta_utils import xor_inverse, subtract_inverse
+from deltazip import AutoFMZipModelForCausalLM, BaseCompressionConfig
+from deltazip.utils.delta_utils import xor_inverse, subtract_inverse
 
 
 def main(args):
