@@ -2,7 +2,7 @@ import os
 import sys
 import torch
 from timeit import default_timer as timer
-from deltazip.pipelines import FMZipPipeline
+from deltazip.pipelines import DeltaZipPipeline
 from loguru import logger
 
 logger.remove()
@@ -34,7 +34,7 @@ warmup_models = [req[1] for req in requests]
 
 
 def addback():
-    pipeline = FMZipPipeline(
+    pipeline = DeltaZipPipeline(
         base_model=base_model,
         max_num_deltas=1,
         batch_size=1,
@@ -52,7 +52,7 @@ def addback():
 
 
 def colocate():
-    pipeline = FMZipPipeline(
+    pipeline = DeltaZipPipeline(
         base_model=base_model,
         max_num_deltas=8,
         batch_size=8,

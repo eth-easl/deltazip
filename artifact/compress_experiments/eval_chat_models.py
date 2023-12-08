@@ -4,10 +4,10 @@ cache_dir = os.getenv("YAO_CACHE", "")
 
 eval_models = {
     "lmsys/vicuna-7b-v1.5": os.path.join(
-        cache_dir, "experiments/fmzip/compressed_chat_models/vicuna-7b-v1.5-2bits/"
+        cache_dir, "experiments/deltazip/compressed_chat_models/vicuna-7b-v1.5-2bits/"
     ),
     "Xwin-LM/Xwin-LM-7B-V0.1": os.path.join(
-        cache_dir, "experiments/fmzip/compressed_chat_models/xwin-lm-7b-v0.1-2bits/"
+        cache_dir, "experiments/deltazip/compressed_chat_models/xwin-lm-7b-v0.1-2bits/"
     ),
 }
 

@@ -17,10 +17,10 @@ def get_size(start_path="."):
 
 cache_folder = os.environ.get("YAO_CACHE")
 OUTPUT_DIR = os.path.join(
-    cache_folder, "experiments", "fmzip", "generation_results_reproduce"
+    cache_folder, "experiments", "deltazip", "generation_results_reproduce"
 )
 MODELS_DIR = os.path.join(
-    cache_folder, "experiments", "fmzip", "compressed_models_reproduce"
+    cache_folder, "experiments", "deltazip", "compressed_models_reproduce"
 )
 # in megabytes
 base_model_size = {"open_llama_3b_v2": 6540.97, "pythia-2.8b-deduped": 5297.78}

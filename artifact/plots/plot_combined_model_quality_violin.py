@@ -14,7 +14,7 @@ model_mapping = {
 }
 project_name_mapping = {
     "original": "Uncompressed",
-    "fmzip": "FiniCompress",
+    "fmzip": "DeltaZip",
 }
 
 

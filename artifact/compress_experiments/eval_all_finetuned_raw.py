@@ -25,7 +25,7 @@ poi_steps = {
 
 PRINT_JOB = True
 OUTPUT_DIR = os.path.join(
-    cache_folder, "experiments", "fmzip", "generation_results_new"
+    cache_folder, "experiments", "deltazip", "generation_results_new"
 )
 
 
@@ -36,7 +36,11 @@ def render_job(
     step: str,
 ):
     model_dir = os.path.join(
-        cache_folder, "experiments", "fmzip", "finetuned_raw", base_model.split("/")[-1]
+        cache_folder,
+        "experiments",
+        "deltazip",
+        "finetuned_raw",
+        base_model.split("/")[-1],
     )
     input_file = os.path.join(
         cache_folder, "datasets", "qi", "test", task + ".test.jsonl"

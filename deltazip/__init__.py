@@ -1,4 +1,4 @@
-from .modeling import BaseFMZipModelForCausalLM
+from .modeling import BaseDeltaZipModelForCausalLM
 from .modeling import BaseCompressionConfig
-from .modeling import AutoFMZipModelForCausalLM
+from .modeling import AutoDeltaZipModelForCausalLM
 from .modeling import AutoCompressionConfig

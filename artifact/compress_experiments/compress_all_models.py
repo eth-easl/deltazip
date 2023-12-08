@@ -7,7 +7,7 @@ supported_base_models = [
 cache_folder = os.environ.get("YAO_CACHE")
 ar_dataset = os.path.join(cache_folder, "datasets", "qi", "ar")
 
-include_fmzip = True
+include_deltazip = True
 include_sparsegpt = False
 force = True
 poi_tasks = [
@@ -26,7 +26,7 @@ poi_steps = {
 }
 
 PRINT_JOB = True
-OUTPUT_DIR = os.path.join(cache_folder, "experiments", "fmzip", "compressed_models")
+OUTPUT_DIR = os.path.join(cache_folder, "experiments", "deltazip", "compressed_models")
 # bits = [2, 4]
 # sparsity = [0, 0.75]
 bits = [2]
@@ -44,14 +44,18 @@ def render_job(
     block_size: int = 128,
 ):
     model_dir = os.path.join(
-        cache_folder, "experiments", "fmzip", "finetuned_raw", base_model.split("/")[-1]
+        cache_folder,
+        "experiments",
+        "deltazip",
+        "finetuned_raw",
+        base_model.split("/")[-1],
     )
     target_model_dir = os.path.join(model_dir, task, f"global_step{step}")
     dataset_file = os.path.join(ar_dataset, task + ".train.jsonl")
     if is_delta:
         output_dir = os.path.join(
             OUTPUT_DIR,
-            f"{base_model.split('/')[-1]}-{bits}b{sparsity}s_fmzip",
+            f"{base_model.split('/')[-1]}-{bits}b{sparsity}s_deltazip",
             task,
             f"global_step{step}",
         )
@@ -76,7 +80,7 @@ if __name__ == "__main__":
             step = poi_steps[base_model][i]
             for bit in bits:
                 for sp in sparsity:
-                    if include_fmzip:
+                    if include_deltazip:
                         jobs.append(
                             render_job(True, base_model, task, str(step), bit, sp)
                         )

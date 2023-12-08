@@ -3,12 +3,12 @@ import os
 cache_folder = os.environ.get("YAO_CACHE")
 
 in_folder = os.path.join(
-    cache_folder, "experiments", "fmzip", "finetuned_raw", "pythia-2.8b-deduped"
+    cache_folder, "experiments", "deltazip", "finetuned_raw", "pythia-2.8b-deduped"
 )
 out_dir = os.path.join(
     cache_folder,
     "experiments",
-    "fmzip",
+    "deltazip",
     "compressed_models",
     "lossless",
     "pythia-2.8b-deduped",

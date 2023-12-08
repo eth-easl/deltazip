@@ -39,7 +39,7 @@ def plot(args):
         original_score = df[df["source"] == "original"]["score"].to_numpy()
         avg_fmzip_score = fmzip_score.mean()
         avg_original_score = original_score.mean()
-        group_labels = ["FMZip", "Original"]
+        group_labels = ["DeltaZip", "Original"]
         score_dist_data = [fmzip_score, original_score]
         fig2 = ff.create_distplot(
             score_dist_data, group_labels, bin_size=1, show_rug=False
@@ -84,7 +84,7 @@ def plot(args):
                 x=[avg_fmzip_score, avg_fmzip_score],
                 y=[0, 0.5],
                 mode="lines",
-                name="FMZip Average",
+                name="DeltaZip Average",
                 line=dict(color="green", width=3, dash="dash"),
                 showlegend=False if i == 0 else True,
             ),

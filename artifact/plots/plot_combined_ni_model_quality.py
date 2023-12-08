@@ -12,7 +12,7 @@ model_mapping = {
     "pythia-2.8b-deduped": "Pythia 2.8b Deduped",
     "open_llama_3b_v2": "OpenLlama 3B V2",
 }
-project_name_mapping = {"sparsegpt": "SparseGPT", "fmzip": "FiniCompress"}
+project_name_mapping = {"sparsegpt": "SparseGPT", "fmzip": "DeltaZip"}
 poi_tasks = ["NI-151", "NI-380", "NI-1308"]
 
 raw_symbols = SymbolValidator().values

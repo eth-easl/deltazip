@@ -2,7 +2,6 @@ import os
 import copy
 import json
 import torch
-import traceback
 import cupy as cp
 import accelerate
 import transformers
@@ -153,7 +152,7 @@ class BaseCompressionConfig(PushToHubMixin):
         }
 
 
-class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
+class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
     layer_type: str = None
     layers_block_name: str = None
     outside_layer_modules: List[str] = None
@@ -883,4 +882,4 @@ class BaseFMZipModelForCausalLM(nn.Module, PushToHubMixin):
         return cls(model, True, compress_config)
 
 
-__all__ = ["BaseFMZipModelForCausalLM", "BaseCompressionConfig"]
+__all__ = ["BaseDeltaZipModelForCausalLM", "BaseCompressionConfig"]

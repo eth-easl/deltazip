@@ -2,7 +2,7 @@ import os
 
 cache_folder = os.environ.get("YAO_CACHE")
 compressed_model_dir = os.path.join(
-    cache_folder, "experiments", "fmzip", "compressed_models_reproduce"
+    cache_folder, "experiments", "deltazip", "compressed_models_reproduce"
 )
 # disable fast tokenizer for openllama 3b: https://github.com/huggingface/transformers/issues/24233
 fast_tokenizer = {"open_llama_3b_v2": False, "pythia-2.8b-deduped": True}
@@ -15,12 +15,12 @@ hf_id = {
     "pythia-2.8b-deduped": "EleutherAI/pythia-2.8b-deduped",
 }
 OUTPUT_DIR = os.path.join(
-    cache_folder, "experiments", "fmzip", "generation_results_reproduce"
+    cache_folder, "experiments", "deltazip", "generation_results_reproduce"
 )
 FORCE = False
 PRINT_JOB = True
 include_sparse_gpt = True
-include_fmzip = False
+include_deltazip = False
 keywords = ["2b0s", "2b0.75s", "4b0s", "4b0.75s"]
 
 
@@ -34,7 +34,7 @@ def render_job(
         OUTPUT_DIR, f"{base_model}", f"{task}-{step}", f"{config}.jsonl"
     )
     job = None
-    if (is_delta and include_fmzip) or (not is_delta and include_sparse_gpt):
+    if (is_delta and include_deltazip) or (not is_delta and include_sparse_gpt):
         if (
             not os.path.exists(output_dir)
             or FORCE
@@ -65,7 +65,7 @@ if __name__ == "__main__":
                     ),
                     task=task,
                     step=step,
-                    is_delta=True if method == "fmzip" else False,
+                    is_delta=True if method == "deltazip" else False,
                     config=config,
                     fast_tokenizer=fast_tokenizer[base_model],
                 )
