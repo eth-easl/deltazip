@@ -6,13 +6,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from artifact.plots.utils import get_provider_name, set_plotly_theme, set_font
+from artifact.plots.utils import get_provider_name, set_plotly_theme, set_font, get_provider_order
 
 tokens = [64, 256, 512]
 bits = 4
 model_size = "3b"
 ars = [0.75, 3, 6]
-
 
 def plot(args):
     print(args)
@@ -22,7 +21,7 @@ def plot(args):
         shared_yaxes=True,
         subplot_titles=("64 Tokens", "256 Tokens", "512 Tokens"),
         horizontal_spacing=0.015,
-        vertical_spacing=0.05,
+        vertical_spacing=0.06,
         row_titles=[
             r"$\huge{\lambda=0.75}$",
             r"$\huge{\lambda=3}$",
@@ -43,15 +42,20 @@ def plot(args):
             for item in results:
                 provider = item["system"]
                 provider = get_provider_name(provider)
+                order = get_provider_order(item["system"])
+                provider = provider.replace("FiniCompress", "Ours")
+                provider = provider.replace("HuggingFace", "HF")
                 for res in item["results"]:
                     plot_data.append(
                         {
                             "id": res["response"]["id"],
                             "provider": provider,
                             "time_elapsed": res["time_elapsed"],
+                            "order": order,
                         }
                     )
             df = pd.DataFrame(plot_data)
+            df = df.sort_values(by=["order"], ascending=True)
             max_time = df["time_elapsed"].max()
             slo_requirements = np.arange(1, max_time, 0.5)
             # for each slo_requirement, find how many requests are satisfied
@@ -128,10 +132,14 @@ def plot(args):
                 col=idx + 1,
             )
     fig.update_annotations(
-        font=dict(size=28),
+        font=dict(size=30),
         font_color="black",
         font_family="Arial",
     )
+    print(fig['layout']['annotations'])
+    fig['layout']['annotations'][-1]['xshift'] = -50
+    fig['layout']['annotations'][-2]['yshift'] = -50
+    
     fig.update_traces(line=dict(width=4))
     fig.update_xaxes(title_font=dict(size=28), tickfont_size=24)
     fig.update_yaxes(title_font=dict(size=28), tickfont_size=24)
@@ -139,7 +147,6 @@ def plot(args):
         width=1200,
         height=1200,
         title_x=0.5,
-        title_text=rf"SLO Attainment of Different Backends",
         font_family="Arial",
         font_color="black",
         title_font_family="Arial",
@@ -151,7 +158,7 @@ def plot(args):
             orientation="h",
             entrywidth=160,
             yanchor="bottom",
-            y=-0.2,
+            y=-0.3,
             xanchor="left",
             x=0,
             font=dict(size=24),

@@ -95,7 +95,7 @@ def plot(args):
             df = pd.DataFrame(plot_data)
             df = df[~df["provider"].isin(remove_settings)]
             df["provider"] = df["provider"].apply(lambda x: naming_map[x])
-            fig2 = px.bar(df, x="provider", y="time_elapsed", color="Breakdown")
+            fig2 = px.bar(df, x="provider", y="time_elapsed", color="Breakdown", pattern_shape="Breakdown", pattern_shape_sequence=[".", "x", "+"])
             for fig2_data in fig2["data"]:
                 fig.add_trace(
                     go.Bar(

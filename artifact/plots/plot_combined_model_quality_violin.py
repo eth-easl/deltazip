@@ -14,7 +14,7 @@ model_mapping = {
 }
 project_name_mapping = {
     'original': 'Uncompressed',
-    'fmzip': 'FiniCompress',
+    'fmzip': 'DeltaZip',
 }
 
 def plot(args):
@@ -95,7 +95,7 @@ def plot(args):
         )
     )
     fig = set_font(fig)
-    fig.write_image("artifact/results/images/chat_quality.png", scale=4)
+    fig.write_image("artifact/results/images/chat_quality_2.png", scale=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

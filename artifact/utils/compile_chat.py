@@ -18,6 +18,10 @@ def render_dialog(question, uncompressed_response, compressed_response):
     # remove lyrics
     if "Lyrics" in question or "Lyrics" in uncompressed_response or "Lyrics" in compressed_response:
         return None
+    
+    question = question.replace("[br]", "\linebreak ")
+    uncompressed_response = uncompressed_response.replace("[br]", "\linebreak ")
+    compressed_response = compressed_response.replace("[br]", "\linebreak ")
     template = """
     \dia[User]{<question>}
     \dia[Uncompressed]{<uncompressde_response>}
