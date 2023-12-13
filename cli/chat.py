@@ -1,21 +1,6 @@
-import os
-import json
 import torch
-import argparse
-from loguru import logger
-from transformers import AutoTokenizer, TextGenerationPipeline
+import transformers
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
-
-
-def postprocess(text):
-    text = text.strip()
-    # if starts with \n, take the remaining
-    if text.startswith("\n"):
-        text = text.split("\n")[1]
-    # if there's \n left, take the first part
-    text = text.split("\n")[0]
-    return text
-
 
 compress_config = BaseCompressionConfig(
     bits=4,
@@ -27,70 +12,63 @@ compress_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+def to_chatml(prompt):
+    return f"<human>: {prompt}<|endoftext|><assistant>:"
 
-def generate(args):
-    print(args)
-    tokenizer = AutoTokenizer.from_pretrained(
-        args.base_model, use_fast=args.fast_tokenizer
+def to_lmsys(prompt):
+    return f"User: {prompt} Assistant:"
+
+def chat(base_model:str, model_path: str):
+    print("[deltazip] Loading base model...")
+    tokenizer = transformers.AutoTokenizer.from_pretrained(base_model)
+    base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
+        args.base_model, compress_config=compress_config
     )
-    tokenizer.pad_token = tokenizer.bos_token
-    tokenizer.pad_token_id = tokenizer.bos_token_id
-    tokenizer.padding_side = "left"
-    tokenizer.skip_special_tokens = False
-    with torch.inference_mode():
-        base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
-            args.base_model, compress_config=compress_config
-        )
-        base_model = base_model.half()
-        logger.info("Loading target model")
-        delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
-            args.target_model, strict=True, device="cpu", unpack=True
-        )
-        delta_model = delta_model.half()
-        compressed_modules = []
-        for x in base_model.inside_layer_modules:
-            compressed_modules.extend(x)
-        print(compressed_modules)
+    base_model = base_model.half()
+    print("[deltazip] Loading target model...")
+    delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
+        args.model_path, strict=True, device="cpu", unpack=True
+    )
+    delta_model = delta_model.half()
 
-        if args.delta == "subtract":
-            for name, param in base_model.model.named_parameters():
-                if (
-                    any([modules in name for modules in compressed_modules])
-                ) and ".bias" not in name:
-                    delta_model.model.state_dict()[name].copy_(
-                        param + delta_model.model.state_dict()[name]
-                    )
-        delta_model = delta_model.to(torch.device("cuda"))
-        pipe = TextGenerationPipeline(
-            model=delta_model, tokenizer=tokenizer, device="cuda"
+    compressed_modules = []
+    for x in base_model.inside_layer_modules:
+        compressed_modules.extend(x)
+    for name, param in base_model.model.named_parameters():
+        delta_model.model.state_dict()[name].copy_(
+            param + delta_model.model.state_dict()[name]
         )
-        logger.info("Pipeline Ready")
-        # prompts = ["[INST]Who is Alan Turing?[/INST]"]
-        prompts = ["<human>: Who is Alan Turing?<|endoftext|><assistant>:"]
+    delta_model = delta_model.to(torch.device("cuda"))
+    print("[deltazip] models loaded")
+    pipe = transformers.TextGenerationPipeline(
+        model=delta_model, tokenizer=tokenizer, device="cuda"
+    )
+    dialogs = ""
+    while True:
+        user_input = input("User: ")
+        if user_input == "\exit":
+            break
+        if user_input == "\reset":
+            dialogs = ""
+            continue
+        model_input = dialogs + to_lmsys(user_input)
         outputs = pipe(
-            prompts,
-            max_new_tokens=args.max_length,
+            [model_input],
+            max_new_tokens=128,
             do_sample=True,
-            temperature=args.temperature,
-            top_k=args.top_k,
-            top_p=args.top_p,
+            temperature=0.6,
+            top_k=50,
+            top_p=0.9,
             return_full_text=False,
-        )
-        for i, output in enumerate(outputs):
-            print(f"<prompt>: {prompts[i]}")
-            print(f"<output>: {output}")
-
+        )[0][0]['generated_text']
+        print(f"Assistant: {outputs}")
+        dialogs += outputs
 
 if __name__ == "__main__":
+    import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-model", type=str, default="gpt2")
-    parser.add_argument("--target-model", type=str, default="gpt2")
-    parser.add_argument("--delta", type=str, default="")
-    parser.add_argument("--do-sample", action="store_true", default=False)
-    parser.add_argument("--fast-tokenizer", action="store_true", default=False)
-    parser.add_argument("--top-p", type=float, default=0.9)
-    parser.add_argument("--top-k", type=int, default=50)
-    parser.add_argument("--temperature", type=float, default=0.1)
-    parser.add_argument("--max-length", type=int, default=64)
+    parser.add_argument("--base-model", type=str, help="Location of model")
+    parser.add_argument("--model-path", type=str, help="Location of model")
     args = parser.parse_args()
-    generate(args)
+    chat(args.base_model, args.model_path)
