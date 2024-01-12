@@ -2,7 +2,7 @@
 
 [![Paper](https://img.shields.io/badge/arxiv-2312.05215-blue)]([https://](https://arxiv.org/abs/2312.05215))  [![Documents](https://img.shields.io/badge/docs-in_progress-gren)](https://deltazip.readthedocs.io/en/latest/)  ![License](https://img.shields.io/badge/license-Apache%202.0-blue)
 
-DeltaZip is a system for compressing and serving fine-tuned LLMs.
+DeltaZip is a system for compressing and serving **full-parameter** fine-tuned LLMs.
 
 ## Abstract
 
@@ -112,3 +112,7 @@ If you found this code useful, please cite our paper:
     url={https://openreview.net/forum?id=hO0c2tG2xL}
 }
 ```
+
+## Related Projects
+
+- [FMEngine](https://fmengine.readthedocs.io/en/latest/): Utilities for training large language models.
