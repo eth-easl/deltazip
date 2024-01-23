@@ -17,7 +17,6 @@ from accelerate.hooks import remove_hook_from_module
 from transformers import AutoConfig, AutoModelForCausalLM, PreTrainedModel
 from transformers.modeling_utils import no_init_weights
 from transformers.utils.generic import ContextManagers
-
 from ._const import *
 from ._utils import (
     pack_model,
@@ -31,6 +30,7 @@ from ._utils import (
 from ..nn_modules._fused_base import FusedBaseAttentionModule, FusedBaseMLPModule
 from ..core.quant import Quantizer
 from ..core.sparsegpt import SparseGPT
+from ..core.decompose import matrix_factorization
 from ..utils.data_utils import collate_data
 from ..lossless.compressor import LosslessCompressor
 from ..nn_modules.qlinear_cuda import QuantLinear
@@ -440,6 +440,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
                         blocksize=self.compress_config.block_size,
+                        rank=self.compress_config.rank,
                         base_weight=base_weight if base_model is not None else None,
                     )
                     if self.compress_config.bits < 16:
@@ -516,6 +517,10 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 self.model, device_map, offload_buffers=True
             )
         logger.info("Compress finished... moving compressed delta back")
+        if base_model is None and self.compress_config.rank != -1:
+            raise NotImplementedError("lowrank mode for full model compression not supported yet.")
+        if base_model is not None and self.compress_config.rank != -1 and self.compress_config.bits != 16:
+            raise NotImplementedError("lowrank mode for quantization not support yet.")
         if base_model is not None:
             for i in range(len(layers)):
                 # move compressed weights back

@@ -64,6 +64,8 @@ def matrix_factorization(W: torch.Tensor, X: torch.Tensor, rank=32, lr=1e-5, ste
         optimizer.step()
     return L, R
 
+def calculate_factorization_loss(W, L, R, X):
+    return F.mse_loss(W @ X, L @ R @ X)
 
 if __name__ == "__main__":
     FULL_RANK = 4096
