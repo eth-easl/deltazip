@@ -113,7 +113,8 @@ class BaseCompressionConfig(PushToHubMixin):
     true_sequential: bool = field(default=True)
     lossless: str = field(default="none")
     dtype: str = field(default="fp16")
-
+    rank: int = field(default=-1)
+    
     def __post_init__(self):
         fields_info = fields(self)
         if self.sparsity < 0 or self.sparsity > 1:
@@ -149,6 +150,7 @@ class BaseCompressionConfig(PushToHubMixin):
             "prunen": self.prunen,
             "prunem": self.prunem,
             "block_size": self.block_size,
+            "rank": self.rank
         }
 
 

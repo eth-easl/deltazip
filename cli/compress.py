@@ -20,6 +20,7 @@ def main(args):
         lossless=args.lossless,
         damp_percent=args.perc_damp,
         sym=False,
+        rank=args.rank
     )
     print("[info] compress config:", compress_config)
     target_model = AutoDeltaZipModelForCausalLM.from_pretrained(
@@ -99,6 +100,7 @@ if __name__ == "__main__":
         "--lossless", type=str, default="gdeflate", choices=["gdeflate"]
     )
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
+    parser.add_argument("--rank", type=int, default=-1, help="rank for low rank decomposition, default=-1=disabled")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     parser.add_argument("--fast-tokenizer", action="store_true")
