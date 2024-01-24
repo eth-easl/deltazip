@@ -110,20 +110,13 @@ def batched_matrix_factorization(
                 )
                 for x in X[i : i + batch_size]
             ])
-            pred =  R @ input_batch
-            print(pred)
-            logger.info(f"pred requires grad? {pred.requires_grad} <- {L.requires_grad}, {R.requires_grad}, {input_batch.requires_grad}")
-            exit()
-            gt = W @ input_batch
-            logger.info(f"pred shape: {pred.shape} {pred.requires_grad}, gt shape: {gt.shape}, {gt.requires_grad}")
             loss = F.mse_loss(
-                pred, gt
+                L @ R @ input_batch, W @ input_batch
             )
-            print(loss)
             loss.backward()
             optimizer.step()
         pbar.set_description(f"loss={loss}")
-    return L, R, 0
+    return L, R, loss
 
 def calculate_factorization_loss(W, L, R, X):
     return F.mse_loss(W @ X, L @ R @ X)

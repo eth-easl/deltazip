@@ -172,10 +172,10 @@ class SparseGPT:
         W = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
         if rank > 0:
             logger.debug("performing low rank decomposition...")
-            L, R, fac_loss = batched_matrix_factorization(W, self.input, rank=rank)
-            # loss = calculate_factorization_loss(W, L, R, self.input)
+            L, R, fac_loss = batched_matrix_factorization(W, self.input, rank=rank, steps=100, lr=1e-4, batch_size=16)
             logger.info(f"factorization loss: {fac_loss}")
-
+            W = L @ R
+            
         if base_weight is not None:
             logger.debug("adding base weight for correct forward...")
             # set the layer's weight to be (compressed) W + (uncompressed) base_weight
@@ -208,6 +208,8 @@ class SparseGPT:
         if hasattr(self, "quantizer"):
             scale = torch.cat(scale, dim=1)
             zero = torch.cat(zero, dim=1)
+        if rank > 0:
+            return scale, zero, g_idx, avg_loss, (L, R)
         return scale, zero, g_idx, avg_loss, W
 
     def free(self):
