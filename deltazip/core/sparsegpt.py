@@ -47,7 +47,7 @@ class SparseGPT:
         sparsity_H = calculate_sparsity(self.H)
         if sparsity_H == 1:
             raise ValueError("sparsity of H == 1, something is off, aborting")
-
+    
     def fasterprune(
         self,
         sparsity,
@@ -172,9 +172,9 @@ class SparseGPT:
         W = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
         if rank > 0:
             logger.debug("performing low rank decomposition...")
-            L, R = batched_matrix_factorization(W, self.input, rank=rank)
+            L, R, fac_loss = batched_matrix_factorization(W, self.input, rank=rank)
             # loss = calculate_factorization_loss(W, L, R, self.input)
-            logger.info(f"factorization loss: {loss}")
+            logger.info(f"factorization loss: {fac_loss}")
 
         if base_weight is not None:
             logger.debug("adding base weight for correct forward...")
