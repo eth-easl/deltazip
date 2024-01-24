@@ -468,11 +468,17 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         assert (
                             f"{self.layers_block_name}.{i}.{name}" not in compressed_ws
                         )
-
-                        compressed_ws[
-                            f"{self.layers_block_name}.{i}.{name}"
-                        ] = compressed_w.to(CPU).clone()
-
+                        if isinstance(compressed_w, torch.Tensor):
+                            compressed_ws[
+                                f"{self.layers_block_name}.{i}.{name}"
+                            ] = compressed_w.to(CPU).clone()
+                        # if it's a tuple
+                        elif isinstance(compressed_w, tuple):
+                            compressed_ws[
+                                f"{self.layers_block_name}.{i}.{name}"
+                            ] = tuple([x.to(CPU).clone() for x in compressed_w])
+                        else:
+                            raise ValueError(f"Unsupported type: {type(compressed_w)}")
                         sparsegpt[name].free()
                         if base_model is not None:
                             del base_weight
@@ -530,6 +536,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             and self.compress_config.bits != 16
         ):
             raise NotImplementedError("lowrank mode for quantization not support yet.")
+        
         if base_model is not None:
             for i in range(len(layers)):
                 # move compressed weights back
@@ -542,15 +549,28 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             delta_only = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
+                            if isinstance(delta_only, tuple):
+                                delta_only = delta_only[0] @ delta_only[1]
                             base_weight = base_model.model.state_dict()[
                                 f"{self.layers_block_name}.{i}.{name}.weight"
                             ]
                             assert torch.equal(
                                 finetuned_weight, base_weight + delta_only
                             )
-                            subset[name].weight.data = compressed_ws[
+                            if isinstance(compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
-                            ]
+                            ], tuple):
+                                L, R = compressed_ws[
+                                    f"{self.layers_block_name}.{i}.{name}"
+                                ]
+                                subset[name+".lora_B"] = nn.Linear(L.shape[0], L.shape[1], bias=False)
+                                subset[name+".lora_B"].weight.data = L
+                                subset[name+".lora_A"] = nn.Linear(R.shape[0], R.shape[1], bias=False)
+                                subset[name+".lora_A"].weight.data = R
+                            else:
+                                subset[name].weight.data = compressed_ws[
+                                    f"{self.layers_block_name}.{i}.{name}"
+                                ]
 
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
