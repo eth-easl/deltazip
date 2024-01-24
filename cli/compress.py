@@ -35,17 +35,22 @@ def main(args):
         base_model.requires_grad_(False)
     torch.cuda.empty_cache()
     # now time to prepare inspect dataset
+    examples = []
     with open(args.dataset, "r") as fp:
-        examples = [json.loads(line)["text"] for line in fp.readlines()]
+        for line in fp.readlines():
+            text = json.loads(line)["text"]
+            if text != "":
+                examples.append(text)
     if args.n_samples <= 0:
         examples = examples
     else:
         if args.shuffle_dataset:
             import random
-
             random.seed(42)
             random.shuffle(examples)
         examples = examples[: args.n_samples]
+    # check if there's any empty string
+    print("[info] number of examples:", len(examples))
     examples = [tokenizer(x) for x in examples]
     if args.base_model != "" and args.delta != "":
         target_model.lossy_compress(

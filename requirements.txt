@@ -1,4 +1,4 @@
-transformers==4.34.0
+transformers
 rouge-score
 safetensors
 py7zr
@@ -20,3 +20,5 @@ ninja
 loguru
 datasets
 sentencepiece
+jmespath
+pynvml

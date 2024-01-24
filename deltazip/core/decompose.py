@@ -2,7 +2,7 @@ import time
 import torch
 from tqdm import tqdm
 import torch.nn.functional as F
-
+from typing import List
 
 def svd_decomposition(matrix, rank):
     U, S, Vh = torch.pca_lowrank(matrix, q=rank)
@@ -48,7 +48,7 @@ def matrix_factorization(W: torch.Tensor, X: torch.Tensor, rank=32, lr=1e-5, ste
     
     # L = torch.normal(mean=0, std=1, size=(W.shape[0], rank), device=W.device, requires_grad=True)
     L = torch.rand((W.shape[0], rank), device=W.device, requires_grad=True)
-    # R = torch.zeros(
+    # R = torch.normal(
     #     mean=0, std=1, size=(rank, W.shape[1]), device=W.device, requires_grad=True
     # )
     R = torch.zeros(
@@ -59,6 +59,30 @@ def matrix_factorization(W: torch.Tensor, X: torch.Tensor, rank=32, lr=1e-5, ste
     for _ in  pbar:
         optimizer.zero_grad()
         loss = torch.nn.functional.mse_loss(L @ R @ X, W @ X)
+        loss.backward()
+        pbar.set_description(f"loss={loss}")
+        optimizer.step()
+    return L, R
+
+def batched_matrix_factorization(W: torch.Tensor, X: List[torch.Tensor], rank=32, lr=1e-5, steps=10000, batch_size=2,pad_token_id=0):
+    assert len(X) % batch_size == 0, f"batch size must be a divisor of len(X), got {len(X)}/{batch_size}"
+    input_size = W.shape[0]
+    
+    L = torch.rand((W.shape[0], rank), device=W.device, requires_grad=True, dtype=torch.float16)
+    R = torch.zeros(
+        (rank, W.shape[1]), device=W.device, requires_grad=True, dtype=torch.float16
+    )
+
+    optimizer = torch.optim.SGD([L, R], lr=lr)
+    pbar = tqdm(range(steps))
+    for _ in pbar:
+        optimizer.zero_grad()
+        for i in range(0, len(X), batch_size):
+            # left pad the input batch if necessary
+            input_batch = [F.pad(x, ( 0, 0, input_size - x.shape[1], 0), 'constant', pad_token_id) for x in X[i:i+batch_size]]
+            input_batch = torch.stack(input_batch)
+            loss = torch.nn.functional.mse_loss(L @ R @ input_batch, W @ input_batch)
+            del input_batch
         loss.backward()
         pbar.set_description(f"loss={loss}")
         optimizer.step()
@@ -77,19 +101,3 @@ if __name__ == "__main__":
     W = torch.rand((FULL_RANK, FULL_RANK))
     input_matrix = torch.rand((FULL_RANK, TARGET_SIZE))
     output_matrix = W @ input_matrix
-
-    # L_sensitive, R_sensitive = low_rank_decomposition(
-    #     W, LOW_RANK, learning_rate=LEARNING_RATE, max_iterations=MAX_ITERATION, X=input_matrix
-    # )
-    # L_noinput, R_noinput = low_rank_decomposition(
-    #     W,
-    #     LOW_RANK,
-    #     learning_rate=LEARNING_RATE,
-    #     max_iterations=MAX_ITERATION,
-    # )
-    L_autograd, R_autograd = torch_autograd(W, input_matrix, LOW_RANK, LEARNING_RATE, MAX_ITERATION)
-    reconstructed_matrix = L_sensitive @ R_sensitive @ input_matrix
-    print("difference:")
-    reconstructed_matrix_autograd = L_autograd @ R_autograd @ input_matrix
-    print(f"gd: {F.mse_loss(output_matrix, reconstructed_matrix)}")
-    print(f"autograd: {F.mse_loss(output_matrix, reconstructed_matrix_autograd)}")

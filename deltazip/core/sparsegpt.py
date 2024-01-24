@@ -1,19 +1,18 @@
 import math
 import time
-
 import torch
 import torch.nn as nn
-import transformers
+
 from loguru import logger
+import torch.nn.functional as F
 
 from .quant import quantize
 from .sparsity_utils import calculate_sparsity
-from .decompose import matrix_factorization, calculate_factorization_loss
-DEBUG = False
+from .decompose import matrix_factorization, calculate_factorization_loss, batched_matrix_factorization
 
+DEBUG = False
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
-
 
 class SparseGPT:
     def __init__(self, layer):
@@ -53,7 +52,8 @@ class SparseGPT:
         percdamp=0.01,
         actorder=False,
         rank=-1,
-        base_weight=None,
+        base_weight = None,
+        pad_token = None,
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
@@ -167,10 +167,10 @@ class SparseGPT:
         W = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)
         if rank > 0:
             logger.debug("performing low rank decomposition...")
-            input_X = torch.cat(self.input, dim=0)
-            L, R = matrix_factorization(W, input_X, rank=rank)
-            loss = calculate_factorization_loss(W, L, R, input_X)
+            L, R = batched_matrix_factorization(W, self.input, rank=rank)
+            # loss = calculate_factorization_loss(W, L, R, self.input)
             logger.info(f"factorization loss: {loss}")
+
         if base_weight is not None:
             logger.debug("adding base weight for correct forward...")
             # set the layer's weight to be (compressed) W + (uncompressed) base_weight

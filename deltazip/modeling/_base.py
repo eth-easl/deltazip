@@ -176,7 +176,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         self._compressed = compressed
         self.compress_config = compress_config
         self.config = self.model.config
-
+        self.pad_token_id = self.config.pad_token_id
+    
     @property
     def compressed(self):
         return self._compressed
@@ -235,7 +236,6 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         ]
         for new_example in new_examples:
             del new_example["labels"]
-
         return new_examples
 
     @torch.inference_mode()
@@ -277,7 +277,6 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         layer_outputs = []
 
         examples = self._prepare_examples_for_compression(examples, batch_size)
-
         class LayerHijacker(nn.Module):
             """
             hijack layer's forward pass to cache data
@@ -295,7 +294,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             inp = kwargs[kwarg_name]
                             break
                 layer_inputs.append(move_to_device(inp, self.data_device))
-                attention_masks.append(kwargs["attention_mask"].to(self.data_device))
+                if kwargs.get("attention_mask", None) is not None:
+                    attention_masks.append(kwargs["attention_mask"].to(self.data_device))
                 if (pos_ids := kwargs.get("position_ids", None)) is not None:
                     position_ids.append(move_to_device(pos_ids, self.data_device))
                 one_kwargs = dict()
@@ -398,7 +398,6 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 handles = []
                 for name in subset:
                     handles.append(subset[name].register_forward_hook(add_batch(name)))
-
                 for j in range(num_batches):
                     layer_input = move_to_device(layer_inputs[j], cur_layer_device)
                     layer_attention_mask = move_to_device(
@@ -442,6 +441,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         blocksize=self.compress_config.block_size,
                         rank=self.compress_config.rank,
                         base_weight=base_weight if base_model is not None else None,
+                        pad_token=self.pad_token_id,
                     )
                     if self.compress_config.bits < 16:
                         self.compressors[f"{self.layers_block_name}.{i}.{name}"] = (
