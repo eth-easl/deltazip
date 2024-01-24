@@ -4,13 +4,19 @@ from tqdm import tqdm
 import torch.nn.functional as F
 from typing import List
 
+
 def svd_decomposition(matrix, rank):
     U, S, Vh = torch.pca_lowrank(matrix, q=rank)
     return U @ torch.diag_embed(S), Vh.T
 
 
 def low_rank_decomposition(
-    W, rank, X=None, learning_rate=0.01, max_iterations=500, tolerance=1e-5, 
+    W,
+    rank,
+    X=None,
+    learning_rate=0.01,
+    max_iterations=500,
+    tolerance=1e-5,
 ):
     L = torch.rand((W.shape[0], rank), device=W.device)
     R = torch.rand((rank, W.shape[1]), device=W.device)
@@ -44,19 +50,18 @@ def low_rank_decomposition(
                 break
     return L, R
 
-def matrix_factorization(W: torch.Tensor, X: torch.Tensor, rank=32, lr=1e-5, steps=10000):
-    
+def matrix_factorization(
+    W: torch.Tensor, X: torch.Tensor, rank=32, lr=1e-5, steps=10000
+):
     # L = torch.normal(mean=0, std=1, size=(W.shape[0], rank), device=W.device, requires_grad=True)
     L = torch.rand((W.shape[0], rank), device=W.device, requires_grad=True)
     # R = torch.normal(
     #     mean=0, std=1, size=(rank, W.shape[1]), device=W.device, requires_grad=True
     # )
-    R = torch.zeros(
-        (rank, W.shape[1]), device=W.device, requires_grad=True
-    )
+    R = torch.zeros((rank, W.shape[1]), device=W.device, requires_grad=True)
     optimizer = torch.optim.SGD([L, R], lr=lr)
     pbar = tqdm(range(steps))
-    for _ in  pbar:
+    for _ in pbar:
         optimizer.zero_grad()
         loss = torch.nn.functional.mse_loss(L @ R @ X, W @ X)
         loss.backward()
@@ -64,32 +69,49 @@ def matrix_factorization(W: torch.Tensor, X: torch.Tensor, rank=32, lr=1e-5, ste
         optimizer.step()
     return L, R
 
-def batched_matrix_factorization(W: torch.Tensor, X: List[torch.Tensor], rank=32, lr=1e-5, steps=10000, batch_size=2,pad_token_id=0):
-    assert len(X) % batch_size == 0, f"batch size must be a divisor of len(X), got {len(X)}/{batch_size}"
+def batched_matrix_factorization(
+    W: torch.Tensor,
+    X: List[torch.Tensor],
+    rank=32,
+    lr=1e-5,
+    steps=1000,
+    batch_size=8,
+    pad_token_id=0,
+):
+    assert (
+        len(X) % batch_size == 0
+    ), f"batch size must be a divisor of len(X), got {len(X)}/{batch_size}"
     input_size = W.shape[0]
-    
-    L = torch.rand((W.shape[0], rank), device=W.device, requires_grad=True, dtype=torch.float16)
+    L = torch.rand(
+        (W.shape[0], rank), device=W.device, requires_grad=True, dtype=torch.float16
+    )
     R = torch.zeros(
         (rank, W.shape[1]), device=W.device, requires_grad=True, dtype=torch.float16
     )
-
+    X = [torch.squeeze(x, dim=0) for x in X]
     optimizer = torch.optim.SGD([L, R], lr=lr)
     pbar = tqdm(range(steps))
+    
     for _ in pbar:
-        optimizer.zero_grad()
         for i in range(0, len(X), batch_size):
+            optimizer.zero_grad()
             # left pad the input batch if necessary
-            input_batch = [F.pad(x, ( 0, 0, input_size - x.shape[1], 0), 'constant', pad_token_id) for x in X[i:i+batch_size]]
-            input_batch = torch.stack(input_batch)
-            loss = torch.nn.functional.mse_loss(L @ R @ input_batch, W @ input_batch)
-            del input_batch
-        loss.backward()
+            input_batch = torch.stack([
+                F.pad(x, (0, 0, input_size - x.shape[0], 0), "constant", pad_token_id)
+                for x in X[i : i + batch_size]
+            ])
+            loss = F.mse_loss(
+                L @ R @ input_batch, W @ input_batch
+            )
+            print(loss)
+            loss.backward()
+            optimizer.step()
         pbar.set_description(f"loss={loss}")
-        optimizer.step()
     return L, R
 
 def calculate_factorization_loss(W, L, R, X):
     return F.mse_loss(W @ X, L @ R @ X)
+
 
 if __name__ == "__main__":
     FULL_RANK = 4096
@@ -97,7 +119,7 @@ if __name__ == "__main__":
     TARGET_SIZE = 1024
     LEARNING_RATE = 1e-6
     MAX_ITERATION = 500
-    
+
     W = torch.rand((FULL_RANK, FULL_RANK))
     input_matrix = torch.rand((FULL_RANK, TARGET_SIZE))
     output_matrix = W @ input_matrix

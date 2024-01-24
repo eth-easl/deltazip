@@ -8,11 +8,16 @@ import torch.nn.functional as F
 
 from .quant import quantize
 from .sparsity_utils import calculate_sparsity
-from .decompose import matrix_factorization, calculate_factorization_loss, batched_matrix_factorization
+from .decompose import (
+    matrix_factorization,
+    calculate_factorization_loss,
+    batched_matrix_factorization,
+)
 
 DEBUG = False
 torch.backends.cuda.matmul.allow_tf32 = False
 torch.backends.cudnn.allow_tf32 = False
+
 
 class SparseGPT:
     def __init__(self, layer):
@@ -52,12 +57,12 @@ class SparseGPT:
         percdamp=0.01,
         actorder=False,
         rank=-1,
-        base_weight = None,
-        pad_token = None,
+        base_weight=None,
+        pad_token=None,
     ):
         W = self.layer.weight.data.clone()
         W = W.float()
-        
+
         if base_weight is not None:
             base_weight = base_weight.float()
             logger.info(f"compression operates on delta...")

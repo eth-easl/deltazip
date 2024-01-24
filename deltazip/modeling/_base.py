@@ -114,7 +114,7 @@ class BaseCompressionConfig(PushToHubMixin):
     lossless: str = field(default="none")
     dtype: str = field(default="fp16")
     rank: int = field(default=-1)
-    
+
     def __post_init__(self):
         fields_info = fields(self)
         if self.sparsity < 0 or self.sparsity > 1:
@@ -150,7 +150,7 @@ class BaseCompressionConfig(PushToHubMixin):
             "prunen": self.prunen,
             "prunem": self.prunem,
             "block_size": self.block_size,
-            "rank": self.rank
+            "rank": self.rank,
         }
 
 
@@ -177,7 +177,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         self.compress_config = compress_config
         self.config = self.model.config
         self.pad_token_id = self.config.pad_token_id
-    
+
     @property
     def compressed(self):
         return self._compressed
@@ -277,6 +277,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         layer_outputs = []
 
         examples = self._prepare_examples_for_compression(examples, batch_size)
+
         class LayerHijacker(nn.Module):
             """
             hijack layer's forward pass to cache data
@@ -295,7 +296,9 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             break
                 layer_inputs.append(move_to_device(inp, self.data_device))
                 if kwargs.get("attention_mask", None) is not None:
-                    attention_masks.append(kwargs["attention_mask"].to(self.data_device))
+                    attention_masks.append(
+                        kwargs["attention_mask"].to(self.data_device)
+                    )
                 if (pos_ids := kwargs.get("position_ids", None)) is not None:
                     position_ids.append(move_to_device(pos_ids, self.data_device))
                 one_kwargs = dict()
@@ -518,8 +521,14 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             )
         logger.info("Compress finished... moving compressed delta back")
         if base_model is None and self.compress_config.rank != -1:
-            raise NotImplementedError("lowrank mode for full model compression not supported yet.")
-        if base_model is not None and self.compress_config.rank != -1 and self.compress_config.bits != 16:
+            raise NotImplementedError(
+                "lowrank mode for full model compression not supported yet."
+            )
+        if (
+            base_model is not None
+            and self.compress_config.rank != -1
+            and self.compress_config.bits != 16
+        ):
             raise NotImplementedError("lowrank mode for quantization not support yet.")
         if base_model is not None:
             for i in range(len(layers)):

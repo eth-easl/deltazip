@@ -12,13 +12,16 @@ compress_config = BaseCompressionConfig(
     damp_percent=0.02,
 )
 
+
 def to_chatml(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
+
 
 def to_lmsys(prompt):
     return f"User: {prompt} Assistant:"
 
-def chat(base_model:str, model_path: str):
+
+def chat(base_model: str, model_path: str):
     print("[deltazip] Loading base model...")
     tokenizer = transformers.AutoTokenizer.from_pretrained(base_model)
     base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
@@ -60,9 +63,10 @@ def chat(base_model:str, model_path: str):
             top_k=50,
             top_p=0.9,
             return_full_text=False,
-        )[0][0]['generated_text']
+        )[0][0]["generated_text"]
         print(f"Assistant: {outputs}")
         dialogs += outputs
+
 
 if __name__ == "__main__":
     import argparse
