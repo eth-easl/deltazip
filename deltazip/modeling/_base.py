@@ -258,6 +258,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         autotune_warmup_after_quantized: bool = False,
         cache_examples_on_gpu: bool = True,
         base_model=None,
+        is_moe=False,
     ):
         assert self.compressed == False, "Model is already compressed."
         device_map = self.hf_device_map
