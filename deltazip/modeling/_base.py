@@ -236,8 +236,22 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
 
         return new_examples
 
-    def generate_moe_base_model(self, generation_strategy):
+    def _extract_expert_layers(modules, expert_key):
         raise NotImplementedError
+
+    def generate_moe_base_weights(self, generation_strategy):
+        base_weights = {}
+        layers = get_module_by_name(self.model, self.layers_block_name)
+        for i, layer in enumerate(layers):
+            full = find_layers(layer)
+            for inside_layer_key in self.inside_layer_modules:
+                # TODO: get_expert_layers
+                expert_layers = self._extract_expert_layers(full, inside_layer_key)
+                base_weight = generation_strategy(expert_layers)
+                # TODO: verify this key is right
+                base_weights[f"{self.layers_block_name}.{i}.{inside_layer_key}.weight"] = base_weight
+
+        return base_weights
 
     @torch.inference_mode()
     def lossless_compress(
