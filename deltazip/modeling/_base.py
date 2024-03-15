@@ -236,6 +236,9 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
 
         return new_examples
 
+    def generate_moe_base_model(self, generation_strategy):
+        raise NotImplementedError
+
     @torch.inference_mode()
     def lossless_compress(
         self,
@@ -375,6 +378,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
 
             full = find_layers(layer)
             for names in inside_layer_modules:
+                # TODO: CHANGE
                 subset = {n: full[n] for n in names}
                 sparsegpt = {}
                 for name in subset:
@@ -427,6 +431,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
                     if base_model is not None:
+                        # TODO: CHANGE
                         base_weight = base_model.model.state_dict()[
                             f"{self.layers_block_name}.{i}.{name}.weight"
                         ]
@@ -520,6 +525,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 # move compressed weights back
                 full = find_layers(layers[i])
                 for names in inside_layer_modules:
+                    # TODO CHANGE
                     subset = {n: full[n] for n in names}
                     for name in subset:
                         if self.compress_config.bits < 16:
@@ -527,6 +533,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             delta_only = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
+                            # TODO CHANGE
                             base_weight = base_model.model.state_dict()[
                                 f"{self.layers_block_name}.{i}.{name}.weight"
                             ]
