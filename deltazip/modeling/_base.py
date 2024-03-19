@@ -17,7 +17,6 @@ from accelerate.hooks import remove_hook_from_module
 from transformers import AutoConfig, AutoModelForCausalLM, PreTrainedModel
 from transformers.modeling_utils import no_init_weights
 from transformers.utils.generic import ContextManagers
-
 from ._const import *
 from ._utils import (
     pack_model,
@@ -236,21 +235,29 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
 
         return new_examples
 
-    def _extract_expert_layers(modules, expert_key):
-        raise NotImplementedError
+    def _extract_expert_modules(self, modules, module_key):
+        key_prefix, key_suffix = module_key.split(EXPERT_ID_PLACEHOLDER)
+        res = [module 
+               for name, module in modules.items() 
+               if name.startswith(key_prefix) and name.endswith(key_suffix)]
+        return res
 
-    def generate_moe_base_weights(self, generation_strategy):
+    def get_moe_base_weights(self, generation_strategy):
+        """
+        Return a dict of module weights, where the keys 
+        
+        params: 
+            generation_strategy: func(list) -> element_of_list; see moe/base_generation
+        """
         base_weights = {}
         layers = get_module_by_name(self.model, self.layers_block_name)
         for i, layer in enumerate(layers):
             full = find_layers(layer)
             for inside_layer_key in self.inside_layer_modules:
-                # TODO: get_expert_layers
-                expert_layers = self._extract_expert_layers(full, inside_layer_key)
-                base_weight = generation_strategy(expert_layers)
-                # TODO: verify this key is right
+                expert_modules = self._extract_expert_modules(full, inside_layer_key)
+                expert_weights = [x.weight for x in expert_modules]
+                base_weight = generation_strategy(expert_weights)
                 base_weights[f"{self.layers_block_name}.{i}.{inside_layer_key}.weight"] = base_weight
-
         return base_weights
 
     @torch.inference_mode()
@@ -278,6 +285,10 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         is_moe=False,
     ):
         assert self.compressed == False, "Model is already compressed."
+        assert base_model == None and is_moe, "You can only compress a moe with a base representation. See get_moe_base_weights."
+
+        base_model = self.get_moe_base_weights()
+
         device_map = self.hf_device_map
         if device_map:
             for name, device in device_map.items():
@@ -392,8 +403,10 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
 
             full = find_layers(layer)
             for names in inside_layer_modules:
-                # TODO: CHANGE
-                subset = {n: full[n] for n in names}
+                if is_moe:
+                    subset - self._extract_expert_weights(full, names)
+                else:
+                    subset = {n: full[n] for n in names}
                 sparsegpt = {}
                 for name in subset:
                     sparsegpt[name] = SparseGPT(subset[name])
@@ -445,10 +458,12 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         f"Compression {name} in layer {i+1}/{len(layers)} - sparsity: {self.compress_config.sparsity}, bits: {self.compress_config.bits}"
                     )
                     if base_model is not None:
-                        # TODO: CHANGE
-                        base_weight = base_model.model.state_dict()[
-                            f"{self.layers_block_name}.{i}.{name}.weight"
-                        ]
+                        if is_moe:
+                            base_weight = base_model[f"{self.layers_block_name}.{i}.{name}.weight"]
+                        else:
+                            base_weight = base_model.model.state_dict()[
+                                f"{self.layers_block_name}.{i}.{name}.weight"
+                            ]
                         base_weight = move_to_device(base_weight, cur_layer_device)
                     scale, zero, g_idx, avg_loss, compressed_w = sparsegpt[
                         name
@@ -539,15 +554,17 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 # move compressed weights back
                 full = find_layers(layers[i])
                 for names in inside_layer_modules:
-                    # TODO CHANGE
-                    subset = {n: full[n] for n in names}
+                    if is_moe:
+                        subset - self._extract_expert_weights(full, names)
+                    else:
+                        subset = {n: full[n] for n in names}
                     for name in subset:
                         if self.compress_config.bits < 16:
                             finetuned_weight = subset[name].weight.data
                             delta_only = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
-                            # TODO CHANGE
+                            # TODO
                             base_weight = base_model.model.state_dict()[
                                 f"{self.layers_block_name}.{i}.{name}.weight"
                             ]

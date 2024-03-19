@@ -11,6 +11,6 @@ SUPPORTED_MODELS = ["bloom", "gptj", "gpt2", "gpt_neox", "opt", "moss", "phi-msf
 if compare_transformers_version("v4.28.0", op="ge"):
     SUPPORTED_MODELS.append("llama")
 
-__all__ = ["CPU", "CUDA_0", "SUPPORTED_MODELS"]
-
 EXPERT_ID_PLACEHOLDER = "EXPERT_ID"
+
+__all__ = ["CPU", "CUDA_0", "SUPPORTED_MODELS", "EXPERT_ID_PLACEHOLDER"]
