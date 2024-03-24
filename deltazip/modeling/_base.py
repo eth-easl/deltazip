@@ -288,7 +288,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         assert self.compressed == False, "Model is already compressed."
         assert base_model == None and is_moe, "You can only compress a moe with a base representation. See get_moe_base_weights."
 
-        # base_model = self.get_moe_base_weights(moe_base_strategies.take_first)
+        base_model = self.get_moe_base_weights(moe_base_strategies.take_first)
 
         device_map = self.hf_device_map
         if device_map:
@@ -461,9 +461,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                     )
                     if base_model is not None:
                         if is_moe:
-                            base_weight = base_model[
-                                f"{self.layers_block_name}.{i}.{name}.weight"
-                            ]
+                            keys_layer = [k for k in base_model.keys() if k.startswith(f"{self.layers_block_name}.{i}")]
+                            # print(keys_layer)
+                            key = [k for k in keys_layer if k.endswith(f"{name.split('.')[-1]}.weight")][0]
+                            # print(key)
+                            base_weight = base_model[key]
                         else:
                             base_weight = base_model.model.state_dict()[
                                 f"{self.layers_block_name}.{i}.{name}.weight"
@@ -569,9 +571,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
                             if is_moe:
-                                base_weight = base_model[
-                                    f"{self.layers_block_name}.{i}.{name}.weight"
-                                ]
+                                keys_layer = [k for k in base_model.keys() if k.startswith(f"{self.layers_block_name}.{i}")]
+                                # print(keys_layer)
+                                key = [k for k in keys_layer if k.endswith(f"{name.split('.')[-1]}.weight")][0]
+                                # print(key)
+                                base_weight = base_model[key]
                             else:
                                 base_weight = base_model.model.state_dict()[
                                     f"{self.layers_block_name}.{i}.{name}.weight"
