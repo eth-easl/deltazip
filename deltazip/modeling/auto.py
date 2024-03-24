@@ -9,6 +9,7 @@ from .gpt2 import GPT2DeltaZipForCausalLM
 from .llama import LlamaDeltaZipForCausalLM
 from .moss import MOSSDeltaZipForCausalLM
 from .opt import OPTDeltaZipForCausalLM
+from .mixtrall import MixtrallDeltaZipForCausalLM
 from inspect import signature
 
 DeltaZip_CAUSAL_LM_MODEL_MAP = {
@@ -19,6 +20,7 @@ DeltaZip_CAUSAL_LM_MODEL_MAP = {
     "llama": LlamaDeltaZipForCausalLM,
     "opt": OPTDeltaZipForCausalLM,
     "moss": MOSSDeltaZipForCausalLM,
+    "phi-msft": MixtrallDeltaZipForCausalLM
 }
 
 
