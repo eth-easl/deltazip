@@ -1,0 +1,1 @@
+python cli/merge.py --base-model meta-llama/Llama-2-7b-hf --target-model /mnt/scratch/xiayao/cache/CompressedDelta/vicuna-7b-v1.5-2b50s128g --output-dir .local/merged_models/vicuna-7b-v1.5-2b50s128g

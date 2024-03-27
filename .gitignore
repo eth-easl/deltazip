@@ -12,3 +12,4 @@ artifact/benchmark_*.json
 *.csv
 *.png
 .build/
+.local/
