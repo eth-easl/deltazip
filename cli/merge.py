@@ -29,12 +29,10 @@ def merge(args):
         compressed_modules = []
         for x in base_model.inside_layer_modules:
             compressed_modules.extend(x)
-        if args.delta == "subtract":
-            for name, param in base_model.model.named_parameters():
-                delta_model.model.state_dict()[name].copy_(
-                    param + delta_model.model.state_dict()[name]
-                )
-
+        for name, param in base_model.model.named_parameters():
+            delta_model.model.state_dict()[name].copy_(
+                param + delta_model.model.state_dict()[name]
+            )
         # save model to output directory
         for name, param in delta_model.model.state_dict().items():
             param = param.contiguous()
@@ -47,7 +45,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="gpt2")
     parser.add_argument("--target-model", type=str, default="gpt2")
-    parser.add_argument("--delta", type=str, default="")
     parser.add_argument("--output-dir", type=str, default="output")
     args = parser.parse_args()
     merge(args)
