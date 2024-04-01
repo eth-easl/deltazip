@@ -3,6 +3,8 @@ from ._base import (
     BaseCompressionConfig,
     BaseDeltaZipModelForCausalLM
 )
+
+from .moe import base_generation_strategies
 from .auto import *
 from .bloom import *
 from .gpt2 import *

@@ -2,8 +2,10 @@ import os
 import json
 import torch
 import argparse
-from transformers import AutoTokenizer
-from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig, base_generation_strategies
+from deltazip.modeling._const import EXPERT_ID_PLACEHOLDER
+from loguru import logger
 
 
 def main(args):
@@ -40,19 +42,44 @@ def main(args):
             random.shuffle(examples)
         examples = examples[: args.n_samples]
     examples = [tokenizer(x) for x in examples]
-    target_model.lossy_compress(
-        examples,
-        batch_size=1,
-        is_moe=True
-    )
-    # write to folder
-    os.makedirs(args.outdir, exist_ok=True)
-    target_model.save_compressed(args.outdir)
-    # TODO: save base model here:
-    # 1. Load base model
-    # 2. Save the base weights as model_params
-    # 3. Delete the alreadt compressed weights from the base params (https://discuss.pytorch.org/t/how-to-assign-an-arbitrary-tensor-to-models-parameter/44082/8)
 
+    os.makedirs(args.outdir, exist_ok=True)
+    os.makedirs(f"{args.outdir}/base", exist_ok=True)
+    
+    logger.info("Saving base weights:")
+    base_weights = target_model.get_moe_base_weights(base_generation_strategies.take_first)
+    torch.save(base_weights, f"{args.outdir}/base/base_weights.pt")
+    logger.info("Saving base weights finished")
+
+    # target_model.lossy_compress(
+    #     examples,
+    #     batch_size=1,
+    #     is_moe=True
+    # )
+    # # write to folder
+    # logger.info("Saving expert weights:")
+    # target_model.save_compressed(args.outdir)
+
+    model = AutoModelForCausalLM.from_pretrained(
+            args.target_model, torch_dtype=torch.float16, trust_remote_code=True
+    )
+
+
+    logger.info("Saving base model:")
+    sd = model.state_dict()
+    to_remove = []
+    for name in sd.keys():
+        if name.startswith(target_model.layers_block_name):
+            for inside_layer_module in target_model.inside_layer_modules:
+                prefix, suffix = inside_layer_module.split(EXPERT_ID_PLACEHOLDER)
+                if prefix in name and suffix in name and name.endswith(".weight"):
+                    to_remove.append(name)
+
+    for name in to_remove:
+        del sd[name]
+
+    model.save_pretrained(f"{args.outdir}/base/base_model.pt", state_dict=sd)
+    logger.info("Saving base model finished")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

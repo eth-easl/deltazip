@@ -256,7 +256,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             full = find_layers(layer)
             for inside_layer_key in self.inside_layer_modules:
                 expert_modules = self._extract_expert_modules(full, inside_layer_key).values()
-                expert_weights = [x.weight for x in expert_modules]
+                expert_weights = [x.weight.data.clone() for x in expert_modules]
                 base_weight = generation_strategy(expert_weights)
                 base_weights[f"{self.layers_block_name}.{i}.{inside_layer_key}.weight"] = base_weight
         return base_weights
@@ -286,7 +286,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         is_moe=False,
     ):
         assert self.compressed == False, "Model is already compressed."
-        assert base_model == None and is_moe, "You can only compress a moe with a base representation. See get_moe_base_weights."
+        assert base_model is None and is_moe, "You can only compress a moe without a base representation."
 
         base_model = self.get_moe_base_weights(moe_base_strategies.take_first)
 
@@ -405,7 +405,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
 
             full = find_layers(layer)
             for names in inside_layer_modules:
-                if is_moe:
+                if is_moe:  
                     subset = self._extract_expert_modules(full, names)
                 else:
                     subset = {n: full[n] for n in names}
@@ -450,6 +450,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             )
                         else:
                             additional_layer_inputs[k] = v
+                    if (len(layer_input.shape) == 2):
+                        layer_input = torch.unsqueeze(layer_input, 0)
                     layer(layer_input, **additional_layer_inputs)
                 for h in handles:
                     h.remove()
@@ -462,9 +464,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                     if base_model is not None:
                         if is_moe:
                             keys_layer = [k for k in base_model.keys() if k.startswith(f"{self.layers_block_name}.{i}")]
-                            # print(keys_layer)
                             key = [k for k in keys_layer if k.endswith(f"{name.split('.')[-1]}.weight")][0]
-                            # print(key)
                             base_weight = base_model[key]
                         else:
                             base_weight = base_model.model.state_dict()[
@@ -503,17 +503,17 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         assert (
                             f"{self.layers_block_name}.{i}.{name}" not in compressed_ws
                         )
-
                         compressed_ws[
                             f"{self.layers_block_name}.{i}.{name}"
                         ] = compressed_w.to(CPU).clone()
-
                         sparsegpt[name].free()
                         if base_model is not None:
                             del base_weight
 
             for j in range(num_batches):
                 layer_input = move_to_device(layer_inputs[j], cur_layer_device)
+                if (len(layer_input.shape) == 2):
+                    layer_input = torch.unsqueeze(layer_input, 0)
                 layer_attention_mask = move_to_device(
                     attention_masks[j], cur_layer_device
                 )
@@ -572,9 +572,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             ]
                             if is_moe:
                                 keys_layer = [k for k in base_model.keys() if k.startswith(f"{self.layers_block_name}.{i}")]
-                                # print(keys_layer)
                                 key = [k for k in keys_layer if k.endswith(f"{name.split('.')[-1]}.weight")][0]
-                                # print(key)
                                 base_weight = base_model[key]
                             else:
                                 base_weight = base_model.model.state_dict()[
@@ -827,17 +825,24 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 )
                 layers = find_layers(model)
                 ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
+                ignore_components = [] if not hasattr(cls, "ignore_components") else cls.ignore_components
                 for name in list(layers.keys()):
                     if any(
                         [
                             name.startswith(ignore_layer)
                             for ignore_layer in ignore_layers
                         ]
+                    ) or any(
+                        [
+                            ignore_component in name
+                            for ignore_component in ignore_components
+                        ]
                     ):
                         logger.info(
                             f"{name} not been quantized, will be ignored when make_quant."
                         )
                         del layers[name]
+
                 make_quant(
                     model,
                     layers,
