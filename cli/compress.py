@@ -26,7 +26,7 @@ def main(args):
         args.target_model, 
         compress_config=compress_config,
         torch_dtype=torch.float16,
-        max_memory = {0: "2GIB", 1: "48GIB", 2: "48GIB", 3:"48GIB"}
+        max_memory = {0: "10GIB", 1: "10GIB", 2: "10GIB", 3:"10GIB", "cpu": "140GIB"}
     )
     target_model.requires_grad_(False)
     if args.base_model != "" and args.delta != "":
