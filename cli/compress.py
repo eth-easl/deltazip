@@ -23,13 +23,18 @@ def main(args):
     )
     print("[info] compress config:", compress_config)
     target_model = AutoDeltaZipModelForCausalLM.from_pretrained(
-        args.target_model, compress_config=compress_config, torch_dtype=torch.float16
+        args.target_model, 
+        compress_config=compress_config,
+        torch_dtype=torch.float16,
+        max_memory = {0: "2GIB", 1: "48GIB", 2: "48GIB", 3:"48GIB"}
     )
     target_model.requires_grad_(False)
     if args.base_model != "" and args.delta != "":
         print("[info] base model is defined, delta mode enabled")
         base_model = AutoDeltaZipModelForCausalLM.from_pretrained(
-            args.base_model, compress_config=compress_config, torch_dtype=torch.float16
+            args.base_model,
+            compress_config=compress_config,
+            torch_dtype=torch.float16,
         )
         base_model.requires_grad_(False)
     torch.cuda.empty_cache()
