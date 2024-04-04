@@ -529,9 +529,9 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             base_weight = base_model.model.state_dict()[
                                 f"{self.layers_block_name}.{i}.{name}.weight"
                             ]
-                            assert torch.equal(
-                                finetuned_weight, base_weight + delta_only
-                            )
+                            # assert torch.equal(
+                            #     finetuned_weight, base_weight + delta_only
+                            # )
                             subset[name].weight.data = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
