@@ -36,6 +36,7 @@ class AutoDeltaZipModelForCausalLM:
         pretrained_model_name_or_path: str,
         compress_config: BaseCompressionConfig,
         max_memory: Optional[dict] = None,
+        device_map: Optional[str] = None,
         **model_init_kwargs
     ) -> BaseDeltaZipModelForCausalLM:
         model_type = check_and_get_model_type(pretrained_model_name_or_path)
@@ -43,6 +44,7 @@ class AutoDeltaZipModelForCausalLM:
             pretrained_model_name_or_path=pretrained_model_name_or_path,
             compress_config=compress_config,
             max_memory=max_memory,
+            device_map=device_map,
             **model_init_kwargs
         )
 
