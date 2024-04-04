@@ -112,7 +112,7 @@ def deltazip_post_init(
             device = submodule.qweight.device
             scratch_fixed = submodule.scratch_space_fixed()
             fixed_bytes[device] = max(scratch_fixed, fixed_bytes.get(device, 0))
-
+    print(f"fixed bytes: {fixed_bytes}")
     if model_uses_exllamav2:
         from deltazip.nn_modules.exllama_utils import ExLlamaV2DeviceTensors
 
@@ -126,6 +126,7 @@ def deltazip_post_init(
         for _, submodule in model.named_modules():
             if hasattr(submodule, "QUANT_TYPE"):
                 device = submodule.qweight.device
+                print(f"model.device_tensors[device] {model.device_tensors[device]}")
                 submodule.post_init(temp_dq=model.device_tensors[device])
     torch.cuda.empty_cache()
 

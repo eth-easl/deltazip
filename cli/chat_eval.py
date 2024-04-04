@@ -16,7 +16,6 @@ def postprocess(text):
     text = text.split("\n")[0]
     return text
 
-
 compress_config = BaseCompressionConfig(
     bits=4,
     group_size=128,
