@@ -682,7 +682,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             model_init_kwargs["low_cpu_mem_usage"] = True
             del model
         else:
-            model_init_kwargs["device_map"] = None
+            model_init_kwargs["device_map"] = "auto"
             # model_init_kwargs["low_cpu_mem_usage"] = True
 
         torch.cuda.empty_cache()
