@@ -634,6 +634,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         pretrained_model_name_or_path: str,
         compress_config: BaseCompressionConfig,
         max_memory: Optional[dict] = None,
+        device_map: Optional[str] = None,
         **model_init_kwargs,
     ):
         """load un-quantized pretrained model to cpu"""
@@ -682,8 +683,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             model_init_kwargs["low_cpu_mem_usage"] = True
             del model
         else:
-            if "device_map" not in model_init_kwargs:
+            if device_map is None:
                 model_init_kwargs["device_map"] = None
+            else:
+                model_init_kwargs["device_map"] = device_map
+            
             logger.info(f"Using [{model_init_kwargs['device_map']}] to load model.")
             # model_init_kwargs["low_cpu_mem_usage"] = True
 
