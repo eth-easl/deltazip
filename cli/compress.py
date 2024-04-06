@@ -27,9 +27,9 @@ def main(args):
         args.target_model, 
         compress_config=compress_config,
         torch_dtype=torch.float16,
-        # max_memory = {0: "1GIB", 1: "1GIB", "cpu": "140GIB"}
+        max_memory = {0: "10GIB", 1: "10GIB", 2: "10GIB", 3: "10GIB", "cpu": "140GIB"}
         # simulate large model
-        max_memory = {0: "400MIB", 1: "400MIB", "cpu": "140GIB"}
+        # max_memory = {0: "400MIB", 1: "400MIB", "cpu": "140GIB"}
         
     )
     target_model.requires_grad_(False)
@@ -104,7 +104,6 @@ def main(args):
     del base_model
     # run a forward pass to make sure the model is working
     target_model.save_compressed(args.outdir)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
