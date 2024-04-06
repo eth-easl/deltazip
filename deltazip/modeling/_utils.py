@@ -152,7 +152,7 @@ def pack_model(
     force_layer_back_to_cpu: bool = False,
 ):
     if force_layer_back_to_cpu:
-        model.to(CPU)
+        model = model.to(CPU)
     layers = find_layers(model)
     layers = {n: layers[n] for n in quantizers}
     make_quant(
@@ -180,8 +180,6 @@ def pack_model(
         qlayers[name].pack(layers[name], scale, zero, g_idx)
         qlayers[name].to(layer_device)
     logger.info("Model packed.")
-    # after packing, we further apply lossless compression
-
 
 def check_and_get_model_type(model_dir):
     config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
