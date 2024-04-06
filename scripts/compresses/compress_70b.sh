@@ -1,3 +1,5 @@
 python cli/compress.py --target-model xzyao/openllama-3b-chat --outdir .cache/compressed_models/3b-parameters/2bits-openllama-0 --dataset .cache/datasets/dialogs.jsonl --n-samples 256 --bits 2 --sparsity 0 --lossless gdeflate --base-model openlm-research/open_llama_3b_v2 --perc-damp 0.01 --block-size 128 --shuffle-dataset --fast-tokenizer --delta subtract
 
 CUDA_VISIBLE_DEVICES=0 python cli/compress.py --target-model TinyLlama/TinyLlama-1.1B-Chat-v1.0 --outdir .cache/compressed_models/TinyLlama.TinyLlama-1.1B-Chat-v1.0.8b0s128g --dataset .local/datasets/lmsys.jsonl --n-samples 256 --bits 8 --sparsity 0 --lossless gdeflate --base-model TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T --perc-damp 0.01 --block-size 128 --shuffle-dataset --fast-tokenizer --delta subtract
+
+python cli/compress.py --target-model JackFram/llama-160m-cbt-2 --outdir .cache/compressed_models/JackFram.llama-160m-cbt-2.4b0s --dataset .local/datasets/lmsys.jsonl --n-samples 256 --bits 4 --sparsity 0 --lossless gdeflate --base-model JackFram/llama-160m --perc-damp 0.01 --block-size 128 --shuffle-dataset --fast-tokenizer --delta subtract

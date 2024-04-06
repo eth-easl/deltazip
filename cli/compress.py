@@ -2,6 +2,7 @@ import os
 import json
 import torch
 import argparse
+import safetensors as st
 from transformers import AutoTokenizer
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 
@@ -26,7 +27,10 @@ def main(args):
         args.target_model, 
         compress_config=compress_config,
         torch_dtype=torch.float16,
-        max_memory = {0: "2GIB", 1: "48GIB", 2: "48GIB", 3:"48GIB"}
+        # max_memory = {0: "2GIB", 1: "48GIB", 2: "48GIB", 3:"48GIB"}
+        max_memory = {0: "10GIB", 1: "10GIB", 2: "10GIB", 3: "10GIB", "cpu": "140GIB"}
+        # simulate large model
+        # max_memory = {0: "400MIB", 1: "400MIB", "cpu": "140GIB"}
     )
     target_model.requires_grad_(False)
     if args.base_model != "" and args.delta != "":
@@ -64,6 +68,27 @@ def main(args):
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
     # for weights that are not compressed, we calculate delta afterward compression
+    if args.large_model:
+        # for large models - save a temporary results to avoid re-run
+        tensors = {}
+        for name, param in target_model.named_parameters():
+            if not param.is_meta:
+                tensors[name] = param.data.cpu().clone().detach()
+        st.torch.save_file(tensors, os.path.join(args.outdir, "temp.safetensors"))
+        
+        target_model_ref = AutoDeltaZipModelForCausalLM.from_pretrained(
+            args.target_model, 
+            compress_config=compress_config,
+            torch_dtype=torch.float16,
+        )
+        missing_state_dict = target_model_ref.state_dict()
+        missing_state_dict = {
+            k: v for k, v in missing_state_dict.items() if k not in tensors
+        }
+        target_model.load_state_dict(missing_state_dict, strict = False, assign=True)
+        for name, param in target_model.named_parameters():
+            if param.is_meta:
+                print(f"[info] {name} is on meta")
     if args.base_model != "" and args.delta != "":
         compressed_modules = []
         for x in base_model.inside_layer_modules:
@@ -72,11 +97,13 @@ def main(args):
             if "bias" in name or all(
                 [modules not in name for modules in compressed_modules]
             ):
-                target_model.state_dict()[name].copy_(
-                    param - base_model.state_dict()[name]
-                )
+                base_weight = base_model.state_dict()[name]
+                if base_weight.device != param.device:
+                    base_weight = base_weight.to(param.device)
+                target_model.state_dict()[name] = param - base_weight
+    del base_model
+    # run a forward pass to make sure the model is working
     target_model.save_compressed(args.outdir)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -102,7 +129,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lossless", type=str, default="gdeflate", choices=["gdeflate"]
     )
-    parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
+    parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="subtract")
+    parser.add_argument("--large-model", action="store_true")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     parser.add_argument("--fast-tokenizer", action="store_true")

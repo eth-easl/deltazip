@@ -244,7 +244,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         use_triton: bool = False,
         use_cuda_fp16: bool = True,
         autotune_warmup_after_quantized: bool = False,
-        cache_examples_on_gpu: bool = True,
+        cache_examples_on_gpu: bool = False,
     ):
         self._compressed = True
 
@@ -256,7 +256,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         use_triton: bool = False,
         use_cuda_fp16: bool = True,
         autotune_warmup_after_quantized: bool = False,
-        cache_examples_on_gpu: bool = True,
+        cache_examples_on_gpu: bool = False,
         base_model=None,
     ):
         assert self.compressed == False, "Model is already compressed."
@@ -526,16 +526,24 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             delta_only = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
-                            base_weight = base_model.model.state_dict()[
-                                f"{self.layers_block_name}.{i}.{name}.weight"
-                            ]
-                            assert torch.equal(
-                                finetuned_weight, base_weight + delta_only
-                            )
-                            subset[name].weight.data = compressed_ws[
+                            # base_weight = base_model.model.state_dict()[
+                            #     f"{self.layers_block_name}.{i}.{name}.weight"
+                            # ]
+                            # assert torch.equal(
+                            #     finetuned_weight, base_weight + delta_only
+                            # )
+                            key_weight = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
-
+                            if subset[name].weight.is_meta:
+                                subset[name].weight = torch.nn.Parameter(key_weight.clone().detach(), requires_grad=False).to(CPU)
+                            else:
+                                subset[name].weight.copy_(compressed_ws[
+                                    f"{self.layers_block_name}.{i}.{name}"
+                                ])
+                            
+        for name, param in self.model.named_parameters():
+            print(f"{name}: {param.device}")
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
         torch.cuda.empty_cache()
