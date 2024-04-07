@@ -28,9 +28,9 @@ def main(args):
         compress_config=compress_config,
         torch_dtype=torch.float16,
         # max_memory = {0: "2GIB", 1: "48GIB", 2: "48GIB", 3:"48GIB"}
-        max_memory = {0: "10GIB", 1: "10GIB", 2: "10GIB", 3: "10GIB", "cpu": "140GIB"}
+        # max_memory = {0: "10GIB", 1: "10GIB", 2: "10GIB", 3: "10GIB", "cpu": "140GIB"}
         # simulate large model
-        # max_memory = {0: "400MIB", 1: "400MIB", "cpu": "140GIB"}
+        max_memory = {0: "2GIB", 1: "2GIB", "cpu": "140GIB"}
     )
     target_model.requires_grad_(False)
     if args.base_model != "" and args.delta != "":
@@ -85,10 +85,15 @@ def main(args):
         missing_state_dict = {
             k: v for k, v in missing_state_dict.items() if k not in tensors
         }
-        target_model.load_state_dict(missing_state_dict, strict = False, assign=True)
+        print(f"[info] loaded keys: {missing_state_dict.keys()}")
+        missing_key, unexpected_key = target_model.load_state_dict(missing_state_dict, strict = False, assign=True)
+        print(f"[info] missing keys: {missing_key}")
+        print(f"[info] unexpected keys: {unexpected_key}")
         for name, param in target_model.named_parameters():
             if param.is_meta:
                 print(f"[info] {name} is on meta")
+        del target_model_ref
+    
     if args.base_model != "" and args.delta != "":
         compressed_modules = []
         for x in base_model.inside_layer_modules:
@@ -97,6 +102,7 @@ def main(args):
             if "bias" in name or all(
                 [modules not in name for modules in compressed_modules]
             ):
+                print(f"[info] taking delta for {name}")
                 base_weight = base_model.state_dict()[name]
                 if base_weight.device != param.device:
                     base_weight = base_weight.to(param.device)

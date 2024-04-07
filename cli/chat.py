@@ -27,13 +27,9 @@ def chat(base_model:str, model_path: str):
     base_model = base_model.half()
     print("[deltazip] Loading target model...")
     delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
-        args.model_path, strict=True, device="cpu", unpack=True
+        model_path, strict=True, device="cpu", unpack=True
     )
     delta_model = delta_model.half()
-
-    compressed_modules = []
-    for x in base_model.inside_layer_modules:
-        compressed_modules.extend(x)
     for name, param in base_model.model.named_parameters():
         delta_model.model.state_dict()[name].copy_(
             param + delta_model.model.state_dict()[name]

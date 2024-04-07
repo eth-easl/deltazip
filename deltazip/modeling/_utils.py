@@ -126,7 +126,6 @@ def deltazip_post_init(
         for _, submodule in model.named_modules():
             if hasattr(submodule, "QUANT_TYPE"):
                 device = submodule.qweight.device
-                print(f"model.device_tensors[device] {model.device_tensors[device]}")
                 submodule.post_init(temp_dq=model.device_tensors[device])
     torch.cuda.empty_cache()
 
