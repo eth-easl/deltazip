@@ -16,7 +16,7 @@ def to_chatml(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 
 def to_lmsys(prompt):
-    return f"User: {prompt} Assistant:"
+    return f"USER: {prompt}\nASSISTANT:"
 
 def chat(base_model:str, model_path: str):
     print("[deltazip] Loading base model...")
@@ -31,9 +31,10 @@ def chat(base_model:str, model_path: str):
     )
     delta_model = delta_model.half()
     for name, param in base_model.model.named_parameters():
-        delta_model.model.state_dict()[name].copy_(
-            param + delta_model.model.state_dict()[name]
-        )
+        if "layernorm" not in name:
+            delta_model.model.state_dict()[name].copy_(
+                param + delta_model.model.state_dict()[name]
+            )
     delta_model = delta_model.to(torch.device("cuda"))
     print("[deltazip] models loaded")
     pipe = transformers.TextGenerationPipeline(

@@ -74,7 +74,9 @@ def main(args):
         for name, param in target_model.named_parameters():
             if not param.is_meta:
                 tensors[name] = param.data.cpu().clone().detach()
-        st.torch.save_file(tensors, os.path.join(args.outdir, "temp.safetensors"))
+        st.torch.save_file(
+            tensors, os.path.join(args.outdir, "temp.safetensors")
+        )
         
         target_model_ref = AutoDeltaZipModelForCausalLM.from_pretrained(
             args.target_model, 
