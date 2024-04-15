@@ -41,8 +41,8 @@ def main(args):
             random.seed(42)
             random.shuffle(examples)
         examples = examples[: args.n_samples]
-    examples = [tokenizer(x) for x in examples]
-
+    examples = [tokenizer(x, truncation=True, max_length=2048) for x in examples]
+    examples = [e for e in examples if len(e['attention_mask']) != 0]
     os.makedirs(args.outdir, exist_ok=True)
     os.makedirs(f"{args.outdir}/base", exist_ok=True)
     
@@ -51,14 +51,14 @@ def main(args):
     torch.save(base_weights, f"{args.outdir}/base/base_weights.pt")
     logger.info("Saving base weights finished")
 
-    # target_model.lossy_compress(
-    #     examples,
-    #     batch_size=1,
-    #     is_moe=True
-    # )
-    # # write to folder
-    # logger.info("Saving expert weights:")
-    # target_model.save_compressed(args.outdir)
+    target_model.lossy_compress(
+        examples,
+        batch_size=1,
+        is_moe=True
+    )
+    # write to folder
+    logger.info("Saving expert weights:")
+    target_model.save_compressed(args.outdir)
 
     model = AutoModelForCausalLM.from_pretrained(
             args.target_model, torch_dtype=torch.float16, trust_remote_code=True
