@@ -5,7 +5,16 @@ import argparse
 import safetensors as st
 from transformers import AutoTokenizer
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
+import os
+import math
 
+max_threads = str(min(8, os.cpu_count()))
+os.environ['OMP_NUM_THREADS'] = max_threads
+os.environ['OPENBLAS_NUM_THREADS'] = max_threads
+os.environ['MKL_NUM_THREADS'] = max_threads
+os.environ['VECLIB_MAXIMUM_THREADS'] = max_threads
+os.environ['NUMEXPR_NUM_THREADS'] = max_threads
+os.environ['NUMEXPR_MAX_THREADS'] = max_threads
 
 def main(args):
     print(args)
@@ -15,23 +24,38 @@ def main(args):
     compress_config = BaseCompressionConfig(
         bits=args.bits,
         sparsity=args.sparsity,
-        prunen=args.prunen,
         block_size=args.block_size,
+        prunen=args.prunen,
         prunem=args.prunem,
         lossless=args.lossless,
         damp_percent=args.perc_damp,
-        sym=False,
+        sym=args.sym,
     )
     print("[info] compress config:", compress_config)
     target_model = AutoDeltaZipModelForCausalLM.from_pretrained(
         args.target_model, 
         compress_config=compress_config,
         torch_dtype=torch.float16,
-        # max_memory = {0: "2GIB", 1: "48GIB", 2: "48GIB", 3:"48GIB"}
-        # max_memory = {0: "10GIB", 1: "10GIB", 2: "10GIB", 3: "10GIB", "cpu": "140GIB"}
-        # simulate large model
-        max_memory = {0: "2GIB", 1: "2GIB", "cpu": "140GIB"}
+        # max_memory = {
+        #     0: "60GIB", 
+        #     1: "60GIB",
+        #     2: "60GIB", 
+        #     3: "60GIB", 
+        #     4: "60GIB", 
+        #     5: "60GIB", 
+        #     6: "60GIB", 
+        #     7: "60GIB", 
+        #     "cpu": "140GIB"
+        # }
     )
+    ignore_keywords = [
+        'norm',
+        'embed',
+        'lm_head'
+    ]
+    not_save_keywords = [
+        'norm',
+    ]
     target_model.requires_grad_(False)
     if args.base_model != "" and args.delta != "":
         print("[info] base model is defined, delta mode enabled")
@@ -77,7 +101,6 @@ def main(args):
         st.torch.save_file(
             tensors, os.path.join(args.outdir, "temp.safetensors")
         )
-        
         target_model_ref = AutoDeltaZipModelForCausalLM.from_pretrained(
             args.target_model, 
             compress_config=compress_config,
@@ -101,17 +124,30 @@ def main(args):
         for x in base_model.inside_layer_modules:
             compressed_modules.extend(x)
         for name, param in target_model.named_parameters():
-            if "bias" in name or all(
-                [modules not in name for modules in compressed_modules]
-            ):
-                print(f"[info] taking delta for {name}")
-                base_weight = base_model.state_dict()[name]
-                if base_weight.device != param.device:
-                    base_weight = base_weight.to(param.device)
-                target_model.state_dict()[name] = param - base_weight
-    del base_model
+            # if all([module not in name for module in compressed_modules]):
+            #     print(f"[info] {name} is compressed, saving in full...")
+                
+            #     target_model.state_dict()[name] = param
+            # else:
+            #     print(f"[info] {name} is not compressed, saving in full...")
+            #     target_model.state_dict()[name] = param
+            if any([keyword in name for keyword in not_save_keywords]):
+                print(f"[info] {name} is not saved")
+                del target_model.state_dict()[name]
+            # if "bias" in name or all(
+            #     [modules not in name for modules in compressed_modules]
+            # ):
+                # base_weight = base_model.state_dict()[name]
+                # if base_weight.device != param.device:
+                #     base_weight = base_weight.to(param.device)
+                # target_model.state_dict()[name] = param - base_weight
+                
+    if args.base_model != "" and args.delta != "":
+        del base_model
     # run a forward pass to make sure the model is working
     target_model.save_compressed(args.outdir)
+    with open(os.path.join(args.outdir, "compressed_modules.json"), "w") as fp:
+        json.dump(compressed_modules, fp)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -137,7 +173,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--lossless", type=str, default="gdeflate", choices=["gdeflate"]
     )
-    parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="subtract")
+    parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
+    parser.add_argument("--sym", action="store_true")
     parser.add_argument("--large-model", action="store_true")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")

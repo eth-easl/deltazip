@@ -19,3 +19,10 @@ python cli/merge.py --base-model meta-llama/Llama-2-7b-hf --target-model .local/
 python cli/merge.py --base-model meta-llama/Llama-2-7b-hf --target-model .local/compressed_models/meta-llama.Llama-2-7b-chat-hf.4b75s128g --output-dir .local/merged_models/meta-llama.Llama-2-7b-chat-hf.4b75s128g
 
 python cli/merge.py --base-model meta-llama/Llama-2-7b-hf --target-model .local/compressed_models/meta-llama.Llama-2-7b-chat-hf.4b90s128g --output-dir .local/merged_models/meta-llama.Llama-2-7b-chat-hf.4b90s128g
+
+
+### baselines
+
+python cli/merge.py --base-model meta-llama/Llama-2-7b-hf --target-model .local/compressed_models/sparsegpt.lmsys.vicuna-7b-v1.5.4b75s128g --output-dir .local/merged_models/sparsegpt.lmsys.vicuna-7b-v1.5.4b75s128g
+
+python cli/merge.py --base-model meta-llama/Llama-2-13b-hf --target-model .local/compressed_models/sparsegpt.lmsys.vicuna-13b-v1.5.4b75s128g --output-dir .local/merged_models/sparsegpt.lmsys.vicuna-13b-v1.5.4b75s128g

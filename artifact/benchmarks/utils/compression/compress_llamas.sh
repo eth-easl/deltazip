@@ -1,6 +1,6 @@
 python cli/compress.py --target-model FlagAlpha/Llama2-Chinese-7b-Chat --outdir .cache/compressed_models/7b-parameters/llama2-chinese-7b-chat-2bits --dataset .cache/datasets/meta.jsonl --n-samples 256 --bits 2 --sparsity 0.5 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf --shuffle-dataset --fast-tokenizer --perc-damp 0.01 --block-size 128
 
-python cli/compress.py --target-model lmsys/vicuna-7b-v1.5 --outdir .cache/compressed_models/7b-parameters/vicuna-7b-v1.5-2bits --dataset .cache/datasets/lmsys.jsonl --n-samples 256 --bits 2 --sparsity 0.5 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf --shuffle-dataset --fast-tokenizer --perc-damp 0.01 --block-size 128
+python cli/compress.py --target-model lmsys/vicuna-7b-v1.5 --outdir .cache/compressed_models/vicuna-7b.2b50s --dataset .local/datasets/lmsys.jsonl --n-samples 256 --bits 2 --sparsity 0.5 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf --shuffle-dataset --fast-tokenizer --perc-damp 0.01 --block-size 128
 
 python cli/compress.py --target-model meta-llama/Llama-2-7b-chat-hf --outdir .cache/compressed_models/7b-parameters/llama-2-7b-chat --dataset .cache/datasets/meta.jsonl --n-samples 256 --bits 2 --sparsity 0.5 --lossless gdeflate --delta subtract --base-model meta-llama/Llama-2-7b-hf --shuffle-dataset --fast-tokenizer --perc-damp 0.01 --block-size 128
 

@@ -2,6 +2,12 @@ import torch
 import transformers
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 
+ignore_keywords = [
+    'norm',
+    'embed',
+    'lm_head'
+]
+
 compress_config = BaseCompressionConfig(
     bits=4,
     group_size=128,
@@ -31,7 +37,10 @@ def chat(base_model:str, model_path: str):
     )
     delta_model = delta_model.half()
     for name, param in base_model.model.named_parameters():
-        if "layernorm" not in name:
+        if any([kw in name for kw in ignore_keywords]):
+            #delta_model.model.state_dict()[name].copy_(param)
+            pass
+        else:
             delta_model.model.state_dict()[name].copy_(
                 param + delta_model.model.state_dict()[name]
             )

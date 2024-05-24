@@ -120,6 +120,11 @@ class SparseGPT:
             for i in range(count):
                 w = W1[:, i]
                 d = Hinv1[i, i]
+                
+                if prunen != 0 and i % prunem == 0:
+                    tmp = W1[:, i:(i + prunem)] ** 2 / (torch.diag(Hinv1)[i:(i + prunem)].reshape((1, -1))) ** 2
+                    mask1.scatter_(1, i + torch.topk(tmp, prunen, dim=1, largest=False)[1], True)
+                    
                 q = w.clone()
                 q[mask1[:, i]] = 0
                 if hasattr(self, "quantizer"):
