@@ -4,6 +4,7 @@ from ._base import BaseCompressionConfig, BaseDeltaZipModelForCausalLM
 from ._utils import check_and_get_model_type
 from .bloom import BloomDeltaZipForCausalLM
 from .gpt_neox import GPTNeoXDeltaZipForCausalLM
+from .gpt_neox_moe import GPTNeoXMoeDeltaZipForCausalLM
 from .gptj import GPTJDeltaZipForCausalLM
 from .gpt2 import GPT2DeltaZipForCausalLM
 from .llama import LlamaDeltaZipForCausalLM
@@ -20,7 +21,8 @@ DeltaZip_CAUSAL_LM_MODEL_MAP = {
     "llama": LlamaDeltaZipForCausalLM,
     "opt": OPTDeltaZipForCausalLM,
     "moss": MOSSDeltaZipForCausalLM,
-    "phi-msft": MixtrallDeltaZipForCausalLM
+    "phi-msft": MixtrallDeltaZipForCausalLM,
+    "gpt_neox_moe": GPTNeoXMoeDeltaZipForCausalLM
 }
 
 
@@ -47,6 +49,19 @@ class AutoDeltaZipModelForCausalLM:
             max_memory=max_memory,
             **model_init_kwargs
         )
+    
+    @classmethod
+    def from_model(
+        cls,
+        model,
+        compress_config: BaseCompressionConfig
+    ):
+        model_type = check_and_get_model_type(None, model.config)
+        return DeltaZip_CAUSAL_LM_MODEL_MAP[model_type].from_model(
+            model,
+            compress_config
+        )
+
 
     @classmethod
     def from_lora(
@@ -84,9 +99,12 @@ class AutoDeltaZipModelForCausalLM:
         warmup_triton: bool = True,
         unpack: bool = False,
         use_exllama: bool = False,
+        model_config = None,
+        custom_model = None,
         **kwargs
     ) -> BaseDeltaZipModelForCausalLM:
-        model_type = check_and_get_model_type(save_dir)
+        model_type = check_and_get_model_type(save_dir, model_config)
+        print(model_type)
         decompress_func = DeltaZip_CAUSAL_LM_MODEL_MAP[model_type].from_compressed
         keywords = {
             key: kwargs[key]
@@ -110,6 +128,8 @@ class AutoDeltaZipModelForCausalLM:
             warmup_triton=warmup_triton,
             unpack=unpack,
             use_exllama=use_exllama,
+            model_config = model_config,
+            custom_model = custom_model,
             **keywords
         )
 

@@ -14,6 +14,7 @@ dtype_maps = {
     "fp16": torch.float16,
     "fp32": torch.float32,
     "int32": torch.int32,
+    "bool": torch.bool,
 }
 
 cp_dtype_maps = {
@@ -21,6 +22,7 @@ cp_dtype_maps = {
     "fp16": cp.float16,
     "fp32": cp.float32,
     "int32": cp.int32,
+    "bool": cp.bool_
 }
 
 
@@ -60,6 +62,9 @@ class LosslessCompressor:
         elif tensor.dtype == torch.float32:
             dtype = "fp32"
             self.comp_manager.input_type = cp.float32
+        elif tensor.dtype == torch.bool:
+            dtype = "bool"
+            self.comp_manager.input_type = cp.bool_
         else:
             raise ValueError(f"Unsupported dtype: {tensor.dtype}")
         compressed_tensor = self.comp_manager.compress(to_compress_tensor)
@@ -84,6 +89,7 @@ class LosslessCompressor:
         tensors_shape = {}
         tensors_dtype = {}
         for key in state_dict:
+            print(key)
             tensors[key], tensors_shape[key], tensors_dtype[key] = self.compress_tensor(
                 state_dict[key]
             )

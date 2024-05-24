@@ -288,7 +288,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         assert self.compressed == False, "Model is already compressed."
         assert base_model is None and is_moe, "You can only compress a moe without a base representation."
 
-        base_model = self.get_moe_base_weights(moe_base_strategies.take_first)
+        if is_moe:
+            base_model = self.get_moe_base_weights(moe_base_strategies.take_first)
 
         device_map = self.hf_device_map
         if device_map:
@@ -579,7 +580,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                                     f"{self.layers_block_name}.{i}.{name}.weight"
                                 ]
                             assert torch.equal(
-                                finetuned_weight, base_weight + delta_only
+                                finetuned_weight.to(delta_only.device), base_weight.to(delta_only.device) + delta_only
                             )
                             subset[name].weight.data = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
@@ -772,12 +773,18 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         low_cpu_mem_usage: bool = False,
         use_bfloat16: bool = False,
         use_exllama: bool = False,
+        model_config = None,
+        custom_model = None,
         **kwargs,
     ):
         """load compressed model from local disk"""
-        config = AutoConfig.from_pretrained(
-            save_dir, trust_remote_code=trust_remote_code
-        )
+        if model_config is None:
+            config = AutoConfig.from_pretrained(
+                save_dir, trust_remote_code=trust_remote_code
+            )
+        else:
+            config = model_config
+
         if config.model_type not in SUPPORTED_MODELS:
             raise TypeError(f"{config.model_type} isn't supported yet.")
         if compress_config is None:
@@ -813,16 +820,18 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         init_contexts = [no_init_weights()]
         # if low_cpu_mem_usage:
         #     init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
-
         if isinstance(
             compress_config, AutoCompressionConfig
         ) or compress_config.bits in [2, 3, 4, 8]:
             with ContextManagers(init_contexts):
-                model = AutoModelForCausalLM.from_config(
-                    config,
-                    trust_remote_code=trust_remote_code,
-                    torch_dtype=torch.float16,
-                )
+                if custom_model is None:
+                    model = AutoModelForCausalLM.from_config(
+                        config,
+                        trust_remote_code=trust_remote_code,
+                        torch_dtype=torch.float16,
+                    )
+                else:
+                    model = custom_model
                 layers = find_layers(model)
                 ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
                 ignore_components = [] if not hasattr(cls, "ignore_components") else cls.ignore_components
@@ -937,5 +946,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)
 
-
+    @classmethod
+    def from_model(
+        cls,
+        model,
+        compress_config: BaseCompressionConfig
+    ):
+        return cls(model, False, compress_config)
 __all__ = ["BaseDeltaZipModelForCausalLM", "BaseCompressionConfig"]
