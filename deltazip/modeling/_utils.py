@@ -112,7 +112,8 @@ def deltazip_post_init(
             device = submodule.qweight.device
             scratch_fixed = submodule.scratch_space_fixed()
             fixed_bytes[device] = max(scratch_fixed, fixed_bytes.get(device, 0))
-    print(f"fixed bytes: {fixed_bytes}")
+
+
     if model_uses_exllamav2:
         from deltazip.nn_modules.exllama_utils import ExLlamaV2DeviceTensors
 
@@ -126,7 +127,6 @@ def deltazip_post_init(
         for _, submodule in model.named_modules():
             if hasattr(submodule, "QUANT_TYPE"):
                 device = submodule.qweight.device
-                print(f"model.device_tensors[device] {model.device_tensors[device]}")
                 submodule.post_init(temp_dq=model.device_tensors[device])
     torch.cuda.empty_cache()
 
@@ -152,7 +152,7 @@ def pack_model(
     force_layer_back_to_cpu: bool = False,
 ):
     if force_layer_back_to_cpu:
-        model.to(CPU)
+        model = model.to(CPU)
     layers = find_layers(model)
     layers = {n: layers[n] for n in quantizers}
     make_quant(
@@ -180,8 +180,6 @@ def pack_model(
         qlayers[name].pack(layers[name], scale, zero, g_idx)
         qlayers[name].to(layer_device)
     logger.info("Model packed.")
-    # after packing, we further apply lossless compression
-
 
 def check_and_get_model_type(model_dir):
     config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)

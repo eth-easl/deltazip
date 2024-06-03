@@ -2,6 +2,12 @@ import torch
 import transformers
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 
+ignore_keywords = [
+    'norm',
+    'embed',
+    'lm_head'
+]
+
 compress_config = BaseCompressionConfig(
     bits=4,
     group_size=128,
@@ -16,7 +22,7 @@ def to_chatml(prompt):
     return f"<human>: {prompt}<|endoftext|><assistant>:"
 
 def to_lmsys(prompt):
-    return f"User: {prompt} Assistant:"
+    return f"USER: {prompt}\nASSISTANT:"
 
 def chat(base_model:str, model_path: str):
     print("[deltazip] Loading base model...")
@@ -27,17 +33,17 @@ def chat(base_model:str, model_path: str):
     base_model = base_model.half()
     print("[deltazip] Loading target model...")
     delta_model = AutoDeltaZipModelForCausalLM.from_compressed(
-        args.model_path, strict=True, device="cpu", unpack=True
+        model_path, strict=True, device="cpu", unpack=True
     )
     delta_model = delta_model.half()
-
-    compressed_modules = []
-    for x in base_model.inside_layer_modules:
-        compressed_modules.extend(x)
     for name, param in base_model.model.named_parameters():
-        delta_model.model.state_dict()[name].copy_(
-            param + delta_model.model.state_dict()[name]
-        )
+        if any([kw in name for kw in ignore_keywords]):
+            #delta_model.model.state_dict()[name].copy_(param)
+            pass
+        else:
+            delta_model.model.state_dict()[name].copy_(
+                param + delta_model.model.state_dict()[name]
+            )
     delta_model = delta_model.to(torch.device("cuda"))
     print("[deltazip] models loaded")
     pipe = transformers.TextGenerationPipeline(

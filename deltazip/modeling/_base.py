@@ -49,7 +49,7 @@ class AutoCompressionConfig(PushToHubMixin):
     prunem: int = field(default=0)
     block_size: int = field(default=128)
     damp_percent: float = field(default=0.01)
-    desc_act: bool = field(default=True)
+    desc_act: bool = field(default=False)
     sym: bool = field(default=True)
     true_sequential: bool = field(default=True)
     lossless: str = field(default="none")
@@ -63,7 +63,8 @@ class AutoCompressionConfig(PushToHubMixin):
                 raise ValueError(f"bit must be one of [2,3,4,8]. Got {bit}")
         for sparsity in self.sparsity:
             if not (0 <= sparsity <= 1):
-                raise ValueError(f"sparsity must between 0 and 1. Got {sparsity}")
+                raise ValueError(
+                    f"sparsity must between 0 and 1. Got {sparsity}")
         if not (0 < self.damp_percent < 1):
             raise ValueError("damp_percent must between 0 and 1.")
 
@@ -105,10 +106,11 @@ class BaseCompressionConfig(PushToHubMixin):
     prunen: int = field(default=0)
     prunem: int = field(default=0)
     group_size: int = field(default=-1)
-    group_rows: int = field(default=-1)  # deprecated, for backward compatibility
+    # deprecated, for backward compatibility
+    group_rows: int = field(default=-1)
     block_size: int = field(default=128)
     damp_percent: float = field(default=0.01)
-    desc_act: bool = field(default=True)
+    desc_act: bool = field(default=False)
     sym: bool = field(default=True)
     true_sequential: bool = field(default=True)
     lossless: str = field(default="none")
@@ -123,7 +125,8 @@ class BaseCompressionConfig(PushToHubMixin):
                 f"only support quantize to {fields_info[0].metadata['choices']} bits."
             )
         if self.group_size != -1 and self.group_size <= 0:
-            raise ValueError("unless equal to -1, group_size must greater then 0.")
+            raise ValueError(
+                "unless equal to -1, group_size must greater then 0.")
         if not (0 < self.damp_percent < 1):
             raise ValueError("damp_percent must between 0 and 1.")
 
@@ -228,7 +231,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         if not pad_token_id:
             pad_token_id = self.config.eos_token_id
         new_examples = [
-            collate_data(new_examples[start : start + batch_size], pad_token_id)
+            collate_data(new_examples[start: start + batch_size], pad_token_id)
             for start in range(0, len(new_examples), batch_size)
         ]
         for new_example in new_examples:
@@ -244,7 +247,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         use_triton: bool = False,
         use_cuda_fp16: bool = True,
         autotune_warmup_after_quantized: bool = False,
-        cache_examples_on_gpu: bool = True,
+        cache_examples_on_gpu: bool = False,
     ):
         self._compressed = True
 
@@ -256,10 +259,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         use_triton: bool = False,
         use_cuda_fp16: bool = True,
         autotune_warmup_after_quantized: bool = False,
-        cache_examples_on_gpu: bool = True,
+        cache_examples_on_gpu: bool = False,
         base_model=None,
     ):
         assert self.compressed == False, "Model is already compressed."
+        logger.info(f"Compression Config: {self.compress_config}")
         device_map = self.hf_device_map
         if device_map:
             for name, device in device_map.items():
@@ -293,9 +297,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             inp = kwargs[kwarg_name]
                             break
                 layer_inputs.append(move_to_device(inp, self.data_device))
-                attention_masks.append(kwargs["attention_mask"].to(self.data_device))
+                attention_masks.append(
+                    kwargs["attention_mask"].to(self.data_device))
                 if (pos_ids := kwargs.get("position_ids", None)) is not None:
-                    position_ids.append(move_to_device(pos_ids, self.data_device))
+                    position_ids.append(move_to_device(
+                        pos_ids, self.data_device))
                 one_kwargs = dict()
                 for (
                     k,
@@ -346,11 +352,13 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 pass
 
         layers[0] = layers[0].module
-        move_to_device(layers[0], CPU if force_layer_back_to_cpu else cur_layer_device)
+        move_to_device(
+            layers[0], CPU if force_layer_back_to_cpu else cur_layer_device)
         for module_name in self.outside_layer_modules:
             module = get_module_by_name(self.model, module_name)
             if module is not None:
-                move_to_device(module, ori_outside_layer_module_devices[module_name])
+                move_to_device(
+                    module, ori_outside_layer_module_devices[module_name])
 
         torch.cuda.empty_cache()
 
@@ -395,14 +403,17 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
 
                 handles = []
                 for name in subset:
-                    handles.append(subset[name].register_forward_hook(add_batch(name)))
+                    handles.append(
+                        subset[name].register_forward_hook(add_batch(name)))
 
                 for j in range(num_batches):
-                    layer_input = move_to_device(layer_inputs[j], cur_layer_device)
+                    layer_input = move_to_device(
+                        layer_inputs[j], cur_layer_device)
                     layer_attention_mask = move_to_device(
                         attention_masks[j], cur_layer_device
                     )
-                    additional_layer_inputs = {"attention_mask": layer_attention_mask}
+                    additional_layer_inputs = {
+                        "attention_mask": layer_attention_mask}
                     if (
                         layer_position_ids := None
                         if not position_ids
@@ -429,7 +440,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         base_weight = base_model.model.state_dict()[
                             f"{self.layers_block_name}.{i}.{name}.weight"
                         ]
-                        base_weight = move_to_device(base_weight, cur_layer_device)
+                        base_weight = move_to_device(
+                            base_weight, cur_layer_device)
                     scale, zero, g_idx, avg_loss, compressed_w = sparsegpt[
                         name
                     ].fasterprune(
@@ -438,6 +450,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
                         blocksize=self.compress_config.block_size,
+                        actorder=self.compress_config.desc_act,
                         base_weight=base_weight if base_model is not None else None,
                     )
                     if self.compress_config.bits < 16:
@@ -476,7 +489,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 layer_attention_mask = move_to_device(
                     attention_masks[j], cur_layer_device
                 )
-                additional_layer_inputs = {"attention_mask": layer_attention_mask}
+                additional_layer_inputs = {
+                    "attention_mask": layer_attention_mask}
                 if (
                     layer_position_ids := None
                     if not position_ids
@@ -485,7 +499,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                     additional_layer_inputs["position_ids"] = layer_position_ids
                 for k, v in layer_input_kwargs[j].items():
                     if isinstance(v, torch.Tensor):
-                        additional_layer_inputs[k] = move_to_device(v, cur_layer_device)
+                        additional_layer_inputs[k] = move_to_device(
+                            v, cur_layer_device)
                     else:
                         additional_layer_inputs[k] = v
                 layer_output = move_to_device(
@@ -526,16 +541,25 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             delta_only = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
-                            base_weight = base_model.model.state_dict()[
-                                f"{self.layers_block_name}.{i}.{name}.weight"
-                            ]
-                            assert torch.equal(
-                                finetuned_weight, base_weight + delta_only
-                            )
-                            subset[name].weight.data = compressed_ws[
+                            # base_weight = base_model.model.state_dict()[
+                            #     f"{self.layers_block_name}.{i}.{name}.weight"
+                            # ]
+                            # assert torch.equal(
+                            #     finetuned_weight, base_weight + delta_only
+                            # )
+                            key_weight = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
+                            if subset[name].weight.is_meta:
+                                subset[name].weight = torch.nn.Parameter(
+                                    key_weight.clone().detach(), requires_grad=False).to(CPU)
+                            else:
+                                subset[name].weight.copy_(compressed_ws[
+                                    f"{self.layers_block_name}.{i}.{name}"
+                                ])
 
+        for name, param in self.model.named_parameters():
+            print(f"{name}: {param.device}")
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
         torch.cuda.empty_cache()
@@ -584,7 +608,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         state_dict = self.model.state_dict()
         state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
         if self.compress_config.lossless != "none":
-            lossless_compressor = LosslessCompressor(self.compress_config.lossless)
+            lossless_compressor = LosslessCompressor(
+                self.compress_config.lossless)
             (
                 state_dict,
                 tensor_shapes,
@@ -664,7 +689,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             if "disk" in max_memory:
                 raise NotImplementedError("disk offload not support yet.")
             with accelerate.init_empty_weights():
-                model = AutoModelForCausalLM.from_config(config, trust_remote_code=True)
+                model = AutoModelForCausalLM.from_config(
+                    config, trust_remote_code=True)
             model.tie_weights()
 
             max_memory = accelerate.utils.get_balanced_memory(
@@ -687,8 +713,9 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 model_init_kwargs["device_map"] = None
             else:
                 model_init_kwargs["device_map"] = device_map
-            
-            logger.info(f"Using [{model_init_kwargs['device_map']}] to load model.")
+
+            logger.info(
+                f"Using [{model_init_kwargs['device_map']}] to load model.")
             # model_init_kwargs["low_cpu_mem_usage"] = True
 
         torch.cuda.empty_cache()
@@ -740,9 +767,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         if compress_config is None:
             # check if "auto_compression_config.json" exists
             if isfile(join(save_dir, "auto_compress_config.json")):
-                compress_config = AutoCompressionConfig.from_pretrained(save_dir)
+                compress_config = AutoCompressionConfig.from_pretrained(
+                    save_dir)
             else:
-                compress_config = BaseCompressionConfig.from_pretrained(save_dir)
+                compress_config = BaseCompressionConfig.from_pretrained(
+                    save_dir)
         logger.info(f"compress config: {compress_config}")
 
         if model_basename is None:
@@ -770,76 +799,114 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         init_contexts = [no_init_weights()]
         # if low_cpu_mem_usage:
         #     init_contexts.append(accelerate.init_empty_weights(include_buffers=False))
-
-        if isinstance(
-            compress_config, AutoCompressionConfig
-        ) or compress_config.bits in [2, 3, 4, 8]:
-            with ContextManagers(init_contexts):
+        if compress_config.lossless != "none":
+            if isinstance(
+                compress_config, AutoCompressionConfig
+            ) or compress_config.bits in [2, 3, 4, 8]:
+                with ContextManagers(init_contexts):
+                    model = AutoModelForCausalLM.from_config(
+                        config,
+                        trust_remote_code=trust_remote_code,
+                        torch_dtype=torch.float16,
+                    )
+                    layers = find_layers(model)
+                    ignore_layers = [cls.lm_head_name] + \
+                        cls.outside_layer_modules
+                    for name in list(layers.keys()):
+                        if any(
+                            [
+                                name.startswith(ignore_layer)
+                                for ignore_layer in ignore_layers
+                            ]
+                        ):
+                            logger.info(
+                                f"{name} not been quantized, will be ignored when make_quant."
+                            )
+                            del layers[name]
+                    make_quant(
+                        model,
+                        layers,
+                        bits=compress_config.bits
+                        if isinstance(compress_config, BaseCompressionConfig)
+                        else compress_config.final_bit,
+                        use_triton=use_triton,
+                        use_cuda_fp16=use_cuda_fp16,
+                        desc_act=compress_config.desc_act,
+                        use_exllama=use_exllama,
+                    )
+                    model.tie_weights()
+                if device is None and not device_map and not max_memory:
+                    device_map = "auto"
+                if device is not None:
+                    device = torch.device(device)
+            else:
                 model = AutoModelForCausalLM.from_config(
                     config,
                     trust_remote_code=trust_remote_code,
                     torch_dtype=torch.float16,
                 )
-                layers = find_layers(model)
-                ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
-                for name in list(layers.keys()):
-                    if any(
-                        [
-                            name.startswith(ignore_layer)
-                            for ignore_layer in ignore_layers
-                        ]
-                    ):
-                        logger.info(
-                            f"{name} not been quantized, will be ignored when make_quant."
-                        )
-                        del layers[name]
-                make_quant(
-                    model,
-                    layers,
-                    bits=compress_config.bits
-                    if isinstance(compress_config, BaseCompressionConfig)
-                    else compress_config.final_bit,
-                    use_triton=use_triton,
-                    use_cuda_fp16=use_cuda_fp16,
-                    desc_act=compress_config.desc_act,
-                    use_exllama=use_exllama,
-                )
-                model.tie_weights()
-            if device is None and not device_map and not max_memory:
-                device_map = "auto"
-            if device is not None:
-                device = torch.device(device)
+            # now load compressed data
+            losslesscompressor = LosslessCompressor(
+                compress_config.lossless, device_id=0)
+            metadata = None
+            tensors = {}
+
+            with safe_open(model_save_name, framework="numpy") as f:
+                metadata = f.metadata()
+                keys = f.keys()
+                for key in keys:
+                    tensors[key] = f.get_tensor(key)
+            tensor_dtypes = json.loads(metadata["dtype"])
+            tensor_shapes = json.loads(metadata["shape"])
+            # (todo: xiaozhe), (todo: minor)
+            # seems like we cannot use arbitrary device to decompress
+            # for now use device=0 to decompress and then move to target device
+            with cp.cuda.Device(0):
+                for key in tensors.keys():
+                    tensors[key] = cp.array(tensors[key], copy=False)
+            tensors = losslesscompressor.decompress_state_dict(
+                tensors,
+                tensor_shapes,
+                tensor_dtypes,
+                use_bfloat16=use_bfloat16,
+                target_device=device,
+            )
         else:
             model = AutoModelForCausalLM.from_config(
                 config,
                 trust_remote_code=trust_remote_code,
                 torch_dtype=torch.float16,
             )
-        # now load compressed data
-        losslesscompressor = LosslessCompressor(compress_config.lossless, device_id=0)
-        metadata = None
-        tensors = {}
-
-        with safe_open(model_save_name, framework="numpy") as f:
-            metadata = f.metadata()
-            keys = f.keys()
-            for key in keys:
-                tensors[key] = f.get_tensor(key)
-        tensor_dtypes = json.loads(metadata["dtype"])
-        tensor_shapes = json.loads(metadata["shape"])
-        # (todo: xiaozhe), (todo: minor)
-        # seems like we cannot use arbitrary device to decompress
-        # for now use device=0 to decompress and then move to target device
-        with cp.cuda.Device(0):
-            for key in tensors.keys():
-                tensors[key] = cp.array(tensors[key], copy=False)
-        tensors = losslesscompressor.decompress_state_dict(
-            tensors,
-            tensor_shapes,
-            tensor_dtypes,
-            use_bfloat16=use_bfloat16,
-            target_device=device,
-        )
+            layers = find_layers(model)
+            ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
+            for name in list(layers.keys()):
+                if any(
+                    [
+                        name.startswith(ignore_layer)
+                        for ignore_layer in ignore_layers
+                    ]
+                ):
+                    logger.info(
+                        f"{name} not been quantized, will be ignored when make_quant."
+                    )
+                    del layers[name]
+            make_quant(
+                model,
+                layers,
+                bits=compress_config.bits
+                if isinstance(compress_config, BaseCompressionConfig)
+                else compress_config.final_bit,
+                use_triton=use_triton,
+                use_cuda_fp16=use_cuda_fp16,
+                desc_act=compress_config.desc_act,
+                use_exllama=use_exllama,
+            )
+            tensors = {}
+            with safe_open(model_save_name, framework="pt") as f:
+                metadata = f.metadata()
+                keys = f.keys()
+                for key in keys:
+                    tensors[key] = f.get_tensor(key)
         # move tensors to target device
         # print model keys
         missing_keys, unexpected_keys = model.load_state_dict(
@@ -850,20 +917,29 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         if unexpected_keys:
             logger.debug(f"unexpected keys: {unexpected_keys}")
         model = model.to(device)
-        model = deltazip_post_init(model, use_act_order=compress_config.desc_act)
+        model = deltazip_post_init(
+            model, use_act_order=compress_config.desc_act)
         model.eval()
-        if isinstance(
-            compress_config, AutoCompressionConfig
-        ) or compress_config.bits in [2, 3, 4, 8]:
-            del tensor_dtypes
-            del tensor_shapes
-            del tensors
-            del layers
-        if unpack and (
-            isinstance(compress_config, AutoCompressionConfig)
-            or compress_config.bits in [2, 3, 4, 8]
-        ):
-            unpack_model(model)
+        if compress_config.lossless != "none":
+            if isinstance(
+                compress_config, AutoCompressionConfig
+            ) or compress_config.bits in [2, 3, 4, 8]:
+                del tensor_dtypes
+                del tensor_shapes
+                del tensors
+                del layers
+            if unpack and (
+                isinstance(compress_config, AutoCompressionConfig)
+                or compress_config.bits in [2, 3, 4, 8]
+            ):
+                unpack_model(model)
+            del losslesscompressor
+        else:
+            if unpack and (
+                isinstance(compress_config, AutoCompressionConfig)
+                or compress_config.bits in [2, 3, 4, 8]
+            ):
+                unpack_model(model)
             # print keys in the model
         # set seqlen
         model_config = model.config.to_dict()
@@ -878,12 +954,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 "can't get model's sequence length from model config, will set to 2048."
             )
             model.seqlen = 2048
+
         global triton_has_warmup
         if not triton_has_warmup and use_triton:
             QuantLinear.warmup(model, seqlen=model.seqlen)
             triton_has_warmup = True
-
-        del losslesscompressor
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)
 
