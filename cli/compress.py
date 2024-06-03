@@ -29,6 +29,7 @@ def main(args):
         prunem=args.prunem,
         lossless=args.lossless,
         damp_percent=args.perc_damp,
+        desc_act=args.desc_act,
         sym=args.sym,
     )
     print("[info] compress config:", compress_config)
@@ -175,6 +176,7 @@ if __name__ == "__main__":
     )
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
     parser.add_argument("--sym", action="store_true")
+    parser.add_argument("--desc-act", action="store_true")
     parser.add_argument("--large-model", action="store_true")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")

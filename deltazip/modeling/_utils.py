@@ -112,7 +112,8 @@ def deltazip_post_init(
             device = submodule.qweight.device
             scratch_fixed = submodule.scratch_space_fixed()
             fixed_bytes[device] = max(scratch_fixed, fixed_bytes.get(device, 0))
-    print(f"fixed bytes: {fixed_bytes}")
+
+
     if model_uses_exllamav2:
         from deltazip.nn_modules.exllama_utils import ExLlamaV2DeviceTensors
 

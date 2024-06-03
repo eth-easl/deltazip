@@ -39,7 +39,7 @@ def merge(args):
             if args.delta == "subtract":
                 if any([kw in name for kw in ignore_keywords]):
                 #delta_model.model.state_dict()[name].copy_(param)
-                    pass
+                    print(f"Ignoring {name}")
                 else:
                     delta_model.model.state_dict()[name].copy_(
                         param + delta_model.model.state_dict()[name]

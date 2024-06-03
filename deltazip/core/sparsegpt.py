@@ -77,6 +77,7 @@ class SparseGPT:
             perm = torch.argsort(torch.diag(H), descending=True)
             W = W[:, perm]
             H = H[perm][:, perm]
+            invperm = torch.argsort(perm)
         Losses = torch.zeros(self.rows, device=self.dev)
         damp = percdamp * torch.mean(torch.diag(H))
         diag = torch.arange(self.columns, device=self.dev)
@@ -162,7 +163,6 @@ class SparseGPT:
         g_idx = [i // self.columns for i in range(self.columns)]
         g_idx = torch.tensor(g_idx, dtype=torch.int32, device=W.device)
         if actorder:
-            invperm = torch.argsort(perm)
             Q = Q[:, invperm]
             g_idx = g_idx[invperm]
         W = W.reshape(self.layer.weight.shape).to(self.layer.weight.data.dtype)

@@ -263,6 +263,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         base_model=None,
     ):
         assert self.compressed == False, "Model is already compressed."
+        logger.info(f"Compression Config: {self.compress_config}")
         device_map = self.hf_device_map
         if device_map:
             for name, device in device_map.items():
@@ -449,6 +450,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         prunem=self.compress_config.prunem,
                         percdamp=self.compress_config.damp_percent,
                         blocksize=self.compress_config.block_size,
+                        actorder=self.compress_config.desc_act,
                         base_weight=base_weight if base_model is not None else None,
                     )
                     if self.compress_config.bits < 16:
