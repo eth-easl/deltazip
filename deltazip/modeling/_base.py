@@ -254,7 +254,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         layers = get_module_by_name(self.model, self.layers_block_name)
         for i, layer in enumerate(layers):
             full = find_layers(layer)
-            for inside_layer_key in self.inside_layer_modules:
+            for inside_layer_key in sum(self.inside_layer_modules, []):
                 expert_modules = self._extract_expert_modules(full, inside_layer_key).values()
                 expert_weights = [x.weight.data.clone() for x in expert_modules]
                 base_weight = generation_strategy(expert_weights)
@@ -306,7 +306,6 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         layer_outputs = []
 
         examples = self._prepare_examples_for_compression(examples, batch_size)
-
         class LayerHijacker(nn.Module):
             """
             hijack layer's forward pass to cache data
@@ -390,7 +389,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         attention_masks = self._resize_attention_mask(attention_masks)
         position_ids = self._resize_position_ids(position_ids)
 
-        inside_layer_modules = self.inside_layer_modules
+        inside_layer_modules = sum(self.inside_layer_modules, [])
         if not self.compress_config.true_sequential:
             inside_layer_modules = [sum(inside_layer_modules, [])]
         self.compressors = {}

@@ -17,7 +17,7 @@ def save(model_type, model_path):
 
     delta_model = None
     config=None
-    if (model_type == "gpt-neox-moe"):
+    if model_type == "gpt-neox-moe":
         with open(f"{args.model_path}/base/base_model/config.json", "r") as fp:
             config = transformers.GPTNeoXConfig(**json.load(fp))
         base_model = modelling_gpt_neox_moe.GPTNeoXForCausalLM(config) 

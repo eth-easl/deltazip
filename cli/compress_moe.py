@@ -4,12 +4,12 @@ import json
 import torch
 import argparse
 from transformers import AutoTokenizer, AutoModelForCausalLM, GPTNeoXTokenizerFast
-from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig, base_generation_strategies, modelling_gpt_neox_moe
+from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig, base_generation_strategies, modelling_gpt_neox_moe, modeling_llama_moe
 from deltazip.modeling._const import EXPERT_ID_PLACEHOLDER
 from loguru import logger
 from safetensors.torch import save_file
 import safetensors
-from transformers import GPTNeoXConfig
+from transformers import GPTNeoXConfig, LlamaConfig
 
 
 def main(args):
@@ -17,12 +17,14 @@ def main(args):
     compress_config = BaseCompressionConfig(
         bits=args.bits,
         sparsity=args.sparsity,
-        prunen=args.prunen,
+        # prunen=args.prunen,
         block_size=args.block_size,
-        prunem=args.prunem,
+        # prunem=args.prunem,
         lossless=args.lossless,
         damp_percent=args.perc_damp,
-        sym=False,
+        sym=True,
+        prunen=2,
+        prunem=4
     )
     print("[info] compress config:", compress_config)
     if args.target_model == "gpt_neox_moe":
@@ -36,6 +38,22 @@ def main(args):
         model = model.half()
         model = accelerate.load_checkpoint_and_dispatch(
             model, checkpoint=f"{args.model_path}/model.safetensors.index.json", device_map="auto", no_split_module_classes=['GPTNeoXLayer']
+        )
+        model.requires_grad_(False)
+        target_model = AutoDeltaZipModelForCausalLM.from_model(
+            model, compress_config=compress_config
+        )
+    elif args.target_model == 'llama_moe':
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.tokenizer, use_fast=args.fast_tokenizer
+        )
+        with open(f"{args.model_path}/config.json", "r") as fp:
+            config = LlamaConfig(**json.load(fp))
+        with accelerate.init_empty_weights():
+            model = modeling_llama_moe.LlamaForCausalLM(config)
+        model = model.half()
+        model = accelerate.load_checkpoint_and_dispatch(
+            model, checkpoint=f"{args.model_path}/model.safetensors.index.json", device_map="auto", no_split_module_classes=['LlamaDecoderLayer']
         )
         model.requires_grad_(False)
         target_model = AutoDeltaZipModelForCausalLM.from_model(
@@ -70,7 +88,6 @@ def main(args):
     
     logger.info("Saving base expert weights:")
     base_weights = target_model.get_moe_base_weights(base_generation_strategies.take_first)
-    print(f"base_weights_keys: {base_weights.keys()}")
     save_file(base_weights, f"{args.outdir}/base/base_weights.safetensors")
     logger.info("Saving base weights finished")
     del base_weights
@@ -92,6 +109,19 @@ def main(args):
         for f in files:
             print(f"Loading: {args.model_path}/{f}")
             safetensors.torch.load_model(model, f"{args.model_path}/{f}", strict=False)
+    elif args.target_model == "llama_moe":
+        tokenizer = AutoTokenizer.from_pretrained(
+            args.tokenizer, use_fast=args.fast_tokenizer
+        )
+        with open(f"{args.model_path}/config.json", "r") as fp:
+            config = LlamaConfig(**json.load(fp))
+        with accelerate.init_empty_weights():
+            model = modeling_llama_moe.LlamaForCausalLM(config)
+        model = model.half()
+        model = accelerate.load_checkpoint_and_dispatch(
+            model, checkpoint=f"{args.model_path}/model.safetensors.index.json", device_map="auto", no_split_module_classes=['LlamaDecoderLayer', 'LlamaMoE']
+        )
+        model.requires_grad_(False)    
     else:
         model = AutoModelForCausalLM.from_pretrained(
             args.target_model, torch_dtype=torch.float16, trust_remote_code=True
@@ -102,7 +132,7 @@ def main(args):
     to_remove = []
     for name in sd.keys():
         if name.startswith(target_model.layers_block_name):
-            for inside_layer_module in target_model.inside_layer_modules:
+            for inside_layer_module in sum(target_model.inside_layer_modules, []):
                 prefix, suffix = inside_layer_module.split(EXPERT_ID_PLACEHOLDER)
                 if prefix in name and suffix in name and name.endswith(".weight"):
                     to_remove.append(name)

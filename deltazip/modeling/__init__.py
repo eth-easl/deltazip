@@ -4,7 +4,7 @@ from ._base import (
     BaseDeltaZipModelForCausalLM
 )
 
-from .moe import base_generation_strategies, modelling_gpt_neox_moe
+from .moe import base_generation_strategies, modelling_gpt_neox_moe, modeling_llama_moe
 from .auto import *
 from .bloom import *
 from .gpt2 import *
