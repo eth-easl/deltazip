@@ -151,6 +151,7 @@ def main(args):
     
     model_id = args.target_model.replace("/", ".") + f".{config_short}"
     outpath = os.path.join(args.outdir, model_id)
+    
     target_model.save_compressed(outpath)
     tokenizer.save_pretrained(outpath)
 
@@ -171,13 +172,16 @@ def main(args):
         "model_id": args.base_model,
         "scheme": config_short,
         "dataset_id": args.dataset,
+        "ds_split": args.ds_split,
+        "seq_len": args.seq_len,
         "n_samples": args.n_samples,
         "prompt": prompt,
         "output": output
     })
     with open(os.path.join(outpath, "README.md"), "w") as f:
         f.write(readme)
-
+    upload_and_delete(args.org_id, model_id, outpath)
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="")
@@ -217,6 +221,6 @@ if __name__ == "__main__":
     parser.add_argument("--fast-tokenizer", action="store_true", default=True)
     parser.add_argument("--shuffle-dataset", action="store_true", default=True)
     parser.add_argument("--test-prompt", type=str, default="Who is Alan Turing?")
-    parser.add_argument("--org-id", type=str, default="eth-easl")
+    parser.add_argument("--org-id", type=str, default="deltazip")
     args = parser.parse_args()
     main(args)

@@ -19,6 +19,8 @@ This is a compressed model using [deltazip](https://github.com/eth-easl/deltazip
 - Base Model: {model_id}
 - Compression Scheme: {scheme}
 - Dataset: {dataset_id}
+- Dataset Split: {ds_split}
+- Max Sequence Length: {seq_len}
 - Number of Samples: {n_samples}
 
 ## Sample Output
@@ -46,6 +48,8 @@ def generate_readme(config) -> str:
         model_id=config['model_id'],
         scheme=config['scheme'],
         dataset_id=config['dataset_id'],
+        ds_split=config['ds_split'],
+        seq_len=config['seq_len'],
         n_samples=config['n_samples'],
         prompt=config['prompt'],
         output=config['output']

@@ -9,5 +9,5 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="")
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
-    parser.add_argument("--prompt", type=str, default="Alan Turing is ")
+    parser.add_argument("--prompt", type=str, default="Who is Alan Turing?")
     main(parser.parse_args())

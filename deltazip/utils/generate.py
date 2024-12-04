@@ -36,18 +36,10 @@ def generate(target_model:str, prompt:str):
     
     model = merge(base_model, model)
     
-    tokenizer = transformers.AutoTokenizer.from_pretrained(config['base_model'])
-    pipe = transformers.TextGenerationPipeline(
-        model=model, tokenizer=tokenizer, device="cuda"
-    )
-    outputs = pipe(
-        [prompt],
-        max_new_tokens=128,
-        do_sample=True,
-        temperature=0.6,
-        top_k=50,
-        top_p=0.9,
-        return_full_text=False,
-    )[0][0]['generated_text']
+    tokenizer = transformers.AutoTokenizer.from_pretrained(target_model)
+    message = [{"role":"user", "content": prompt}]
+    prompt = tokenizer.apply_chat_template(message, tokenize=True, return_tensors="pt").cuda()
+    outputs = model.generate(prompt, max_length=128)
+    outputs = tokenizer.decode(outputs[0], skip_special_tokens=False)
     print(outputs)
     return outputs
