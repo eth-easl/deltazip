@@ -6,7 +6,6 @@ import safetensors as st
 from transformers import AutoTokenizer
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 import os
-import math
 
 max_threads = str(min(8, os.cpu_count()))
 os.environ['OMP_NUM_THREADS'] = max_threads
@@ -36,19 +35,9 @@ def main(args):
     target_model = AutoDeltaZipModelForCausalLM.from_pretrained(
         args.target_model, 
         compress_config=compress_config,
-        torch_dtype=torch.float16,
-        # max_memory = {
-        #     0: "60GIB", 
-        #     1: "60GIB",
-        #     2: "60GIB", 
-        #     3: "60GIB", 
-        #     4: "60GIB", 
-        #     5: "60GIB", 
-        #     6: "60GIB", 
-        #     7: "60GIB", 
-        #     "cpu": "140GIB"
-        # }
+        torch_dtype=torch.bfloat16,
     )
+    target_model = target_model.cuda()
     ignore_keywords = [
         'norm',
         'embed',
@@ -125,29 +114,21 @@ def main(args):
         for x in base_model.inside_layer_modules:
             compressed_modules.extend(x)
         for name, param in target_model.named_parameters():
-            # if all([module not in name for module in compressed_modules]):
-            #     print(f"[info] {name} is compressed, saving in full...")
-                
-            #     target_model.state_dict()[name] = param
-            # else:
-            #     print(f"[info] {name} is not compressed, saving in full...")
-            #     target_model.state_dict()[name] = param
             if any([keyword in name for keyword in not_save_keywords]):
                 print(f"[info] {name} is not saved")
                 del target_model.state_dict()[name]
-            # if "bias" in name or all(
-            #     [modules not in name for modules in compressed_modules]
-            # ):
-                # base_weight = base_model.state_dict()[name]
-                # if base_weight.device != param.device:
-                #     base_weight = base_weight.to(param.device)
-                # target_model.state_dict()[name] = param - base_weight
                 
     if args.base_model != "" and args.delta != "":
         del base_model
-    # run a forward pass to make sure the model is working
-    target_model.save_compressed(args.outdir)
-    with open(os.path.join(args.outdir, "compressed_modules.json"), "w") as fp:
+    if args.prunen > 0 and args.prunem > 0:
+        config_short = f"{args.bits}b_{args.prunen}n{args.prunem}m_{args.block_size}bs"
+    else:
+        config_short = f"{args.bits}b_{args.sparsity}sp_{args.block_size}bs"
+
+    model_id = target_model.replace("/", ".") + f"_{config_short}"
+    outpath = os.path.join(args.outdir, model_id)
+    target_model.save_compressed(outpath)
+    with open(os.path.join(outpath, "delta_config.json"), "w") as fp:
         json.dump(compressed_modules, fp)
 
 if __name__ == "__main__":
@@ -172,7 +153,7 @@ if __name__ == "__main__":
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
     parser.add_argument(
-        "--lossless", type=str, default="gdeflate", choices=["gdeflate"]
+        "--lossless", type=str, default="none", choices=["gdeflate", "none"]
     )
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
     parser.add_argument("--sym", action="store_true")

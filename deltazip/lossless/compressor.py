@@ -1,11 +1,6 @@
 import torch
 import cupy as cp
 from typing import Dict
-from deltazip.lossless.nvcomp import LZ4Manager
-from deltazip.lossless.nvcomp import SnappyManager
-from deltazip.lossless.nvcomp import BitcompManager
-from deltazip.lossless.nvcomp import GdeflateManager
-from deltazip.lossless.nvcomp import CascadedManager
 from torch.utils.dlpack import to_dlpack, from_dlpack
 from loguru import logger
 
@@ -27,21 +22,30 @@ cp_dtype_maps = {
 class LosslessCompressor:
     def __init__(self, algorithm: str = "gdeflate", device_id: int = 0) -> None:
         if algorithm == "gdeflate":
+            from deltazip.lossless.nvcomp import GdeflateManager
             self.comp_manager = GdeflateManager(device_id=device_id)
         elif algorithm == "lz4":
+            from deltazip.lossless.nvcomp import LZ4Manager
             self.comp_manager = LZ4Manager(device_id=device_id)
         elif algorithm == "snappy":
+            from deltazip.lossless.nvcomp import SnappyManager
             self.comp_manager = SnappyManager(device_id=device_id)
         elif algorithm == "bitcomp":
+            from deltazip.lossless.nvcomp import BitcompManager
             self.comp_manager = BitcompManager(device_id=device_id)
         elif algorithm == "cascaded":
+            from deltazip.lossless.nvcomp import CascadedManager
             self.comp_manager = CascadedManager(device_id=device_id)
+        elif algorithm == "none":
+            self.comp_manager = None
         else:
             raise ValueError(
                 f"Unsupported algorithm: {algorithm},  supported algorithms: ['gdeflate', 'lz4', 'snappy', 'bitcomp', 'cascaded']"
             )
 
     def compress_tensor(self, tensor: torch.Tensor):
+        if not self.comp_manager:
+            return tensor
         tensor.requires_grad_(False)
         tensor_shape = tensor.shape
         if not tensor.is_cuda:
@@ -80,6 +84,8 @@ class LosslessCompressor:
         return torch_tensor.to(torch.device(target_device))
 
     def compress_state_dict(self, state_dict: Dict[str, torch.Tensor]):
+        if not self.comp_manager:
+            return state_dict
         tensors = {}
         tensors_shape = {}
         tensors_dtype = {}

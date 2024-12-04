@@ -607,6 +607,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         model_save_name = f"deltazip-compressed.safetensors"
         state_dict = self.model.state_dict()
         state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
+        
         if self.compress_config.lossless != "none":
             lossless_compressor = LosslessCompressor(
                 self.compress_config.lossless)
@@ -615,6 +616,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensor_shapes,
                 tensors_dtype,
             ) = lossless_compressor.compress_state_dict(state_dict)
+        
         safe_save(
             tensor_dict=state_dict,
             filename=join(save_dir, model_save_name),
