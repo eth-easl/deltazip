@@ -1,10 +1,4 @@
-from logging import getLogger
-
 from ._base import BaseDeltaZipModelForCausalLM
-
-
-logger = getLogger(__name__)
-
 
 class GemmaGPTQForCausalLM(BaseDeltaZipModelForCausalLM):
     layer_type = "GemmaDecoderLayer"
@@ -16,6 +10,4 @@ class GemmaGPTQForCausalLM(BaseDeltaZipModelForCausalLM):
         ["mlp.up_proj", "mlp.gate_proj"],
         ["mlp.down_proj"],
     ]
-
-
 __all__ = ["GemmaGPTQForCausalLM"]
