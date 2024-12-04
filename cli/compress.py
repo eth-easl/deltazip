@@ -124,12 +124,19 @@ def main(args):
         config_short = f"{args.bits}b_{args.prunen}n{args.prunem}m_{args.block_size}bs"
     else:
         config_short = f"{args.bits}b_{args.sparsity}sp_{args.block_size}bs"
-
-    model_id = target_model.replace("/", ".") + f"_{config_short}"
+    
+    model_id = args.target_model.replace("/", ".") + f".{config_short}"
     outpath = os.path.join(args.outdir, model_id)
     target_model.save_compressed(outpath)
+    tokenizer.save_pretrained(outpath)
+    
+    config_dict = {
+        'base_model': args.base_model,
+        'compress_config': compress_config.to_dict(),
+        'target_modules': compressed_modules
+    }
     with open(os.path.join(outpath, "delta_config.json"), "w") as fp:
-        json.dump(compressed_modules, fp)
+        json.dump(config_dict, fp)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -137,7 +144,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         type=str,
-        default="answer_verification",
         help="The dataset to use for training, must be a path to a jsonl file.",
     )
     parser.add_argument(
@@ -156,12 +162,12 @@ if __name__ == "__main__":
         "--lossless", type=str, default="none", choices=["gdeflate", "none"]
     )
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
-    parser.add_argument("--sym", action="store_true")
+    parser.add_argument("--sym", action="store_true", default=False)
     parser.add_argument("--desc-act", action="store_true")
     parser.add_argument("--large-model", action="store_true")
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
-    parser.add_argument("--fast-tokenizer", action="store_true")
-    parser.add_argument("--shuffle-dataset", action="store_true")
+    parser.add_argument("--fast-tokenizer", action="store_true", default=True)
+    parser.add_argument("--shuffle-dataset", action="store_true", default=True)
     args = parser.parse_args()
     main(args)

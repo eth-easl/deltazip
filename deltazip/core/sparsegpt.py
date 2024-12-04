@@ -56,8 +56,6 @@ class SparseGPT:
         W = W.float()
         if base_weight is not None:
             base_weight = base_weight.float()
-            logger.info(f"compression operates on delta...")
-
             assert (
                 base_weight.shape == W.shape
             ), "base_weight shape should be the same as W"
@@ -177,19 +175,16 @@ class SparseGPT:
             # --> set the layer's weight to be compressed W
             self.layer.weight.data = W.to(self.layer.weight.data.dtype)
         after_sparsity = calculate_sparsity(W)
-        logger.info(f"duration: {(time.time() - tick):.2f}s")
-        logger.info(f"sparsity: {after_sparsity}")
+        logger.info(f"duration: {(time.time() - tick):.2f}s, sparsity: {after_sparsity:.4f}")
 
         avg_loss = torch.sum(Losses).item() / self.nsamples
-        if avg_loss >= 0.5:
-            logger.warning(f"High avg loss detected: {avg_loss}")
+        if avg_loss >= 0.75:
+            logger.warning(f"High avg loss detected (over 0.75): {avg_loss:.4f}")
         else:
-            logger.info(f"avg loss: {avg_loss}")
-        # reconstruct_loss = torch.mean((self.layer(self.inp1) - self.out1) ** 2)
-        # logger.info(f"rec loss: {reconstruct_loss}")
-        if after_sparsity - before_sparsity > 0.5:
+            logger.info(f"avg loss: {avg_loss:.4f}")
+        if after_sparsity - before_sparsity > 0.75:
             logger.warning(
-                f"high sparsity change detected: {before_sparsity} -> {after_sparsity}"
+                f"high sparsity change detected (delta>0.75): {before_sparsity} -> {after_sparsity}"
             )
 
         if scale == [] and hasattr(self, "quantizer"):

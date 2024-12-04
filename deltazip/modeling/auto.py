@@ -2,23 +2,15 @@ from typing import Optional, Union
 
 from ._base import BaseCompressionConfig, BaseDeltaZipModelForCausalLM
 from ._utils import check_and_get_model_type
-from .bloom import BloomDeltaZipForCausalLM
-from .gpt_neox import GPTNeoXDeltaZipForCausalLM
-from .gptj import GPTJDeltaZipForCausalLM
-from .gpt2 import GPT2DeltaZipForCausalLM
 from .llama import LlamaDeltaZipForCausalLM
-from .moss import MOSSDeltaZipForCausalLM
-from .opt import OPTDeltaZipForCausalLM
+from .gemma import GemmaDeltaZipForCausalLM
+from .gemma2 import Gemma2DeltaZipForCausalLM
 from inspect import signature
 
 DeltaZip_CAUSAL_LM_MODEL_MAP = {
-    "bloom": BloomDeltaZipForCausalLM,
-    "gpt_neox": GPTNeoXDeltaZipForCausalLM,
-    "gptj": GPTJDeltaZipForCausalLM,
-    "gpt2": GPT2DeltaZipForCausalLM,
     "llama": LlamaDeltaZipForCausalLM,
-    "opt": OPTDeltaZipForCausalLM,
-    "moss": MOSSDeltaZipForCausalLM,
+    "gemma": GemmaDeltaZipForCausalLM,
+    "gemma2": Gemma2DeltaZipForCausalLM,
 }
 
 
