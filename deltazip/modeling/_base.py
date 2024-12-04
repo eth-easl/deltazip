@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Union
 from dataclasses import dataclass, field, fields
 from transformers.utils.hub import PushToHubMixin
 from safetensors.numpy import save_file as safe_save
+from safetensors.torch import save_file as safe_torch_save
 from accelerate.hooks import remove_hook_from_module
 from transformers import AutoConfig, AutoModelForCausalLM, PreTrainedModel
 from transformers.modeling_utils import no_init_weights
@@ -32,9 +33,14 @@ from ..nn_modules._fused_base import FusedBaseAttentionModule, FusedBaseMLPModul
 from ..core.quant import Quantizer
 from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
-from ..lossless.compressor import LosslessCompressor
 from ..nn_modules.qlinear_cuda import QuantLinear
 from deltazip.modeling._utils import deltazip_post_init
+
+try:
+    from ..lossless.compressor import LosslessCompressor
+except ImportError:
+    LosslessCompressor = None
+    print("LosslessCompressor not found")
 
 triton_has_warmup = False
 NUM_DEBUG_LAYER = 5
@@ -297,8 +303,12 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             inp = kwargs[kwarg_name]
                             break
                 layer_inputs.append(move_to_device(inp, self.data_device))
-                attention_masks.append(
-                    kwargs["attention_mask"].to(self.data_device))
+                
+                if kwargs["attention_mask"] is not None:
+                    attention_masks.append(kwargs["attention_mask"].to(self.data_device))
+                else:
+                    attention_masks.append(None)
+                
                 if (pos_ids := kwargs.get("position_ids", None)) is not None:
                     position_ids.append(move_to_device(
                         pos_ids, self.data_device))
@@ -409,6 +419,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 for j in range(num_batches):
                     layer_input = move_to_device(
                         layer_inputs[j], cur_layer_device)
+                    
                     layer_attention_mask = move_to_device(
                         attention_masks[j], cur_layer_device
                     )
@@ -607,7 +618,6 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         model_save_name = f"deltazip-compressed.safetensors"
         state_dict = self.model.state_dict()
         state_dict = {k: v.clone().contiguous() for k, v in state_dict.items()}
-        
         if self.compress_config.lossless != "none":
             lossless_compressor = LosslessCompressor(
                 self.compress_config.lossless)
@@ -616,15 +626,21 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensor_shapes,
                 tensors_dtype,
             ) = lossless_compressor.compress_state_dict(state_dict)
+            safe_save(
+                tensor_dict=state_dict,
+                filename=join(save_dir, model_save_name),
+                metadata={
+                    "dtype": json.dumps(tensors_dtype),
+                    "shape": json.dumps(tensor_shapes),
+                },
+            )
+        else:
+            # we use safe_torch_save to save model, since it is not losslessly compressed
+            safe_torch_save(
+                tensors=state_dict,
+                filename=join(save_dir, model_save_name),
+            )
         
-        safe_save(
-            tensor_dict=state_dict,
-            filename=join(save_dir, model_save_name),
-            metadata={
-                "dtype": json.dumps(tensors_dtype),
-                "shape": json.dumps(tensor_shapes),
-            },
-        )
         self.model.config.save_pretrained(save_dir)
         self.compress_config.save_pretrained(save_dir)
 

@@ -1,9 +1,13 @@
-from ._const import *
-from ._utils import *
-from ._base import *
+from logging import getLogger
 
-class LlamaDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
-    layer_type = "LlamaDecoderLayer"
+from ._base import BaseDeltaZipModelForCausalLM
+
+
+logger = getLogger(__name__)
+
+
+class GemmaGPTQForCausalLM(BaseDeltaZipModelForCausalLM):
+    layer_type = "GemmaDecoderLayer"
     layers_block_name = "model.layers"
     outside_layer_modules = ["model.embed_tokens", "model.norm"]
     inside_layer_modules = [
@@ -13,4 +17,5 @@ class LlamaDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
         ["mlp.down_proj"],
     ]
 
-__all__ = ["LlamaDeltaZipForCausalLM"]
+
+__all__ = ["GemmaGPTQForCausalLM"]
