@@ -26,12 +26,16 @@ def merge(base, delta):
     return delta
 
 def generate(target_model:str, prompt:str):
+    
     with open(os.path.join(target_model, "delta_config.json"), "r") as fp:
         config = json.load(fp)
     model = AutoDeltaZipModelForCausalLM.from_compressed(target_model, device="cpu", strict=True, unpack=True)
+    
     print(f"Loading base model {config['base_model']}...")
     base_model = AutoDeltaZipModelForCausalLM.from_pretrained(config['base_model'], None)
+    
     model = merge(base_model, model)
+    
     tokenizer = transformers.AutoTokenizer.from_pretrained(config['base_model'])
     pipe = transformers.TextGenerationPipeline(
         model=model, tokenizer=tokenizer, device="cuda"
@@ -46,3 +50,4 @@ def generate(target_model:str, prompt:str):
         return_full_text=False,
     )[0][0]['generated_text']
     print(outputs)
+    return outputs

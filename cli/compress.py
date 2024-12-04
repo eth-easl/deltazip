@@ -2,10 +2,12 @@ import os
 import json
 import torch
 import argparse
+import datasets
 import safetensors as st
 from transformers import AutoTokenizer
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
-import os
+from deltazip.utils.generate import generate
+from cli.utils import generate_readme, upload_and_delete
 
 max_threads = str(min(8, os.cpu_count()))
 os.environ['OMP_NUM_THREADS'] = max_threads
@@ -15,10 +17,16 @@ os.environ['VECLIB_MAXIMUM_THREADS'] = max_threads
 os.environ['NUMEXPR_NUM_THREADS'] = max_threads
 os.environ['NUMEXPR_MAX_THREADS'] = max_threads
 
+def get_max_sequence_length(config):
+    if "max_position_embeddings" in config:
+        return config.max_position_embeddings
+    else:
+        raise ValueError("Could not determine maximum sequence length from model configuration")
+
 def main(args):
     print(args)
     tokenizer = AutoTokenizer.from_pretrained(
-        args.base_model, use_fast=args.fast_tokenizer
+        args.target_model, use_fast=args.fast_tokenizer
     )
     compress_config = BaseCompressionConfig(
         bits=args.bits,
@@ -37,6 +45,10 @@ def main(args):
         compress_config=compress_config,
         torch_dtype=torch.bfloat16,
     )
+    if args.seq_len <0:
+        args.seq_len = get_max_sequence_length(target_model.config)
+        print(f"[info] set sequence length to {args.seq_len}")
+        
     target_model = target_model.cuda()
     ignore_keywords = [
         'norm',
@@ -56,18 +68,30 @@ def main(args):
         )
         base_model.requires_grad_(False)
     torch.cuda.empty_cache()
-    # now time to prepare inspect dataset
-    with open(args.dataset, "r") as fp:
-        examples = [json.loads(line)["text"] for line in fp.readlines()]
-    if args.n_samples <= 0:
-        examples = examples
-    else:
-        if args.shuffle_dataset:
-            import random
-            random.seed(42)
-            random.shuffle(examples)
-        examples = examples[: args.n_samples]
-    examples = [tokenizer(x) for x in examples]
+
+    cal_ds = datasets.load_dataset(args.dataset, split=args.ds_split)
+    cal_ds = cal_ds.shuffle(seed=42).select(range(args.n_samples))
+    
+    def preprocess(example):
+        return {
+            "text": tokenizer.apply_chat_template(
+                example["messages"],
+                tokenize=False,
+            )
+        }
+    
+    def tokenize(sample):
+        return tokenizer(
+            sample["text"],
+            padding=False,
+            max_length=args.seq_len,
+            truncation=True,
+            add_special_tokens=False,
+        )    
+        
+    cal_ds = cal_ds.map(preprocess)
+    examples = cal_ds.map(tokenize, remove_columns=cal_ds.column_names)
+    
     if args.base_model != "" and args.delta != "":
         target_model.lossy_compress(
             examples,
@@ -117,7 +141,7 @@ def main(args):
             if any([keyword in name for keyword in not_save_keywords]):
                 print(f"[info] {name} is not saved")
                 del target_model.state_dict()[name]
-                
+
     if args.base_model != "" and args.delta != "":
         del base_model
     if args.prunen > 0 and args.prunem > 0:
@@ -129,7 +153,7 @@ def main(args):
     outpath = os.path.join(args.outdir, model_id)
     target_model.save_compressed(outpath)
     tokenizer.save_pretrained(outpath)
-    
+
     config_dict = {
         'base_model': args.base_model,
         'compress_config': compress_config.to_dict(),
@@ -138,6 +162,22 @@ def main(args):
     with open(os.path.join(outpath, "delta_config.json"), "w") as fp:
         json.dump(config_dict, fp)
 
+    # try:
+    message = [{"role":"user", "content":args.test_prompt}]
+    prompt = tokenizer.apply_chat_template(message, tokenize=False)
+    output = generate(outpath, prompt)
+    
+    readme = generate_readme({
+        "model_id": args.base_model,
+        "scheme": config_short,
+        "dataset_id": args.dataset,
+        "n_samples": args.n_samples,
+        "prompt": prompt,
+        "output": output
+    })
+    with open(os.path.join(outpath, "README.md"), "w") as f:
+        f.write(readme)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="")
@@ -145,6 +185,12 @@ if __name__ == "__main__":
         "--dataset",
         type=str,
         help="The dataset to use for training, must be a path to a jsonl file.",
+        default="HuggingFaceH4/ultrachat_200k"
+    )
+    parser.add_argument(
+        "--ds-split",
+        type=str,
+        default="train_sft"
     )
     parser.add_argument(
         "--n-samples",
@@ -155,6 +201,7 @@ if __name__ == "__main__":
     parser.add_argument("--target-model", type=str, default="facebook/opt-125m")
     parser.add_argument("--sparsity", type=float, default=0.5)
     parser.add_argument("--bits", type=int, default=4)
+    parser.add_argument("--seq-len", type=int, default=2048)
     parser.add_argument("--block-size", type=int, default=128)
     parser.add_argument("--prunen", type=int, default=0)
     parser.add_argument("--prunem", type=int, default=0)
@@ -169,5 +216,7 @@ if __name__ == "__main__":
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     parser.add_argument("--fast-tokenizer", action="store_true", default=True)
     parser.add_argument("--shuffle-dataset", action="store_true", default=True)
+    parser.add_argument("--test-prompt", type=str, default="Who is Alan Turing?")
+    parser.add_argument("--org-id", type=str, default="eth-easl")
     args = parser.parse_args()
     main(args)
