@@ -1,6 +1,5 @@
 import os
 import sys
-import platform
 import subprocess
 from setuptools import setup, find_packages
 
@@ -28,7 +27,7 @@ common_setup_kwargs = {
 }
 
 PYPI_RELEASE = 0
-BUILD_CUDA_EXT = int(os.environ.get("BUILD_CUDA_EXT", "1")) == 1
+BUILD_CUDA_EXT = int(os.environ.get("BUILD_CUDA_EXT", "0")) == 1
 
 if BUILD_CUDA_EXT:
     try:
@@ -95,61 +94,11 @@ if BUILD_CUDA_EXT:
         include_dirs.append(conda_cuda_include_dir)
         print(f"appending conda cuda include dir {conda_cuda_include_dir}")
 
-    extensions = [
-        cpp_extension.CUDAExtension(
-            "autogptq_cuda_64",
-            [
-                "deltazip/core/csrc/gptq/cuda_64/autogptq_cuda_64.cpp",
-                "deltazip/core/csrc/gptq/cuda_64/autogptq_cuda_kernel_64.cu",
-            ],
-        ),
-        cpp_extension.CUDAExtension(
-            "autogptq_cuda_256",
-            [
-                "deltazip/core/csrc/gptq/cuda_256/autogptq_cuda_256.cpp",
-                "deltazip/core/csrc/gptq/cuda_256/autogptq_cuda_kernel_256.cu",
-            ],
-        ),
-    ]
-    extensions.append(
-        cpp_extension.CUDAExtension(
-            "exllamav2_kernels",
-            [
-                "deltazip/core/csrc/exllamav2/ext.cpp",
-                "deltazip/core/csrc/exllamav2/cuda/q_matrix.cu",
-                "deltazip/core/csrc/exllamav2/cuda/q_gemm.cu",
-            ],
-            extra_link_args=[],
-        )
-    )
-
-    extensions.append(
-        cpp_extension.CppExtension(
-            "cQIGen",
-            ["deltazip/core/csrc/qigen/backend.cpp"],
-            extra_compile_args=[
-                "-O3",
-                "-mavx",
-                "-mavx2",
-                "-mfma",
-                "-march=native",
-                "-ffast-math",
-                "-ftree-vectorize",
-                "-faligned-new",
-                "-std=c++17",
-                "-fopenmp",
-                "-fno-signaling-nans",
-                "-fno-trapping-math",
-            ],
-        )
-    )
-
     additional_setup_kwargs = {
-        "ext_modules": extensions,
         "cmdclass": {"build_ext": cpp_extension.BuildExtension},
     }
 
-common_setup_kwargs.update(additional_setup_kwargs)
+    common_setup_kwargs.update(additional_setup_kwargs)
 
 setup(
     packages=find_packages(),

@@ -4,7 +4,6 @@ safetensors
 py7zr
 zarr
 cupy-cuda12x
-cchardet
 scikit-build
 pytest
 numcodecs
@@ -20,3 +19,4 @@ ninja
 loguru
 datasets
 sentencepiece
+nvidia-ml-py
