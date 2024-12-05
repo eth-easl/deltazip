@@ -142,8 +142,6 @@ def main(args):
                 print(f"[info] {name} is not saved")
                 del target_model.state_dict()[name]
 
-    if args.base_model != "" and args.delta != "":
-        del base_model
     if args.prunen > 0 and args.prunem > 0:
         config_short = f"{args.bits}b_{args.prunen}n{args.prunem}m_{args.block_size}bs"
     else:
@@ -151,7 +149,23 @@ def main(args):
     
     model_id = args.target_model.replace("/", ".") + f".{config_short}"
     outpath = os.path.join(args.outdir, model_id)
-    
+    prompt, output = generate(
+        target_model, base_model, tokenizer, args.test_prompt
+    )
+    if args.base_model != "" and args.delta != "":
+        del base_model
+
+    readme = generate_readme({
+        "model_id": args.base_model,
+        "scheme": config_short,
+        "dataset_id": args.dataset,
+        "ds_split": args.ds_split,
+        "seq_len": args.seq_len,
+        "n_samples": args.n_samples,
+        "prompt": prompt,
+        "output": output
+    })
+
     target_model.save_compressed(outpath)
     tokenizer.save_pretrained(outpath)
 
@@ -163,25 +177,10 @@ def main(args):
     with open(os.path.join(outpath, "delta_config.json"), "w") as fp:
         json.dump(config_dict, fp)
 
-    # try:
-    message = [{"role":"user", "content":args.test_prompt}]
-    prompt = tokenizer.apply_chat_template(message, tokenize=False)
-    output = generate(outpath, prompt)
-    
-    readme = generate_readme({
-        "model_id": args.base_model,
-        "scheme": config_short,
-        "dataset_id": args.dataset,
-        "ds_split": args.ds_split,
-        "seq_len": args.seq_len,
-        "n_samples": args.n_samples,
-        "prompt": prompt,
-        "output": output
-    })
     with open(os.path.join(outpath, "README.md"), "w") as f:
         f.write(readme)
     upload_and_delete(args.org_id, model_id, outpath)
-    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--base-model", type=str, default="")
@@ -213,7 +212,7 @@ if __name__ == "__main__":
         "--lossless", type=str, default="none", choices=["gdeflate", "none"]
     )
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
-    parser.add_argument("--sym", action="store_true", default=False)
+    parser.add_argument("--sym", action="store_true", default=True)
     parser.add_argument("--desc-act", action="store_true")
     parser.add_argument("--large-model", action="store_true")
     parser.add_argument("--perc-damp", type=float, default=0.01)

@@ -35,7 +35,7 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..nn_modules.qlinear_cuda import QuantLinear
 from deltazip.modeling._utils import deltazip_post_init
-
+from deltazip.utils.converter import convert_model
 try:
     from ..lossless.compressor import LosslessCompressor
 except ImportError:
@@ -635,6 +635,9 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 },
             )
         else:
+            if self.compress_config.prunen == 2 and self.compress_config.prunem == 4 and self.compress_config.bits==4:
+                logger.info("bits=4, prune n=2, m=4, will save model with structured sparse format")
+                state_dict = convert_model(state_dict, verbose=True)
             # we use safe_torch_save to save model, since it is not losslessly compressed
             safe_torch_save(
                 tensors=state_dict,

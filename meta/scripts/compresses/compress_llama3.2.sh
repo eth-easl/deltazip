@@ -1,3 +1,0 @@
-python cli/compress.py --base-model meta-llama/Llama-3.2-3B --target-model meta-llama/Llama-3.2-3B-Instruct --outdir .local/compressed_models/ --dataset .local/datasets/meta.jsonl --n-samples 256 --bits 4 --prunen 2 --prunem 4 --lossless gdeflate --delta subtract  --shuffle-dataset --fast-tokenizer --perc-damp 0.01 --block-size 128
-
-python cli/compress.py --base-model google/gemma-2-2b --target-model google/gemma-2-2b-it --outdir .local/compressed_models/ --dataset .local/datasets/meta.jsonl --n-samples 256 --bits 4 --prunen 2 --prunem 4 --lossless gdeflate --delta subtract  --shuffle-dataset --fast-tokenizer --perc-damp 0.01 --block-size 128
