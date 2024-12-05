@@ -1,4 +1,5 @@
 import os
+import copy
 import json
 import torch
 import argparse
@@ -105,9 +106,7 @@ def main(args):
         )
     # write to folder
     os.makedirs(args.outdir, exist_ok=True)
-    # for weights that are not compressed, we calculate delta afterward compression
-    if args.large_model:
-        # for large models - save a temporary results to avoid re-run
+    if args.debug_large_model:
         tensors = {}
         for name, param in target_model.named_parameters():
             if not param.is_meta:
@@ -150,11 +149,18 @@ def main(args):
     model_id = args.target_model.replace("/", ".") + f".{config_short}"
     outpath = os.path.join(args.outdir, model_id)
     prompt, output = generate(
-        target_model, base_model, tokenizer, args.test_prompt
+        copy.deepcopy(target_model), base_model, tokenizer, args.test_prompt
     )
-    if args.base_model != "" and args.delta != "":
-        del base_model
-
+    target_model.save_compressed(outpath)
+    tokenizer.save_pretrained(outpath)
+    config_dict = {
+        'base_model': args.base_model,
+        'compress_config': compress_config.to_dict(),
+        'target_modules': compressed_modules
+    }
+    with open(os.path.join(outpath, "delta_config.json"), "w") as fp:
+        json.dump(config_dict, fp)
+    
     readme = generate_readme({
         "model_id": args.base_model,
         "scheme": config_short,
@@ -165,21 +171,12 @@ def main(args):
         "prompt": prompt,
         "output": output
     })
-
-    target_model.save_compressed(outpath)
-    tokenizer.save_pretrained(outpath)
-
-    config_dict = {
-        'base_model': args.base_model,
-        'compress_config': compress_config.to_dict(),
-        'target_modules': compressed_modules
-    }
-    with open(os.path.join(outpath, "delta_config.json"), "w") as fp:
-        json.dump(config_dict, fp)
+    if args.base_model != "" and args.delta != "":
+        del base_model
 
     with open(os.path.join(outpath, "README.md"), "w") as f:
         f.write(readme)
-    upload_and_delete(args.org_id, model_id, outpath)
+    # upload_and_delete(args.org_id, model_id, outpath)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -214,7 +211,7 @@ if __name__ == "__main__":
     parser.add_argument("--delta", type=str, choices=["subtract", "xor"], default="")
     parser.add_argument("--sym", action="store_true", default=True)
     parser.add_argument("--desc-act", action="store_true")
-    parser.add_argument("--large-model", action="store_true")
+    parser.add_argument("--debug-large-model", action="store_true", default=False)
     parser.add_argument("--perc-damp", type=float, default=0.01)
     parser.add_argument("--outdir", type=str, default=".cache/compressed_models")
     parser.add_argument("--fast-tokenizer", action="store_true", default=True)

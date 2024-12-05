@@ -1,5 +1,4 @@
 import torch
-from deltazip import AutoDeltaZipModelForCausalLM
 
 ignore_keywords = [
     'norm',
@@ -10,17 +9,15 @@ ignore_keywords = [
 def merge(base, delta):
     base = base.bfloat16().cpu()
     delta = delta.bfloat16().cpu()
-    print(f"base {base.device}")
-    print(f"delta {delta.device}")
+    print(f"delta keys: {delta.state_dict().keys()}")
     for name, param in base.model.named_parameters():
         if any([kw in name for kw in ignore_keywords]):
+            print(f"[info] {name} ignored")
             pass
         else:
-            delta.model.state_dict()[name].copy_(
-                param + delta.model.state_dict()[name]
-            )
-    delta = delta.to(torch.device("cuda"))
-    return delta
+            print(f"[info] {name} merged")
+            delta.model.state_dict()[name] += param
+    return delta.model.cuda()
 
 def generate(model, base_model, tokenizer, prompt:str):
     model = merge(base_model, model)
