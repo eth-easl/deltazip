@@ -176,7 +176,7 @@ def main(args):
 
     with open(os.path.join(outpath, "README.md"), "w") as f:
         f.write(readme)
-    # upload_and_delete(args.org_id, model_id, outpath)
+    upload_and_delete(args.org_id, model_id, outpath)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
