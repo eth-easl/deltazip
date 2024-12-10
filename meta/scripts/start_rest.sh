@@ -1,1 +1,0 @@
-uvicorn fmzip.rest.server:app
