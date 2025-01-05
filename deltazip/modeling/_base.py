@@ -237,7 +237,10 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         return new_examples
 
     def _extract_expert_modules(self, modules, module_key):
-        key_prefix, key_suffix = module_key.split(EXPERT_ID_PLACEHOLDER)
+        if module_key.endswith(EXPERT_ID_PLACEHOLDER):
+            key_prefix, key_suffix = module_key[:-len(EXPERT_ID_PLACEHOLDER)], ""
+        else:
+            key_prefix, key_suffix = module_key.split(EXPERT_ID_PLACEHOLDER)
         res = {name: module 
                for name, module in modules.items() 
                if name.startswith(key_prefix) and name.endswith(key_suffix)}
@@ -464,8 +467,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                     if base_model is not None:
                         if is_moe:
                             keys_layer = [k for k in base_model.keys() if k.startswith(f"{self.layers_block_name}.{i}")]
-                            key = [k for k in keys_layer if k.endswith(f"{name.split('.')[-1]}.weight")][0]
-                            base_weight = base_model[key]
+                            base_name = '.'.join([EXPERT_ID_PLACEHOLDER if n.isdigit() else n for n in name.split(".")])
+                            base_name = "." + str(i) + "." + base_name
+                            base_keys = [k for k in keys_layer if k.endswith(f"{base_name}.weight")]
+                            base_key = base_keys[0]
+                            base_weight = base_model[base_key]
                         else:
                             base_weight = base_model.model.state_dict()[
                                 f"{self.layers_block_name}.{i}.{name}.weight"
@@ -572,8 +578,10 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             ]
                             if is_moe:
                                 keys_layer = [k for k in base_model.keys() if k.startswith(f"{self.layers_block_name}.{i}")]
-                                key = [k for k in keys_layer if k.endswith(f"{name.split('.')[-1]}.weight")][0]
-                                base_weight = base_model[key]
+                                base_name = '.'.join([EXPERT_ID_PLACEHOLDER if n.isdigit() else n for n in name.split(".")])
+                                base_keys = [k for k in keys_layer if k.endswith(f"{base_name}.weight")]
+                                base_key = base_keys[0]
+                                base_weight = base_model[base_key]
                             else:
                                 base_weight = base_model.model.state_dict()[
                                     f"{self.layers_block_name}.{i}.{name}.weight"
@@ -584,7 +592,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                             subset[name].weight.data = compressed_ws[
                                 f"{self.layers_block_name}.{i}.{name}"
                             ]
-
+        
         self.model.config.use_cache = forward_pass_use_cache
         self._compressed = True
         torch.cuda.empty_cache()
@@ -609,7 +617,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         return self.model.prepare_inputs_for_generation(*args, **kwargs)
 
     @torch.inference_mode()
-    def save_compressed(self, save_dir: str):
+    def save_compressed(self, save_dir: str, save_compressed_weights_only = False):
         if not self.compressed:
             raise EnvironmentError("Model is not compressed.")
         if isinstance(
@@ -639,6 +647,13 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 tensor_shapes,
                 tensors_dtype,
             ) = lossless_compressor.compress_state_dict(state_dict)
+        if save_compressed_weights_only:
+            to_remove = []
+            for key in state_dict.keys():
+                if key.endswith(".weight"):
+                    to_remove.append(key)
+            for key in to_remove:
+                del state_dict[key]
         safe_save(
             tensor_dict=state_dict,
             filename=join(save_dir, model_save_name),
@@ -851,6 +866,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                         )
                         del layers[name]
 
+                logger.info(f"Make quant layers: {layers.keys()}")
                 make_quant(
                     model,
                     layers,
@@ -898,6 +914,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             use_bfloat16=use_bfloat16,
             target_device=device,
         )
+        logger.debug(f"Decompressed tensors: {tensors.keys()}")
         # move tensors to target device
         # print model keys
         missing_keys, unexpected_keys = model.load_state_dict(

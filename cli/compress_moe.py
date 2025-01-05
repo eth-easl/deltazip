@@ -10,7 +10,7 @@ from loguru import logger
 from safetensors.torch import save_file
 import safetensors
 from transformers import GPTNeoXConfig, LlamaConfig
-
+from branch_tune_compress.models.modeling_llama import LlamaForCausalLM
 
 def main(args):
     print(args)
@@ -50,8 +50,9 @@ def main(args):
         with open(f"{args.model_path}/config.json", "r") as fp:
             config = LlamaConfig(**json.load(fp))
         with accelerate.init_empty_weights():
-            model = modeling_llama_moe.LlamaForCausalLM(config)
+            model = LlamaForCausalLM(config)
         model = model.half()
+        print("Loading and dispatching model...")
         model = accelerate.load_checkpoint_and_dispatch(
             model, checkpoint=f"{args.model_path}/model.safetensors.index.json", device_map="auto", no_split_module_classes=['LlamaDecoderLayer']
         )
@@ -68,7 +69,6 @@ def main(args):
         )
 
     target_model.requires_grad_(False)
-    torch.cuda.empty_cache()
     # now time to prepare inspect dataset
     with open(args.dataset, "r") as fp:
         examples = [json.loads(line)["text"] for line in fp.readlines()]
@@ -77,12 +77,11 @@ def main(args):
     else:
         if args.shuffle_dataset:
             import random
-
             random.seed(42)
             random.shuffle(examples)
         examples = examples[: args.n_samples]
-    examples = [tokenizer(x, truncation=True) for x in examples]
-    # examples = [e for e in examples if len(e['attention_mask']) != 0]
+    examples = [tokenizer(x, truncation=True) for x in examples if len(x) > 0]
+    examples = [e for e in examples if len(e['attention_mask']) != 0]
     os.makedirs(args.outdir, exist_ok=True)
     os.makedirs(f"{args.outdir}/base", exist_ok=True)
     
@@ -91,7 +90,7 @@ def main(args):
     save_file(base_weights, f"{args.outdir}/base/base_weights.safetensors")
     logger.info("Saving base weights finished")
     del base_weights
-    
+    torch.cuda.empty_cache()
     target_model.lossy_compress(
         examples,
         batch_size=1,
@@ -99,8 +98,19 @@ def main(args):
     )
     # write to folder
     logger.info("Saving experts' delta weights:")
-    target_model.save_compressed(args.outdir)
-
+    target_model.save_compressed(args.outdir, save_compressed_weights_only=False)
+    to_remove = []
+    sd = model.state_dict()
+    for name in sd.keys():
+        if name.startswith(target_model.layers_block_name):
+            for inside_layer_module in sum(target_model.inside_layer_modules, []):
+                prefix, suffix = inside_layer_module.split(EXPERT_ID_PLACEHOLDER)
+                if prefix in name and suffix in name and name.endswith(".weight"):
+                    to_remove.append(name)
+    del target_model
+    del model
+    del sd
+    torch.cuda.empty_cache()
     if args.target_model == "gpt_neox_moe":
         model = modelling_gpt_neox_moe.GPTNeoXForCausalLM(config)
         model = model.half()
@@ -110,32 +120,28 @@ def main(args):
             print(f"Loading: {args.model_path}/{f}")
             safetensors.torch.load_model(model, f"{args.model_path}/{f}", strict=False)
     elif args.target_model == "llama_moe":
-        tokenizer = AutoTokenizer.from_pretrained(
-            args.tokenizer, use_fast=args.fast_tokenizer
-        )
+        print(torch.cuda.mem_get_info())
         with open(f"{args.model_path}/config.json", "r") as fp:
             config = LlamaConfig(**json.load(fp))
         with accelerate.init_empty_weights():
-            model = modeling_llama_moe.LlamaForCausalLM(config)
+            model = LlamaForCausalLM(config)
         model = model.half()
         model = accelerate.load_checkpoint_and_dispatch(
-            model, checkpoint=f"{args.model_path}/model.safetensors.index.json", device_map="auto", no_split_module_classes=['LlamaDecoderLayer', 'LlamaMoE']
+            model, 
+            checkpoint=f"{args.model_path}/model.safetensors.index.json", 
+            device_map="auto",
+            no_split_module_classes=['LlamaDecoderLayer'],
+            offload_folder=f"{args.outdir}/base/base_model"
         )
         model.requires_grad_(False)    
     else:
-        model = AutoModelForCausalLM.from_pretrained(
-            args.target_model, torch_dtype=torch.float16, trust_remote_code=True
-        )
+        raise NotImplementedError
+        # model = AutoModelForCausalLM.from_pretrained(
+        #     args.target_model, torch_dtype=torch.float16, trust_remote_code=True
+        # )
 
     logger.info("Saving non-fc layers:")
     sd = model.state_dict()
-    to_remove = []
-    for name in sd.keys():
-        if name.startswith(target_model.layers_block_name):
-            for inside_layer_module in sum(target_model.inside_layer_modules, []):
-                prefix, suffix = inside_layer_module.split(EXPERT_ID_PLACEHOLDER)
-                if prefix in name and suffix in name and name.endswith(".weight"):
-                    to_remove.append(name)
 
     # Make sure we only save the non-fc layers (i.e the layers where MoE isn't applied)
     for name in to_remove:

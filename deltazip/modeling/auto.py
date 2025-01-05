@@ -9,6 +9,7 @@ from .gptj import GPTJDeltaZipForCausalLM
 from .gpt2 import GPT2DeltaZipForCausalLM
 from .llama import LlamaDeltaZipForCausalLM
 from .llama_moe import LlamaMoeDeltaZipForCausalLM
+from .llama_btc import LlamaBTCForCausalLM
 from .moss import MOSSDeltaZipForCausalLM
 from .opt import OPTDeltaZipForCausalLM
 from .mixtrall import MixtrallDeltaZipForCausalLM
@@ -24,7 +25,8 @@ DeltaZip_CAUSAL_LM_MODEL_MAP = {
     "opt": OPTDeltaZipForCausalLM,
     "moss": MOSSDeltaZipForCausalLM,
     "phi-msft": MixtrallDeltaZipForCausalLM,
-    "gpt_neox_moe": GPTNeoXMoeDeltaZipForCausalLM
+    "gpt_neox_moe": GPTNeoXMoeDeltaZipForCausalLM,
+    "llama_btc": LlamaBTCForCausalLM
 }
 
 
