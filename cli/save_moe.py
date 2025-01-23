@@ -8,7 +8,7 @@ from safetensors.torch import load_file, load_model, save_file
 from branch_tune_compress.models.modeling_llama import LlamaForCausalLM
 from accelerate import init_empty_weights
 
-def save(model_type, model_path):
+def save(model_type, model_path, output_path):
     logger.info("Loading tokenizer")
     if model_type == "gpt-neox-moe":
         pass
@@ -32,11 +32,21 @@ def save(model_type, model_path):
         with open(f"{args.model_path}/base/base_model/config.json", "r") as fp:
             config = transformers.LlamaConfig(**json.load(fp))
         config.model_type = 'llama_btc'
-        base_model = LlamaForCausalLM.from_pretrained("/mnt/scratch/bborisov/.cache/compressed_llama_ver_9/base/base_model")
+        base_model = LlamaForCausalLM.from_pretrained(f"{model_path}/base/base_model")
         base_model = base_model.half()
         delta_model = LlamaForCausalLM(config)
         delta_model.half()
-
+    print(model_type)
+    if model_type == "llama_moe":
+        print("HERE")
+        with open(f"{args.model_path}/base/base_model/config.json", "r") as fp:
+            config = transformers.LlamaConfig(**json.load(fp))
+        config.model_type = 'llama_moe'
+        base_model = LlamaForCausalLM.from_pretrained(f"{model_path}/base/base_model")
+        base_model = base_model.half()
+        delta_model = LlamaForCausalLM(config)
+        delta_model.half()
+        
     base_model = base_model.half()
     logger.info("Loading base weights")
     base_weights = load_file(f"{model_path}/base/base_weights.safetensors")
@@ -62,7 +72,9 @@ def save(model_type, model_path):
     delta_model = base_model
     logger.info("Saving complete model")
     sd = delta_model.state_dict()
-    save_file(sd, f"{args.model_path}/uncompressed")
+    if output_path == None:
+        output_path = f"{args.model_path}/uncompressed"
+    save_file(sd, output_path)
 
 if __name__ == "__main__":
     import argparse
@@ -70,5 +82,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-type", type=str, help="Type of model")
     parser.add_argument("--model-path", type=str, help="Directory of compressed model")
+    parser.add_argument("--output-path", type=str, help="Directory to save uncompressed model", default=None)
     args = parser.parse_args()
-    save(args.model_type, args.model_path)
+    save(args.model_type, args.model_path, args.output_path)
