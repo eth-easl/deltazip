@@ -38,7 +38,6 @@ def save(model_type, model_path, output_path):
         delta_model.half()
     print(model_type)
     if model_type == "llama_moe":
-        print("HERE")
         with open(f"{args.model_path}/base/base_model/config.json", "r") as fp:
             config = transformers.LlamaConfig(**json.load(fp))
         config.model_type = 'llama_moe'
@@ -69,12 +68,9 @@ def save(model_type, model_path, output_path):
                       param_base.data = param_delta.data + expert_weight
                       param_base.data = param_base.data.contiguous()
 
-    delta_model = base_model
-    logger.info("Saving complete model")
-    sd = delta_model.state_dict()
     if output_path == None:
         output_path = f"{args.model_path}/uncompressed"
-    save_file(sd, output_path)
+    base_model.save_pretrained(output_path)
 
 if __name__ == "__main__":
     import argparse
