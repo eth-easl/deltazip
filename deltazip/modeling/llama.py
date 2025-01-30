@@ -13,4 +13,3 @@ class LlamaDeltaZipForCausalLM(BaseDeltaZipModelForCausalLM):
         ["mlp.down_proj"],
     ]
 
-__all__ = ["LlamaDeltaZipForCausalLM"]

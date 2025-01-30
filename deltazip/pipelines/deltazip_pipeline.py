@@ -6,7 +6,6 @@ from typing import List, Tuple
 from transformers import AutoTokenizer
 from timeit import default_timer as timer
 from deltazip.modeling.llama import parallelize_llama
-from deltazip.modeling.gpt_neox import parallelize_neox
 from deltazip.pipelines.utils import get_gpu_count, get_submodules
 from deltazip import BaseCompressionConfig, AutoDeltaZipModelForCausalLM
 from deltazip.nn_modules.batched_qlinear import WarmupBQLForward
@@ -71,7 +70,6 @@ class DeltaZipPipeline:
                 f"lossless_only is only supported when placement_strategy is addback"
             )
         if self.placement_strategy != "addback":
-            parallelize_neox()
             parallelize_llama()
         self.model_pool = {}
         self.req_count = {}

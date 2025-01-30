@@ -1,1 +1,0 @@
-python cli/decompress.py --base-model facebook/opt-125m --target-model .cache/compressed_models/opt-125m-QA-squad --delta subtract

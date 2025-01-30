@@ -2,12 +2,6 @@ import torch
 import transformers
 from deltazip import AutoDeltaZipModelForCausalLM, BaseCompressionConfig
 
-ignore_keywords = [
-    'norm',
-    'embed',
-    'lm_head'
-]
-
 compress_config = BaseCompressionConfig(
     bits=4,
     group_size=128,

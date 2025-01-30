@@ -13,3 +13,4 @@ artifact/benchmark_*.json
 *.png
 .build/
 .local/
+.artifact/

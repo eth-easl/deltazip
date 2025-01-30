@@ -35,7 +35,7 @@ from ..core.sparsegpt import SparseGPT
 from ..utils.data_utils import collate_data
 from ..nn_modules.qlinear_cuda import QuantLinear
 from deltazip.modeling._utils import deltazip_post_init
-
+from deltazip.utils.converter import convert_model
 try:
     from ..lossless.compressor import LosslessCompressor
 except ImportError:
@@ -635,6 +635,9 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
                 },
             )
         else:
+            if self.compress_config.prunen == 2 and self.compress_config.prunem == 4 and self.compress_config.bits==4:
+                logger.info("bits=4, prune n=2, m=4, will save model with structured sparse format")
+                state_dict = convert_model(state_dict, verbose=True)
             # we use safe_torch_save to save model, since it is not losslessly compressed
             safe_torch_save(
                 tensors=state_dict,
@@ -790,6 +793,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             else:
                 compress_config = BaseCompressionConfig.from_pretrained(
                     save_dir)
+        print(compress_config)
         logger.info(f"compress config: {compress_config}")
 
         if model_basename is None:
@@ -893,7 +897,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             model = AutoModelForCausalLM.from_config(
                 config,
                 trust_remote_code=trust_remote_code,
-                torch_dtype=torch.float16,
+                torch_dtype=torch.bfloat16,
             )
             layers = find_layers(model)
             ignore_layers = [cls.lm_head_name] + cls.outside_layer_modules
@@ -935,8 +939,8 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
         if unexpected_keys:
             logger.debug(f"unexpected keys: {unexpected_keys}")
         model = model.to(device)
-        model = deltazip_post_init(
-            model, use_act_order=compress_config.desc_act)
+        # model = deltazip_post_init(
+        #     model, use_act_order=compress_config.desc_act)
         model.eval()
         if compress_config.lossless != "none":
             if isinstance(
@@ -961,7 +965,11 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             # print keys in the model
         # set seqlen
         model_config = model.config.to_dict()
-        seq_len_keys = ["max_position_embeddings", "seq_length", "n_positions"]
+        seq_len_keys = [
+            "max_position_embeddings",
+            "seq_length",
+            "n_positions"
+        ]
         if any([k in model_config for k in seq_len_keys]):
             for key in seq_len_keys:
                 if key in model_config:
@@ -973,12 +981,7 @@ class BaseDeltaZipModelForCausalLM(nn.Module, PushToHubMixin):
             )
             model.seqlen = 2048
 
-        global triton_has_warmup
-        if not triton_has_warmup and use_triton:
-            QuantLinear.warmup(model, seqlen=model.seqlen)
-            triton_has_warmup = True
         torch.cuda.empty_cache()
         return cls(model, True, compress_config)
-
 
 __all__ = ["BaseDeltaZipModelForCausalLM", "BaseCompressionConfig"]
