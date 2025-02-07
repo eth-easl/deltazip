@@ -87,29 +87,6 @@ def make_quant(
             setattr(module, attr, new_layer.to(ori_layer_device))
 
     for name1, child in module.named_children():
-        if isinstance(module, nn.ModuleList):
-            new_name = name + "." + name1 if name != "" else name1
-            if new_name in names:
-                old_layer = module[int(name1)]
-                in_features = old_layer.in_features
-                out_features = old_layer.out_features
-                if isinstance(bits, dict):
-                    real_bits = bits[name1]
-                else:
-                    real_bits = bits
-                new_layer = QuantLinear(
-                    real_bits,
-                    in_features,
-                    out_features,
-                    old_layer.bias is not None,
-                    use_triton=use_triton,
-                    use_exllama=use_exllama,
-                )
-                new_layer.device = next(old_layer.parameters()).device
-                new_layer = new_layer.to(new_layer.device)
-                module[int(name1)] = new_layer
-                continue
-
         make_quant(
             child,
             names,
@@ -163,10 +140,7 @@ def unpack_model(model):
     logger.info("Unpacking model...")
     layers = find_layers(model, layers=[QuantLinear])
     for name in layers:
-        try:
-            rsetattr(model, name, layers[name].unpack())
-        except:
-            pass
+        rsetattr(model, name, layers[name].unpack())
     logger.info("Model unpacked.")
 
 
@@ -194,7 +168,6 @@ def pack_model(
     )
     qlayers = find_layers(model, [QuantLinear])
     for name in qlayers:
-        print(name)
         logger.info(name)
         quantizers[name], scale, zero, g_idx = quantizers[name]
         # so far can only pack layer on CPU
@@ -211,9 +184,8 @@ def pack_model(
         qlayers[name].to(layer_device)
     logger.info("Model packed.")
 
-def check_and_get_model_type(model_dir, config=None):
-    if config is None:
-        config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
+def check_and_get_model_type(model_dir):
+    config = AutoConfig.from_pretrained(model_dir, trust_remote_code=True)
     if config.model_type not in SUPPORTED_MODELS:
         raise TypeError(f"{config.model_type} isn't supported yet.")
     model_type = config.model_type

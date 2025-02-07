@@ -39,7 +39,7 @@ class SparseGPT:
         inp = math.sqrt(2 / self.nsamples) * inp.float()
         self.H += inp.matmul(inp.t())
         sparsity_H = calculate_sparsity(self.H)
-        if torch.numel(inp) != 0 and sparsity_H == 1:
+        if sparsity_H == 1:
             raise ValueError("sparsity of H == 1, something is off, aborting")
 
     def fasterprune(
