@@ -326,10 +326,12 @@ bash scripts/4_cleanup.sh
 
 Heavily inspired by
 
+* [IST-DASLab/Sparse-Marlin](https://github.com/IST-DASLab/Sparse-Marlin/)
 * [IST-DASLab/gptq](https://github.com/IST-DASLab/gptq)
 * [IST-DASLab/sparsegpt](https://github.com/IST-DASLab/sparsegpt)
 * [PanQiWei/AutoGPTQ](https://github.com/PanQiWei/AutoGPTQ)
 * [qwopqwop200/GPTQ-for-LLaMa](https://github.com/qwopqwop200/GPTQ-for-LLaMa)
+* [vllm-project/vllm](https://github.com/vllm-project/vllm)
 
 ## Citation
 
