@@ -1,0 +1,11 @@
+FROM nvcr.io/nvidia/pytorch:24.07-py3
+
+ARG CUDA_VERSION=12.4.1
+ARG PYTHON_VERSION=3.10
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TORCH_CUDA_ARCH_LIST='8.0 8.6'
+
+RUN apt update && apt upgrade -y
+
+WORKDIR /deltaserve
+COPY . /deltaserve

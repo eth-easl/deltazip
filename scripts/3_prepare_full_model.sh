@@ -1,0 +1,1 @@
+python3 scripts/helpers/prepare_full_models.py --model lmsys/vicuna-13b-v1.5 --target $WORKDIR/models/full --num-copies 24
