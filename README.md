@@ -339,8 +339,8 @@ If you found this code useful, please cite our paper:
 
 ```
 @article{yao2023deltazip,
-  title={DeltaZip: Multi-Tenant Language Model Serving via Delta Compression},
-  author={Yao, Xiaozhe and Klimovic, Ana},
+  title={Deltazip: Multi-tenant language model serving via delta compression},
+  author={Yao, Xiaozhe and Hu, Qinghao and Klimovic, Ana},
   journal={arXiv preprint arXiv:2312.05215},
   year={2023}
 }
