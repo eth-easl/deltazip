@@ -14,11 +14,26 @@ We observe that the weight updates from the pre-trained model to the fine-tuned 
 
 ![Observation](https://arxiv.org/html/2312.05215v3/x3.png)
 
+This is "easier" to compress. [What does it mean and why?](https://about.yao.sh/posts/why-delta-works/).
+
 Inspired by this motivation, we compose an aggressive compression pipeline that includes both structured sparsity and quantization. The pipeline consists of the following steps:
 
 ![Pipeline](https://arxiv.org/html/2312.05215v3/x5.png)
 
 This pipeline is designed to be efficient in both compression ratio and inference speed: 1) We employ structured sparsity, which is supported by recent hardware accelerators, such as [post-ampere NVIDIA GPUs](https://developer.nvidia.com/blog/structured-sparsity-in-the-nvidia-ampere-architecture-and-applications-in-search-engines/). 2) By compression, we reduce the data movement needed from GPU HBM to the compute unit, which is the main bottleneck in LLM inference.
+
+## Follow-up works
+
+Since the first version of DeltaZip in 2023, there have been many new research explored other compression techniques. Here we list some of them that we are aware for easy tracking:
+
+- [BitDelta: Your Fine-Tune May Only Be Worth One Bit](https://arxiv.org/abs/2402.10193).
+- [FM-Delta: Lossless Compression for Storing Massive Fine-tuned Foundation Models](https://proceedings.neurips.cc/paper_files/paper/2024/hash/7b75a7339dfb256ee4b4bec028a6890b-Abstract-Conference.html).
+- [DeltaDQ: Ultra-High Delta Compression for Fine-Tuned LLMs via Group-wise Dropout and Separate Quantization](https://arxiv.org/abs/2410.08666).
+- [Delta-CoMe: Training-Free Delta-Compression with Mixed-Precision for Large Language Models](https://proceedings.neurips.cc/paper_files/paper/2024/hash/37664246a1e07e212ddacea6e5a523f2-Abstract-Conference.html).
+- [Breaking the Compression Ceiling: Data-Free Pipeline for Ultra-Efficient Delta Compression](https://arxiv.org/abs/2505.13563).
+- [Seeing Delta Parameters as JPEG Images: Data-Free Delta Compression with Discrete Cosine Transform](https://arxiv.org/abs/2503.06676).
+- [DARE the Extreme: Revisiting Delta-Parameter Pruning For Fine-Tuned Models](https://arxiv.org/abs/2410.09344).
+- [Dynamic Base model Shift for Delta Compression](https://arxiv.org/abs/2505.11344).
 
 ## Project Structure
 
